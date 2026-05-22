@@ -10,29 +10,41 @@
 
 <style>
 
-body{
+*{
     margin:0;
     padding:0;
-    background:#040506;
+    box-sizing:border-box;
+}
+
+body{
+
+    background:#030405;
+
     font-family:Arial;
+
     color:white;
+
     overflow-x:hidden;
 }
 
 /* ===== FONDO ===== */
 
 body::before{
+
     content:'';
+
     position:fixed;
+
     width:100%;
     height:100%;
+
     top:0;
     left:0;
 
     background:
-    radial-gradient(circle at top,#00e5ff15,transparent 35%),
-    linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px);
+    radial-gradient(circle at top,#00d9ff15,transparent 35%),
+    linear-gradient(rgba(0,217,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,217,255,0.03) 1px, transparent 1px);
 
     background-size:
     100% 100%,
@@ -42,28 +54,40 @@ body::before{
     z-index:-5;
 }
 
+/* ===== CONTENEDOR ===== */
+
+.container{
+
+    width:96%;
+
+    margin:auto;
+
+    padding-top:18px;
+
+    padding-bottom:30px;
+}
+
 /* ===== HEADER ===== */
 
 .header{
 
     display:flex;
+
     justify-content:space-between;
+
     align-items:center;
 
-    padding:30px 45px;
-
-    border-bottom:1px solid #00e5ff33;
-
-    background:rgba(0,0,0,0.35);
-
-    backdrop-filter:blur(10px);
+    margin-bottom:18px;
 }
 
 /* ===== LOGO ===== */
 
-.logo-wrap{
+.logo{
+
     display:flex;
+
     align-items:center;
+
     gap:18px;
 }
 
@@ -72,170 +96,187 @@ body::before{
     width:70px;
     height:70px;
 
-    border:2px solid #00e5ff;
-
     border-radius:50%;
 
+    border:2px solid #00d9ff;
+
     display:flex;
+
     justify-content:center;
+
     align-items:center;
 
-    color:#00e5ff;
+    color:#00d9ff;
 
-    font-size:35px;
+    font-size:38px;
 
     box-shadow:
-    0 0 15px #00e5ff55;
+    0 0 18px #00d9ff55;
 }
 
 .logo-text h1{
 
-    margin:0;
-
     font-size:58px;
 
-    letter-spacing:2px;
+    font-weight:bold;
 }
 
 .logo-text span{
+
     color:#ffd000;
 }
 
 .logo-text p{
 
-    margin:0;
-    margin-top:5px;
+    color:#a7b7c8;
 
-    color:#8da5b8;
+    font-size:22px;
 
-    letter-spacing:3px;
+    margin-top:2px;
+
+    letter-spacing:2px;
+}
+
+/* ===== UPA ===== */
+
+.upa-box{
+
+    border:1px solid #ffd000;
+
+    border-radius:16px;
+
+    padding:20px 28px;
+
+    text-align:right;
+
+    box-shadow:
+    0 0 18px #ffd00022;
+}
+
+.upa-box small{
+
+    color:#d0d9e2;
 
     font-size:18px;
 }
 
-/* ===== RIGHT ===== */
-
-.right-top{
-
-    text-align:right;
-}
-
-.right-top small{
-
-    color:#9ca9b5;
-
-    font-size:14px;
-}
-
-.right-top h2{
-
-    margin:0;
-
-    margin-top:5px;
+.upa-box h2{
 
     color:#ffd000;
 
-    font-size:38px;
+    font-size:40px;
+
+    margin-top:5px;
 }
 
 /* ===== HERO ===== */
 
 .hero{
 
-    width:94%;
+    width:100%;
 
-    margin:auto;
+    border:1px solid #00d9ff66;
 
-    margin-top:35px;
-
-    border:1px solid #00e5ff33;
-
-    border-radius:28px;
+    border-radius:24px;
 
     overflow:hidden;
-
-    position:relative;
 
     background:
     linear-gradient(
         145deg,
-        #07111d,
+        #07111a,
         #050608
     );
 
     box-shadow:
-    0 0 25px #00e5ff11;
+    0 0 30px #00d9ff15;
 }
 
 .hero-grid{
 
     display:grid;
-    grid-template-columns:1fr 450px;
+
+    grid-template-columns:1fr 450px 250px;
 
     align-items:center;
 
-    gap:20px;
+    gap:10px;
 
-    padding:45px;
+    padding:35px;
 }
+
+/* ===== HERO TEXTO ===== */
 
 .hero-text small{
 
-    color:#ffd000;
+    color:#00d9ff;
 
-    letter-spacing:4px;
+    font-size:24px;
 
-    font-size:20px;
+    letter-spacing:3px;
 }
 
 .hero-text h1{
 
-    margin:0;
-
-    margin-top:10px;
-
     font-size:120px;
 
-    line-height:0.88;
+    line-height:0.9;
+
+    margin-top:10px;
 }
 
-.hero-text h1 span{
+.hero-text span{
 
     color:#ffd000;
 }
 
 .hero-text p{
 
-    color:#d0dce7;
+    color:#dce5ee;
 
-    font-size:28px;
-
-    margin-top:25px;
-
-    max-width:700px;
+    font-size:30px;
 
     line-height:1.5;
+
+    margin-top:20px;
+
+    max-width:650px;
 }
 
 /* ===== MOTO ===== */
 
-.bike{
+.hero-bike{
+
+    text-align:center;
+}
+
+.hero-bike img{
 
     width:100%;
 
+    max-width:420px;
+
     filter:
-    drop-shadow(0 0 25px #00e5ff55);
+    drop-shadow(0 0 30px #00d9ff55);
+}
+
+/* ===== YAMAHA ===== */
+
+.hero-yamaha{
+
+    text-align:center;
+}
+
+.hero-yamaha img{
+
+    width:170px;
 }
 
 /* ===== INFO ===== */
 
 .info-grid{
 
-    width:94%;
-
-    margin:auto;
-
-    margin-top:22px;
+    margin-top:18px;
 
     display:grid;
 
@@ -244,209 +285,235 @@ body::before{
     gap:18px;
 }
 
-.info-card{
+.info-box{
 
-    background:#070b10;
+    background:#05090e;
 
-    border:1px solid #ffd00044;
+    border:1px solid #00d9ff55;
 
-    border-radius:18px;
+    border-radius:16px;
 
-    padding:28px;
-
-    transition:0.3s;
+    padding:24px;
 
     box-shadow:
-    0 0 18px #ffd00010;
-}
-
-.info-card:hover{
-
-    transform:translateY(-4px);
-
-    border-color:#ffd000;
+    0 0 16px #00d9ff11;
 }
 
 .info-title{
 
-    color:#00e5ff;
+    color:#ffffff;
 
-    font-size:16px;
-
-    letter-spacing:2px;
+    font-size:24px;
 
     margin-bottom:10px;
 }
 
 .info-value{
 
-    font-size:32px;
+    color:#00d9ff;
+
+    font-size:30px;
 
     font-weight:bold;
-
-    color:#ffffff;
 }
 
-/* ===== SECTION ===== */
+/* ===== SECCIONES ===== */
+
+.main-grid{
+
+    margin-top:18px;
+
+    display:grid;
+
+    grid-template-columns:1fr 420px;
+
+    gap:18px;
+}
+
+/* ===== LEFT ===== */
+
+.left-side{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+}
 
 .section{
 
-    width:94%;
+    display:grid;
 
-    margin:auto;
+    grid-template-columns:240px 1fr;
 
-    margin-top:22px;
+    border:1px solid #00d9ff55;
 
-    border-radius:22px;
+    border-radius:18px;
 
     overflow:hidden;
 
-    background:#070b10;
-
-    border:1px solid #00e5ff33;
+    background:#05090e;
 
     box-shadow:
-    0 0 18px #00e5ff10;
+    0 0 18px #00d9ff11;
 }
 
-.section-head{
+/* ===== NUMERO ===== */
 
-    display:flex;
-    align-items:center;
+.section-left{
 
-    gap:20px;
+    padding:35px;
 
-    padding:25px;
-
-    border-bottom:1px solid #00e5ff22;
+    border-right:1px solid #00d9ff33;
 }
 
 .number{
 
-    width:70px;
-    height:70px;
+    width:85px;
+    height:85px;
 
-    border-radius:16px;
-
-    background:#0b131d;
+    border-radius:18px;
 
     border:2px solid #ffd000;
 
-    color:#ffd000;
+    display:flex;
 
-    font-size:40px;
+    justify-content:center;
+
+    align-items:center;
+
+    color:#00d9ff;
+
+    font-size:48px;
 
     font-weight:bold;
 
-    display:flex;
-    justify-content:center;
-    align-items:center;
-
-    box-shadow:
-    0 0 18px #ffd00022;
+    margin-bottom:30px;
 }
 
 .section-title{
 
-    font-size:42px;
+    font-size:48px;
 
     color:white;
 
-    letter-spacing:1px;
+    line-height:1.1;
 }
 
-.section img{
+/* ===== IMAGENES ===== */
+
+.section-image{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:#000;
+}
+
+.section-image img{
 
     width:100%;
 
-    max-height:420px;
+    height:280px;
 
     object-fit:cover;
 
     display:block;
 }
 
-/* ===== NOTES ===== */
+/* ===== NOTAS ===== */
 
 .notes{
 
-    width:94%;
+    background:#05090e;
 
-    margin:auto;
+    border:1px solid #ffd00055;
 
-    margin-top:22px;
-
-    margin-bottom:50px;
-
-    background:#070b10;
-
-    border-radius:22px;
-
-    border:1px solid #ffd00033;
+    border-radius:18px;
 
     padding:35px;
 
     box-shadow:
-    0 0 18px #ffd00010;
+    0 0 18px #ffd00011;
 }
 
 .notes h2{
 
-    margin-top:0;
-
     color:#ffd000;
 
-    font-size:42px;
+    font-size:50px;
+
+    margin-bottom:25px;
 }
 
 .notes ul{
 
-    margin-top:20px;
+    list-style:none;
 
-    line-height:2.3;
+    line-height:2.4;
+
+    font-size:28px;
 
     color:#dce5ee;
+}
 
-    font-size:24px;
+.notes li::before{
+
+    content:'◉';
+
+    color:#ffd000;
+
+    margin-right:15px;
 }
 
 /* ===== FOOTER ===== */
 
 .footer{
 
+    margin-top:20px;
+
     text-align:center;
 
-    color:#7e8d9d;
+    color:#9aa9b8;
 
-    margin-bottom:30px;
-
-    font-size:15px;
+    font-size:20px;
 
     letter-spacing:3px;
 }
 
-/* ===== MOBILE ===== */
+.footer span{
 
-@media(max-width:1100px){
+    color:#ffd000;
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media(max-width:1400px){
 
 .hero-grid{
     grid-template-columns:1fr;
+    text-align:center;
 }
 
-.hero-text h1{
-    font-size:80px;
-}
-
-.info-grid{
+.main-grid{
     grid-template-columns:1fr;
 }
 
-.logo-text h1{
-    font-size:36px;
+.info-grid{
+    grid-template-columns:1fr 1fr;
 }
 
-.right-top h2{
-    font-size:26px;
+.section{
+    grid-template-columns:1fr;
+}
+
+.section-left{
+    border-right:none;
+    border-bottom:1px solid #00d9ff33;
 }
 
 }
@@ -457,11 +524,13 @@ body::before{
 
 <body>
 
+<div class="container">
+
 <!-- HEADER -->
 
 <div class="header">
 
-    <div class="logo-wrap">
+    <div class="logo">
 
         <div class="logo-icon">
             ⟳
@@ -481,7 +550,7 @@ body::before{
 
     </div>
 
-    <div class="right-top">
+    <div class="upa-box">
 
         <small>
             HELP ONLINE
@@ -519,9 +588,15 @@ body::before{
 
         </div>
 
-        <div>
+        <div class="hero-bike">
 
-            <img src="moto.PNG" class="bike">
+            <img src="moto.PNG">
+
+        </div>
+
+        <div class="hero-yamaha">
+
+            <img src="yamaha.png">
 
         </div>
 
@@ -533,7 +608,7 @@ body::before{
 
 <div class="info-grid">
 
-    <div class="info-card">
+    <div class="info-box">
 
         <div class="info-title">
             EEPROM
@@ -545,7 +620,7 @@ body::before{
 
     </div>
 
-    <div class="info-card">
+    <div class="info-box">
 
         <div class="info-title">
             PROGRAMADOR
@@ -557,7 +632,7 @@ body::before{
 
     </div>
 
-    <div class="info-card">
+    <div class="info-box">
 
         <div class="info-title">
             TIPO
@@ -569,7 +644,7 @@ body::before{
 
     </div>
 
-    <div class="info-card">
+    <div class="info-box">
 
         <div class="info-title">
             PLATAFORMA
@@ -583,11 +658,19 @@ body::before{
 
 </div>
 
+<!-- MAIN -->
+
+<div class="main-grid">
+
+<!-- LEFT -->
+
+<div class="left-side">
+
 <!-- DASHBOARD -->
 
 <div class="section">
 
-    <div class="section-head">
+    <div class="section-left">
 
         <div class="number">
             01
@@ -599,7 +682,11 @@ body::before{
 
     </div>
 
-    <img src="Dashboard.jpg">
+    <div class="section-image">
+
+        <img src="Dashboard.jpg">
+
+    </div>
 
 </div>
 
@@ -607,7 +694,7 @@ body::before{
 
 <div class="section">
 
-    <div class="section-head">
+    <div class="section-left">
 
         <div class="number">
             02
@@ -619,7 +706,11 @@ body::before{
 
     </div>
 
-    <img src="eeprom.jpg">
+    <div class="section-image">
+
+        <img src="eeprom.jpg">
+
+    </div>
 
 </div>
 
@@ -627,7 +718,7 @@ body::before{
 
 <div class="section">
 
-    <div class="section-head">
+    <div class="section-left">
 
         <div class="number">
             03
@@ -639,11 +730,17 @@ body::before{
 
     </div>
 
-    <img src="conexión.jpg">
+    <div class="section-image">
+
+        <img src="conexión.jpg">
+
+    </div>
 
 </div>
 
-<!-- NOTES -->
+</div>
+
+<!-- RIGHT -->
 
 <div class="notes">
 
@@ -652,12 +749,20 @@ body::before{
     </h2>
 
     <ul>
+
         <li>Lectura directa EEPROM</li>
+
         <li>Compatible con UPA USB</li>
+
         <li>Sistema kilometraje dashboard</li>
+
         <li>Plataforma Yamaha MT Series</li>
+
         <li>Uso técnico profesional</li>
+
     </ul>
+
+</div>
 
 </div>
 
@@ -665,7 +770,9 @@ body::before{
 
 <div class="footer">
 
-    HELP ONLINE © VELOCÍMETROS CDMX
+    HELP ONLINE © VELOCÍMETROS <span>CDMX</span>
+
+</div>
 
 </div>
 
