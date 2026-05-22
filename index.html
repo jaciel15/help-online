@@ -8,60 +8,153 @@
 
 <style>
 
-body{
+*{
     margin:0;
     padding:0;
+    box-sizing:border-box;
+}
+
+body{
     background:#050505;
     font-family:Arial;
     color:white;
-    text-align:center;
+    overflow-x:hidden;
 }
 
+/* HEADER */
+
 .header{
+    text-align:center;
     padding-top:60px;
 }
 
-.title{
-    font-size:38px;
+.logo{
+    font-size:42px;
     font-weight:bold;
     color:#00ffe1;
-    text-shadow:0 0 15px #00ffe1;
+    text-shadow:
+        0 0 10px #00ffe1,
+        0 0 20px #00ffe1,
+        0 0 40px #00ffe1;
+    letter-spacing:2px;
 }
 
 .subtitle{
-    margin-top:10px;
+    margin-top:15px;
+    color:#bbbbbb;
     font-size:18px;
-    color:#cccccc;
+    letter-spacing:3px;
 }
 
-.container{
+/* MAIN */
+
+.main{
+    width:100%;
+    max-width:500px;
+    margin:auto;
     margin-top:80px;
+    padding:20px;
 }
 
-.btn{
-    width:260px;
-    margin:20px auto;
-    padding:25px;
-    border-radius:20px;
-    background:#111111;
-    border:2px solid #00ffe1;
-    color:#00ffe1;
-    font-size:28px;
-    font-weight:bold;
-    text-decoration:none;
+/* BUTTONS */
+
+.menu-btn{
+    width:100%;
     display:block;
-    box-shadow:0 0 20px #00ffe155;
+    margin-bottom:25px;
+    padding:28px;
+    border-radius:25px;
+
+    background:linear-gradient(
+        145deg,
+        #111111,
+        #1a1a1a
+    );
+
+    border:2px solid #00ffe1;
+
+    color:#00ffe1;
+    text-decoration:none;
+
+    font-size:32px;
+    font-weight:bold;
+
+    text-align:center;
+
+    box-shadow:
+        0 0 20px #00ffe144,
+        inset 0 0 10px #00ffe122;
+
+    transition:0.3s;
 }
 
-.btn:hover{
+.menu-btn:hover{
+    transform:scale(1.03);
+
     background:#00ffe1;
     color:black;
+
+    box-shadow:
+        0 0 30px #00ffe1,
+        0 0 60px #00ffe188;
 }
 
+/* INFO PANEL */
+
+.info-panel{
+    width:100%;
+    margin-top:60px;
+    padding:25px;
+
+    border-radius:20px;
+
+    background:#0d0d0d;
+
+    border:1px solid #222;
+
+    box-shadow:
+        0 0 15px #000;
+}
+
+.info-title{
+    color:#00ffe1;
+    font-size:20px;
+    margin-bottom:15px;
+    text-align:center;
+}
+
+.info-text{
+    color:#999;
+    line-height:1.8;
+    text-align:center;
+    font-size:15px;
+}
+
+/* FOOTER */
+
 .footer{
-    margin-top:120px;
-    color:#666;
-    font-size:14px;
+    margin-top:80px;
+    margin-bottom:30px;
+
+    text-align:center;
+
+    color:#555;
+    font-size:13px;
+}
+
+/* MOBILE */
+
+@media(max-width:600px){
+
+    .logo{
+        font-size:34px;
+    }
+
+    .menu-btn{
+        font-size:28px;
+        padding:24px;
+    }
+
 }
 
 </style>
@@ -69,25 +162,64 @@ body{
 
 <body>
 
+<!-- HEADER -->
+
 <div class="header">
-    <div class="title">VELOCÍMETROS CDMX</div>
-    <div class="subtitle">UPA HELP ONLINE</div>
+
+    <div class="logo">
+        VELOCÍMETROS CDMX
+    </div>
+
+    <div class="subtitle">
+        UPA HELP ONLINE
+    </div>
+
 </div>
 
-<div class="container">
+<!-- MAIN -->
 
-    <a class="btn" href="autos/">
+<div class="main">
+
+    <!-- AUTOS -->
+
+    <a class="menu-btn" href="autos/">
         AUTOS
     </a>
 
-    <a class="btn" href="motos/">
+    <!-- MOTOS -->
+
+    <a class="menu-btn" href="motos/">
         MOTOS
     </a>
 
+    <!-- INFO -->
+
+    <div class="info-panel">
+
+        <div class="info-title">
+            HELP ONLINE SYSTEM
+        </div>
+
+        <div class="info-text">
+
+            Plataforma técnica para
+            EEPROM, CAN BUS,
+            conexiones, dashboards,
+            offsets, BIN y sistemas
+            automotrices.
+
+        </div>
+
+    </div>
+
 </div>
 
+<!-- FOOTER -->
+
 <div class="footer">
+
     HELP ONLINE © VELOCÍMETROS CDMX
+
 </div>
 
 </body>
