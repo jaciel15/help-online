@@ -40,24 +40,14 @@ body{
 
 /* ========================= */
 
-body::before{
-
-    content:"";
-
-    position:fixed;
-
-    inset:0;
-
-    background:
-
-    radial-gradient(circle at center,#00d9ff22 0%,transparent 60%),
-
-    url('moto.PNG') center center/cover no-repeat;
-
-    opacity:0.08;
-
-    z-index:-2;
-
+body{
+    background:#000;
+    background-image:url('yamaha-master.png');
+    background-size:cover;
+    background-position:center;
+    background-attachment:fixed;
+    color:white;
+    overflow-x:hidden;
 }
 
 body::after{
