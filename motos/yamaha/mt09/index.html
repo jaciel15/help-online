@@ -42,12 +42,20 @@ body{
 
 body{
     background:#000;
-    background-image:url('yamaha-master.png');
+    background-image:url('yamaha-master.PNG');
     background-size:cover;
     background-position:center;
     background-attachment:fixed;
     color:white;
     overflow-x:hidden;
+}
+
+body::before{
+    display:none;
+}
+
+body::after{
+    display:none;
 }
 
 body::after{
