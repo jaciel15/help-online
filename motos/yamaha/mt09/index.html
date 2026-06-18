@@ -672,7 +672,28 @@ box-shadow:
 
 /* ========================= */
 
-@media(max-width:1200px){
+@media (max-width: 900px){
+
+    .header{
+        padding-top:20px;
+    }
+
+    .logo-left{
+        position:relative;
+        left:auto;
+        top:auto;
+        display:block;
+        text-align:center;
+        margin-bottom:10px;
+    }
+
+    .logo-right{
+        position:relative;
+        right:auto;
+        top:auto;
+        text-align:center;
+        margin-bottom:15px;
+    }
 
     .main{
         flex-direction:column;
@@ -687,12 +708,8 @@ box-shadow:
         width:100%;
     }
 
-    .slide{
-        height:500px;
-    }
-
     .footer{
-        grid-template-columns:1fr 1fr;
+        grid-template-columns:1fr;
     }
 
 }
