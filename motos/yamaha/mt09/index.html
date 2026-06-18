@@ -433,7 +433,7 @@ z-index:10;
 
     position:relative;
     top:75px;
-
+    cursor:pointer;
     filter:
     drop-shadow(0 0 20px #00d9ff)
     drop-shadow(0 0 50px #00d9ff)
@@ -1088,14 +1088,14 @@ if(modal && modalImg && closeModal){
 
     document.querySelectorAll(".slide img").forEach(img => {
 
-        img.addEventListener("click", () => {
+      img.addEventListener("click", () => {
 
-            modal.style.display = "flex";
-            modalImg.src = img.src;
+    alert("CLICK OK");
 
-        });
+    modal.style.display = "flex";
+    modalImg.src = img.src;
 
-    });
+});
 
     closeModal.addEventListener("click", () => {
 
