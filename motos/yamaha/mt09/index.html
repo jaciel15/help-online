@@ -776,7 +776,62 @@ box-shadow:
 ::-webkit-scrollbar-thumb:hover{
     background:#00ffff;
 }
+/* ========================= */
+/* VENTANA IMAGEN GRANDE */
+/* ========================= */
 
+.modal{
+
+    display:none;
+
+    position:fixed;
+
+    z-index:9999;
+
+    left:0;
+    top:0;
+
+    width:100%;
+    height:100%;
+
+    background:rgba(0,0,0,.95);
+
+    justify-content:center;
+    align-items:center;
+}
+
+.modal img{
+
+    max-width:95%;
+    max-height:95%;
+
+    object-fit:contain;
+
+    filter:
+    drop-shadow(0 0 20px #00d9ff)
+    drop-shadow(0 0 40px #00d9ff);
+}
+
+.close-modal{
+
+    position:absolute;
+
+    top:20px;
+
+    right:30px;
+
+    color:white;
+
+    font-size:60px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    text-shadow:
+    0 0 10px #ff2020,
+    0 0 20px #ff2020;
+}
 </style>
 
 </style>
@@ -1027,10 +1082,47 @@ setInterval(() => {
 
 moveSlide(1);
 
-}, 9000);
+}, 7000);
+
+const modal = document.getElementById("imageModal");
+const modalImg = document.getElementById("modalImg");
+const closeModal = document.querySelector(".close-modal");
+
+document.querySelectorAll(".slide img").forEach(img => {
+
+    img.addEventListener("click", () => {
+
+        modal.style.display = "flex";
+        modalImg.src = img.src;
+
+    });
+
+});
+
+closeModal.addEventListener("click", () => {
+
+    modal.style.display = "none";
+
+});
+
+modal.addEventListener("click", (e) => {
+
+    if(e.target === modal){
+
+        modal.style.display = "none";
+
+    }
+
+});
 
 </script>
+<div id="imageModal" class="modal">
 
+    <span class="close-modal">&times;</span>
+
+    <img id="modalImg" src="">
+
+</div>
 </body>
 
 </html>
