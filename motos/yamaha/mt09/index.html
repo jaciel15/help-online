@@ -7,6 +7,7 @@
   <title>YAMAHA MT-09 | VELOCÍMETROS CDMX</title>
   <link rel="icon" href="../../../assets/img/logo-velocimetros-digitales-cdmx.jpg">
   <link rel="stylesheet" href="../../../assets/css/site.css">
+  <link rel="stylesheet" href="../../../assets/css/ayuda.css">
     <script>
     (function(){
       try{
@@ -15,20 +16,27 @@
         var l=localStorage.getItem('vcdmx-lang');
         if(l==='es'||l==='en'){document.documentElement.setAttribute('lang',l);document.documentElement.setAttribute('data-lang',l);}
       }catch(e){}
+      try{
+        history.replaceState({helpLocked:1},'',location.href);
+        history.pushState({helpLocked:1},'',location.href);
+        window.addEventListener('popstate',function(){
+          history.pushState({helpLocked:1},'',location.href);
+        });
+      }catch(e){}
     })();
   </script>
 </head>
-<body>
+<body class="help-locked">
   <header class="topbar">
-        <a class="brand-lockup" href="../../../">
+        <span class="brand-lockup">
       <span class="brand-logo-wrap" aria-hidden="true">
         <img class="brand-logo" src="../../../assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="">
       </span>
       <span class="brand-text">
-        <span class="brand-name">VELOCÍMETROS CDMX</span>
-        <span class="brand-tag" data-i18n="brand.tag">Sistema Velocímetros Digitales CDMX</span>
+        <span class="brand-name">HELP ONLINE</span>
+        <span class="brand-tag">Solo esta ficha · MT-09</span>
       </span>
-    </a>
+    </span>
         <div class="topbar-controls">
       <div class="theme-switch" role="group" data-i18n-aria="theme.label" aria-label="Tema visual">
         <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true" data-i18n="theme.dark">Oscuro</button>
@@ -41,22 +49,14 @@
     </div>
   </header>
 
-  <nav class="breadcrumbs" data-i18n-aria="nav.crumbs" aria-label="Migas de pan">
-    <a href="../../../" data-i18n="nav.home">Inicio</a>
-    <span class="sep">/</span>
-    <a href="../../" data-i18n="nav.bikes">Motos</a>
-    <span class="sep">/</span>
-    <a href="../">Yamaha</a>
-    <span class="sep">/</span>
-    <span class="current">MT-09</span>
-  </nav>
-  <div class="back-row">
-    <a class="back-link" href="../" data-i18n="back.yamaha">← Regresar a Yamaha</a>
-  </div>
+  <nav class="breadcrumbs help-hidden" hidden aria-hidden="true"></nav>
+  <div class="back-row help-hidden" hidden aria-hidden="true"></div>
+
+  <p class="help-lock-banner">Ayuda bloqueada · Solo esta unidad (MT-09) · Sin acceso a otras fichas</p>
 
   <div class="detail-shell">
     <header class="detail-header">
-      <a class="side-logo side-logo--img" href="../../../"><img src="../../../assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="Velocímetros Digitales CDMX"></a>
+      <div class="side-logo side-logo--img" aria-hidden="true"><img src="../../../assets/img/logo-velocimetros-digitales-cdmx.jpg" alt=""></div>
       <div class="brand-mark">
         <img src="yamaha.png" alt="Yamaha">
       </div>

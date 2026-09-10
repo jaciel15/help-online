@@ -43,8 +43,8 @@
           var m = b.models[mid];
           html += "<div class='tree-model'><div>" + m.name + "</div>";
           (m.versions || []).forEach(function (v) {
-            var href =
-              "../ficha/?c=" +
+            var helpHref =
+              "../ayuda/?c=" +
               encodeURIComponent(cat) +
               "&b=" +
               encodeURIComponent(b.id) +
@@ -52,14 +52,18 @@
               encodeURIComponent(mid) +
               "&v=" +
               encodeURIComponent(v.id);
+            var absHelp = new URL(helpHref, location.href).href;
             html +=
               "<div class='tree-version'>• " +
               (v.name || v.id) +
               " · EEPROM " +
               (v.eeprom || "—") +
               " · <a href='" +
-              href +
-              "' target='_blank' rel='noopener'>Ver</a></div>";
+              helpHref +
+              "' target='_blank' rel='noopener'>Abrir ayuda</a>" +
+              " · <button type='button' class='copy-help' data-help-url='" +
+              absHelp.replace(/'/g, "&#39;") +
+              "'>Copiar link cliente</button></div>";
           });
           html += "</div>";
         });
@@ -67,6 +71,21 @@
       });
     });
     box.innerHTML = html;
+    box.querySelectorAll(".copy-help").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var url = btn.getAttribute("data-help-url");
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(function () {
+            btn.textContent = "¡Copiado!";
+            setTimeout(function () {
+              btn.textContent = "Copiar link cliente";
+            }, 1200);
+          });
+        } else {
+          prompt("Copia este link de ayuda (solo esa ficha):", url);
+        }
+      });
+    });
   }
 
   function clearForm() {
@@ -159,16 +178,30 @@
 
       C.saveCatalog(catalog);
       renderTree();
+      var helpUrl =
+        new URL(
+          "../ayuda/?c=" +
+            encodeURIComponent(category) +
+            "&b=" +
+            encodeURIComponent(brandId) +
+            "&m=" +
+            encodeURIComponent(modelId) +
+            "&v=" +
+            encodeURIComponent(versionId),
+          location.href
+        ).href;
       var msg = $("formMsg");
       msg.hidden = false;
-      msg.textContent =
-        "Listo: " +
+      msg.innerHTML =
+        "Publicado: <strong>" +
         brandName.toUpperCase() +
         " / " +
         modelName.toUpperCase() +
         " / " +
         versionName +
-        " (usuario solo lectura).";
+        "</strong>. Link cliente (solo esa ficha): <code style='word-break:break-all'>" +
+        helpUrl +
+        "</code>";
       clearForm();
     });
 

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-help-locked="1">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="Ayuda técnica UPA — solo lectura de esta ficha.">
+  <title>HELP ONLINE</title>
+  <link rel="stylesheet" href="../assets/css/site.css">
+  <link rel="stylesheet" href="../assets/css/ayuda.css">
+  <script>
+    (function(){
+      try{
+        var t=localStorage.getItem('vcdmx-theme');
+        if(t==='warm'||t==='dark')document.documentElement.setAttribute('data-theme',t);
+        var l=localStorage.getItem('vcdmx-lang');
+        if(l==='es'||l==='en'){document.documentElement.setAttribute('lang',l);document.documentElement.setAttribute('data-lang',l);}
+      }catch(e){}
+      // Evita volver al catálogo con el botón atrás del navegador
+      try{
+        if(location.search.indexOf('c=')!==-1){
+          history.replaceState({helpLocked:1},'',location.href);
+          history.pushState({helpLocked:1},'',location.href);
+          window.addEventListener('popstate',function(){
+            history.pushState({helpLocked:1},'',location.href);
+          });
+        }
+      }catch(e){}
+    })();
+  </script>
+</head>
+<body class="help-locked">
+  <header class="help-top">
+    <div class="help-top-brand">
+      <strong>HELP ONLINE</strong>
+      <span>Soporte técnico · Solo esta ficha</span>
+    </div>
+    <div class="topbar-controls">
+      <div class="theme-switch" role="group" aria-label="Tema">
+        <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true">Oscuro</button>
+        <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false">Cálido</button>
+      </div>
+      <div class="lang-switch" role="group" aria-label="Idioma">
+        <button type="button" class="theme-btn" data-lang-set="es" aria-pressed="true">ES</button>
+        <button type="button" class="theme-btn" data-lang-set="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <p class="help-lock-banner">Vista de ayuda bloqueada · No hay acceso al catálogo ni a otras fichas</p>
+
+  <div class="detail-shell" id="fichaRoot">
+    <p class="lead" id="fichaStatus">Cargando ayuda…</p>
+  </div>
+
+  <footer class="help-footer">
+    <p>Solo lectura · HELP ONLINE</p>
+  </footer>
+
+  <div id="imageModal" class="modal" role="dialog" aria-modal="true" aria-label="Vista ampliada">
+    <button type="button" class="modal-close" aria-label="Cerrar">&times;</button>
+    <img id="modalImg" alt="">
+  </div>
+
+  <script src="../assets/js/catalog.js"></script>
+  <script src="../assets/js/ayuda.js"></script>
+  <script src="../assets/js/site.js"></script>
+</body>
+</html>

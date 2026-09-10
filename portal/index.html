@@ -4,19 +4,29 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex,nofollow">
-  <meta name="description" content="Portal técnico de ayuda UPA / EEPROM — solo consulta.">
+  <meta name="description" content="Portal de ayuda UPA — solo con enlace específico.">
   <title>UPA Technical Help</title>
   <link rel="stylesheet" href="../assets/css/site.css">
   <link rel="stylesheet" href="../assets/css/portal.css">
   <script>
-    (function(){try{var t=localStorage.getItem('vcdmx-theme');if(t==='warm'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+    (function(){
+      try{
+        var t=localStorage.getItem('vcdmx-theme');
+        if(t==='warm'||t==='dark')document.documentElement.setAttribute('data-theme',t);
+        // Si llega un enlace con ficha, manda a ayuda bloqueada
+        var q=new URLSearchParams(location.search);
+        if(q.get('c')&&q.get('b')&&q.get('m')){
+          location.replace('../ayuda/'+location.search);
+        }
+      }catch(e){}
+    })();
   </script>
 </head>
 <body class="portal-body">
   <header class="portal-top">
     <div class="portal-brand">
       <strong>UPA TECHNICAL HELP</strong>
-      <span>Support reference · read only</span>
+      <span>Support · read only · link específico</span>
     </div>
     <div class="topbar-controls">
       <div class="theme-switch" role="group" aria-label="Theme">
@@ -33,31 +43,24 @@
   <main class="portal-main">
     <section class="portal-hero">
       <h1>HELP DESK</h1>
-      <p>Consulta técnica de tablero, conexión y EEPROM. Este portal es solo lectura.</p>
-      <div class="portal-tabs">
-        <button type="button" class="btn btn-primary" data-portal-cat="autos">AUTOS</button>
-        <button type="button" class="btn btn-ghost" data-portal-cat="motos">MOTOS</button>
-      </div>
-    </section>
-
-    <section class="section-block">
-      <div class="toolbar">
-        <label class="search-wrap">
-          <span class="icon" aria-hidden="true">⌕</span>
-          <input type="search" id="portalSearch" placeholder="Buscar marca o modelo…" autocomplete="off">
-        </label>
-      </div>
-      <div id="portalList" class="menu-grid"></div>
-      <p id="portalEmpty" class="empty-state">No hay resultados.</p>
+      <p>
+        Esta aplicación de ayuda abre <strong>solo la ficha exacta</strong> del auto o moto
+        que te envió soporte (ejemplo: MT-09 o Ford Fusion).
+      </p>
+      <p>
+        No hay catálogo público aquí. Si no tienes el link específico, pide a soporte el enlace de tu unidad.
+      </p>
+      <p class="muted">
+        Ejemplo de link cliente:<br>
+        <code>/ayuda/?c=motos&amp;b=yamaha&amp;m=mt09&amp;v=base</code>
+      </p>
     </section>
   </main>
 
   <footer class="portal-footer">
-    <p>Read-only technical desk · No public owner identity on this portal</p>
+    <p>Solo lectura · Sin acceso a otras fichas · Sin identidad pública del proveedor</p>
   </footer>
 
-  <script src="../assets/js/catalog.js"></script>
-  <script src="../assets/js/portal.js"></script>
   <script src="../assets/js/site.js"></script>
 </body>
 </html>
