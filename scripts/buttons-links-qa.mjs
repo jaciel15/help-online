@@ -143,16 +143,23 @@ async function main() {
   await page.goto(BASE + "/ayuda/?c=motos&b=yamaha&m=mt09&v=base", { waitUntil: "networkidle" });
   await page.waitForSelector("#fichaRoot h1");
   await page.click(".slider-arrow.next");
+  await page.waitForTimeout(700);
   await page.click(".slider-arrow.prev");
+  await page.waitForTimeout(700);
   ok("ayuda slider arrows");
 
   const dots = page.locator(".slider-dots button");
   if ((await dots.count()) > 1) {
     await dots.nth(1).click();
+    await page.waitForTimeout(700);
     ok("ayuda slider dots");
   }
 
-  await page.locator("[data-lightbox]").first().click();
+  const photo = page.locator(".slider-shell .slide img[data-lightbox]").first();
+  await photo.waitFor({ state: "visible" });
+  await photo.evaluate((el) => el.scrollIntoView({ block: "center", inline: "center" }));
+  await page.waitForTimeout(200);
+  await photo.click({ force: true });
   await page.waitForSelector("#imageModal.open");
   await page.click(".modal-close");
   await page.waitForFunction(() => !document.getElementById("imageModal")?.classList.contains("open"));
