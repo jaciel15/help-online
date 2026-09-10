@@ -1024,6 +1024,10 @@ a {
     font-size: 1.25rem;
   }
 
+  .slider-shell {
+    min-height: 0;
+  }
+
   .slide {
     height: 280px;
     padding: 10px;
