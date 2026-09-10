@@ -1,0 +1,17 @@
+# Deploy permanente en Render.com
+# 1) Crea cuenta en https://render.com
+# 2) New → Blueprint → conecta este repo
+# 3) (Opcional) añade dominio propio: ayuda.tudominio.com
+services:
+  - type: web
+    name: help-online
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: "8765"
+    disk:
+      name: help-data
+      mountPath: /app/data
+      sizeGB: 1

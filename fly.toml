@@ -1,0 +1,27 @@
+# Deploy permanente en Fly.io (URL fija tipo https://help-online.fly.dev)
+# Comandos:
+#   fly launch --no-deploy
+#   fly volumes create help_data --size 1
+#   fly deploy
+
+app = "help-online"
+primary_region = "mia"
+
+[build]
+
+[http_service]
+  internal_port = 8765
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[mounts]
+  source = "help_data"
+  destination = "/app/data"
