@@ -155,12 +155,25 @@ async function main() {
     ok("ayuda slider dots");
   }
 
-  const photo = page.locator(".slider-shell .slide img[data-lightbox]").first();
-  await photo.waitFor({ state: "visible" });
-  await photo.evaluate((el) => el.scrollIntoView({ block: "center", inline: "center" }));
-  await page.waitForTimeout(200);
-  await photo.click({ force: true });
-  await page.waitForSelector("#imageModal.open");
+  await page.locator(".slider-shell").evaluate((shell) => {
+    shell.scrollIntoView({ block: "center", inline: "nearest" });
+  });
+  await page.waitForTimeout(300);
+  const opened = await page.evaluate(() => {
+    const shell = document.querySelector(".slider-shell");
+    if (!shell) return false;
+    const sr = shell.getBoundingClientRect();
+    const imgs = Array.prototype.slice.call(shell.querySelectorAll("img[data-lightbox]"));
+    const visible = imgs.find(function (img) {
+      const r = img.getBoundingClientRect();
+      return r.width > 40 && r.height > 40 && r.left >= sr.left - 4 && r.right <= sr.right + 4;
+    });
+    if (!visible) return false;
+    visible.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+    return document.getElementById("imageModal")?.classList.contains("open") || false;
+  });
+  if (!opened) throw new Error("lightbox did not open from visible slide");
+  await page.waitForSelector("#imageModal.open", { state: "attached" });
   await page.click(".modal-close");
   await page.waitForFunction(() => !document.getElementById("imageModal")?.classList.contains("open"));
   ok("ayuda lightbox open/close");
