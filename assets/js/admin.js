@@ -335,13 +335,26 @@
               done(false);
               return;
             }
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-              return navigator.clipboard.writeText(url).then(function () {
+            var urlText = url;
+            function fallbackCopy() {
+              try {
+                prompt("Link cliente (cópialo):", urlText);
                 done(true);
-              });
+              } catch (e) {
+                done(false);
+              }
             }
-            prompt("Link cliente (cópialo):", url);
-            done(true);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              return navigator.clipboard
+                .writeText(urlText)
+                .then(function () {
+                  done(true);
+                })
+                .catch(function () {
+                  fallbackCopy();
+                });
+            }
+            fallbackCopy();
           });
       });
     });

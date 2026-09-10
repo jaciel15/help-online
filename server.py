@@ -206,8 +206,15 @@ def delete_photo_files(c: str, b: str, m: str, v: str) -> None:
                         path.unlink()
                     except OSError:
                         pass
-    help_json = out_dir / f"{v}.json"
-    # leave empty dirs; ok
+    # Remove empty model / brand folders after delete
+    try:
+        if out_dir.exists() and not any(out_dir.iterdir()):
+            out_dir.rmdir()
+        brand_dir = out_dir.parent
+        if brand_dir.exists() and not any(brand_dir.iterdir()):
+            brand_dir.rmdir()
+    except OSError:
+        pass
 
 
 class Handler(SimpleHTTPRequestHandler):
