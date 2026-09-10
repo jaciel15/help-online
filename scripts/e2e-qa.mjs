@@ -287,12 +287,159 @@ async function main() {
   if (!modalClosed) throw new Error("lightbox did not close");
   ok("lightbox close button");
 
+  // Slider arrows + dots + lightbox close by image click
+  await cpage.locator("#fichaRoot img[data-lightbox]").first().click();
+  await cpage.waitForTimeout(300);
+  await cpage.locator("#modalImg").click();
+  await cpage.waitForTimeout(300);
+  const closedByImg = await cpage.evaluate(() => !document.getElementById("imageModal").classList.contains("open"));
+  if (!closedByImg) throw new Error("lightbox image click did not close");
+  ok("lightbox closes on image click");
+
+  const beforeDot = await cpage.locator(".slider-dots .active, .slider-dots button.active").count();
+  await cpage.locator(".slider-arrow.next").click();
+  await cpage.waitForTimeout(400);
+  ok("slider next arrow");
+  await cpage.locator(".slider-arrow.prev").click();
+  await cpage.waitForTimeout(300);
+  ok("slider prev arrow", "dotsBefore=" + beforeDot);
+
+  // Vespa + missing help
+  await clientHelpLoads(cpage, "c=motos&b=vespa&m=zardt&v=v1", "VESPA");
+  await cpage.goto(BASE + "/ayuda/?c=autos&b=noexiste&m=x&v=base", { waitUntil: "domcontentloaded" });
+  await cpage.waitForSelector("#fichaStatus", { timeout: 10000 });
+  await cpage.waitForTimeout(500);
+  const missing = await cpage.locator("#fichaStatus").textContent();
+  if (!/no encontrada/i.test(missing || "")) throw new Error("missing help should show error: " + missing);
+  ok("missing help message", (missing || "").slice(0, 60));
+
+  // Portal redirect with query
+  await cpage.goto(BASE + "/portal/?c=motos&b=yamaha&m=mt09&v=base", { waitUntil: "networkidle" });
+  if (!cpage.url().includes("/ayuda/")) throw new Error("portal did not redirect to ayuda: " + cpage.url());
+  ok("portal → ayuda redirect", cpage.url());
+
+  // Ficha redirects guest to ayuda
+  await cpage.goto(BASE + "/ficha/?c=motos&b=yamaha&m=mt09&v=base", { waitUntil: "networkidle" });
+  if (!cpage.url().includes("/ayuda/")) throw new Error("ficha guest redirect failed: " + cpage.url());
+  ok("ficha guest → ayuda", cpage.url());
+
+  // Home example link navigates
+  await cpage.goto(BASE + "/", { waitUntil: "networkidle" });
+  await cpage.click('a[href*="ayuda/?c=motos"]');
+  await cpage.waitForURL(/ayuda\/\?c=motos/);
+  await cpage.waitForSelector("#fichaRoot h1");
+  ok("home Ver ejemplo MT-09");
+
   // Admin redirect
   await cpage.goto(BASE + "/admin/", { waitUntil: "domcontentloaded" });
   await cpage.waitForTimeout(500);
   const hasLogin = await cpage.locator("#loginGate, #loginPass, #administrador").count();
   if (hasLogin < 1) throw new Error("admin redirect broken url=" + cpage.url());
   ok("admin/ route reaches hub", cpage.url());
+
+  // Extra admin buttons: clear, new, export, edit yamaha, logout, wrong pass
+  const adminCtx = await browser.newContext();
+  await adminCtx.grantPermissions(["clipboard-read", "clipboard-write"]).catch(() => {});
+  const ap = await adminCtx.newPage();
+  await ap.goto(BASE + "/#administrador", { waitUntil: "networkidle" });
+  await ap.fill("#loginPass", "wrong-password");
+  ap.once("dialog", async (d) => d.accept());
+  await ap.click('#loginForm button[type="submit"]');
+  await ap.waitForTimeout(500);
+  const stillGate = await ap.locator("#loginGate").isVisible();
+  if (!stillGate) throw new Error("wrong password should keep gate");
+  ok("wrong password rejected");
+
+  await ap.fill("#loginPass", PASS);
+  await ap.click('#loginForm button[type="submit"]');
+  await ap.waitForSelector("#adminApp:not([hidden])");
+
+  // Open every brand folder
+  const brands = await ap.locator(".brand-folder").evaluateAll((els) =>
+    els.map((e) => e.getAttribute("data-b"))
+  );
+  for (const bid of brands) {
+    await ap.click('.brand-folder[data-b="' + bid + '"]');
+    await ap.waitForSelector("#btnBackBrands");
+    const n = await ap.locator(".inv-item").count();
+    if (n < 1) throw new Error("empty brand folder " + bid);
+    const actions = await ap.locator(".edit-help, .copy-help, .delete-help").count();
+    if (actions < 3) throw new Error("missing actions in " + bid);
+    ok("folder " + bid, "helps=" + n + " actions=" + actions);
+    await ap.click("#btnBackBrands");
+    await ap.waitForSelector(".brand-folder");
+  }
+
+  // Edit Yamaha MT-09
+  await ap.click('.brand-folder[data-b="yamaha"]');
+  await ap.waitForSelector(".edit-help");
+  await ap.click(".edit-help");
+  await ap.waitForTimeout(700);
+  if (!(await ap.locator("#formTitle").textContent()).match(/Editando/i)) throw new Error("edit yamaha failed");
+  const yMain = await ap.getAttribute("#prevMain", "src");
+  if (!yMain) throw new Error("yamaha edit photo missing");
+  ok("Editar Yamaha MT-09", yMain.slice(0, 70));
+
+  // Clear + New
+  await ap.click("#btnClear");
+  await ap.waitForTimeout(300);
+  const cleared = await ap.inputValue("#fBrand");
+  if (cleared) throw new Error("clear did not reset brand");
+  ok("Limpiar form");
+  await ap.click("#btnNew");
+  await ap.waitForTimeout(200);
+  const newTitle = await ap.locator("#formTitle").textContent();
+  if (!/Nueva ayuda/i.test(newTitle || "")) throw new Error("btnNew title");
+  ok("Nueva ayuda");
+
+  // Export catalog download
+  const [download] = await Promise.all([
+    ap.waitForEvent("download", { timeout: 10000 }),
+    ap.click("#btnExport"),
+  ]);
+  const dlName = download.suggestedFilename();
+  if (!/catalog\.json/i.test(dlName || "")) throw new Error("export name " + dlName);
+  ok("Exportar JSON", dlName);
+
+  // Photo gallery buttons exist and target inputs
+  const photoBtns = await ap.locator(".btn-photo").count();
+  if (photoBtns < 8) throw new Error("expected 8 galeria/camara buttons, got " + photoBtns);
+  for (const id of [
+    "pMainGallery",
+    "pMainCamera",
+    "pDashGallery",
+    "pDashCamera",
+    "pConnGallery",
+    "pConnCamera",
+    "pIgnGallery",
+    "pIgnCamera",
+    "pMulti",
+  ]) {
+    if ((await ap.locator("#" + id).count()) !== 1) throw new Error("missing input " + id);
+  }
+  ok("photo inputs + Galería/Cámara buttons", "btns=" + photoBtns);
+
+  // Logout
+  await ap.click("#btnLogout");
+  await ap.waitForTimeout(800);
+  const gateAgain = await ap.locator("#loginGate, #loginPass").count();
+  if (gateAgain < 1) throw new Error("logout did not return to login");
+  ok("Salir / logout");
+
+  // Tunnel public smoke (if available)
+  const tunnel = process.env.TUNNEL_URL || "https://dude-monitors-tooth-nasa.trycloudflare.com";
+  try {
+    const th = await fetch(tunnel + "/api/health", { signal: AbortSignal.timeout(8000) });
+    const tj = await th.json();
+    if (!th.ok || !tj.ok) throw new Error("tunnel health");
+    const ta = await fetch(tunnel + "/ayuda/?c=motos&b=yamaha&m=mt09&v=base", {
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!ta.ok) throw new Error("tunnel ayuda " + ta.status);
+    ok("tunnel público", tunnel);
+  } catch (e) {
+    fail("tunnel público", e.message || e);
+  }
 
   await browser.close();
 

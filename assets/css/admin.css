@@ -130,6 +130,14 @@
 }
 
 .admin-gate { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.admin-gate[hidden],
+.admin-app[hidden],
+.form-msg[hidden],
+.inv-breadcrumb[hidden],
+#invEmpty[hidden],
+[hidden] {
+  display: none !important;
+}
 .admin-card {
   background: color-mix(in srgb, var(--bg-panel) 92%, transparent);
   border: 1px solid var(--line);
