@@ -417,6 +417,42 @@
     return version;
   }
 
+  function deleteVersion(catalog, category, brandId, modelId, versionId) {
+    try {
+      var brand = catalog.categories[category].brands[brandId];
+      if (!brand) return false;
+      var model = brand.models[modelId];
+      if (!model || !model.versions) return false;
+      model.versions = model.versions.filter(function (v) {
+        return v.id !== versionId;
+      });
+      if (!model.versions.length) delete brand.models[modelId];
+      if (!Object.keys(brand.models || {}).length) delete catalog.categories[category].brands[brandId];
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function deleteHelpUnit(c, b, m, v) {
+    var key = IDB_HELP_PREFIX + [c, b, m, v || "base"].join(":");
+    return openDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction("kv", "readwrite");
+        tx.objectStore("kv").delete(key);
+        tx.oncomplete = function () {
+          try {
+            localStorage.removeItem(helpUnitKey(c, b, m, v || "base"));
+          } catch (e) {}
+          resolve(true);
+        };
+        tx.onerror = function () {
+          reject(tx.error);
+        };
+      });
+    });
+  }
+
   function getVersion(catalog, category, brandId, modelId, versionId) {
     try {
       var versions = catalog.categories[category].brands[brandId].models[modelId].versions || [];
@@ -575,6 +611,8 @@
     ensureBrand: ensureBrand,
     ensureModel: ensureModel,
     upsertVersion: upsertVersion,
+    deleteVersion: deleteVersion,
+    deleteHelpUnit: deleteHelpUnit,
     getVersion: getVersion,
     listBrands: listBrands,
     listModels: listModels,

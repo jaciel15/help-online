@@ -12,6 +12,7 @@
   var pending = { main: "", dashboard: "", connection: "", ignition: "" };
   var editing = null;
   var listFilter = "all";
+  var brandView = null; // { cat, brandId, brandName } when inside a brand folder
   var PHOTO_KEYS = ["main", "dashboard", "connection", "ignition"];
   var PHOTO_META = {
     main: { img: "prevMain", st: "stMain", slot: 1 },
@@ -210,84 +211,52 @@
     return n;
   }
 
-  function renderTree() {
-    var box = $("catalogTree");
-    var empty = $("invEmpty");
-    if (!box) return;
-    var html = "";
-    var shown = 0;
-    var cats = listFilter === "all" ? ["autos", "motos"] : [listFilter];
+  function countBrandHelps(cat, brandId) {
+    var n = 0;
+    try {
+      var models = catalog.categories[cat].brands[brandId].models || {};
+      Object.keys(models).forEach(function (mid) {
+        n += (models[mid].versions || []).length;
+      });
+    } catch (e) {}
+    return n;
+  }
 
-    cats.forEach(function (cat) {
-      var brands = C.listBrands(catalog, cat).filter(function (b) {
-        return Object.keys(b.models || {}).some(function (mid) {
-          return (b.models[mid].versions || []).length > 0;
-        });
+  function brandThumb(cat, brandId) {
+    try {
+      var models = catalog.categories[cat].brands[brandId].models || {};
+      var mids = Object.keys(models);
+      for (var i = 0; i < mids.length; i++) {
+        var versions = models[mids[i]].versions || [];
+        for (var j = 0; j < versions.length; j++) {
+          var photos = versions[j].photos || {};
+          var src = photos.main || photos.dashboard || photos.connection || photos.ignition;
+          if (src && src !== "[indexed]") return thumbHtml(photos);
+        }
+      }
+    } catch (e) {}
+    return '<div class="inv-thumb inv-thumb--empty">📁</div>';
+  }
+
+  function bindInventoryActions(box) {
+    box.querySelectorAll(".open-brand").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        brandView = {
+          cat: btn.getAttribute("data-c"),
+          brandId: btn.getAttribute("data-b"),
+          brandName: btn.getAttribute("data-name")
+        };
+        renderTree();
       });
-      if (!brands.length) return;
-      html += '<div class="inv-cat"><h3>' + cat.toUpperCase() + "</h3>";
-      brands.forEach(function (b) {
-        Object.keys(b.models || {}).forEach(function (mid) {
-          var m = b.models[mid];
-          (m.versions || []).forEach(function (v) {
-            shown += 1;
-            var href = helpHref(cat, b.id, mid, v.id);
-            var absHelp = new URL(href, location.href).href;
-            var folder = folderPath(cat, b.id, mid);
-            html +=
-              '<article class="inv-item">' +
-              thumbHtml(v.photos) +
-              '<div class="inv-body">' +
-              "<strong>" +
-              b.name +
-              " " +
-              m.name +
-              "</strong>" +
-              "<span>" +
-              (v.name || v.id) +
-              " · EEPROM " +
-              (v.eeprom || "—") +
-              "</span>" +
-              '<span class="inv-folder">📁 ' +
-              folder +
-              "</span>" +
-              '<div class="tree-actions">' +
-              "<button type='button' class='edit-help' data-c='" +
-              cat +
-              "' data-b='" +
-              b.id +
-              "' data-m='" +
-              mid +
-              "' data-v='" +
-              v.id +
-              "'>Editar</button>" +
-              "<a href='" +
-              href +
-              "' target='_blank' rel='noopener'>Ver ayuda cliente</a>" +
-              "<button type='button' class='copy-help' data-help-url='" +
-              absHelp.replace(/'/g, "&#39;") +
-              "'>Copiar link</button>" +
-              "</div></div></article>";
-          });
-        });
-      });
-      html += "</div>";
     });
 
-    box.innerHTML = html || "";
-    if (empty) {
-      if (countItems() === 0) {
-        empty.hidden = false;
-        empty.textContent = "Aún no hay ayudas. Guarda la primera en catálogo.";
-      } else if (shown === 0) {
-        empty.hidden = false;
-        empty.textContent = "No hay ayudas en este filtro.";
-      } else {
-        empty.hidden = true;
-      }
+    var back = box.querySelector("#btnBackBrands");
+    if (back) {
+      back.addEventListener("click", function () {
+        brandView = null;
+        renderTree();
+      });
     }
-    updateFolderCount();
-    syncFoldersFromCatalog();
 
     box.querySelectorAll(".copy-help").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -315,6 +284,192 @@
         );
       });
     });
+
+    box.querySelectorAll(".delete-help").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var c = btn.getAttribute("data-c");
+        var b = btn.getAttribute("data-b");
+        var m = btn.getAttribute("data-m");
+        var v = btn.getAttribute("data-v");
+        var label = btn.getAttribute("data-label") || "esta ayuda";
+        if (!confirm("¿Borrar " + label + "? Esta acción no se puede deshacer.")) return;
+        C.deleteVersion(catalog, c, b, m, v);
+        C.deleteHelpUnit(c, b, m, v)
+          .catch(function () {})
+          .then(function () {
+            return C.saveCatalog(catalog);
+          })
+          .then(function () {
+            if (brandView && countBrandHelps(brandView.cat, brandView.brandId) === 0) {
+              brandView = null;
+            }
+            renderTree();
+            if ($("formMsg")) {
+              $("formMsg").hidden = false;
+              $("formMsg").textContent = "Eliminado: " + label;
+            }
+          })
+          .catch(function (err) {
+            alert("No se pudo borrar: " + ((err && err.message) || err));
+          });
+      });
+    });
+  }
+
+  function renderBrandFolders(cats) {
+    var html = "";
+    var shown = 0;
+    cats.forEach(function (cat) {
+      var brands = C.listBrands(catalog, cat).filter(function (b) {
+        return countBrandHelps(cat, b.id) > 0;
+      });
+      if (!brands.length) return;
+      html += '<div class="inv-cat"><h3>' + cat.toUpperCase() + "</h3>";
+      brands.forEach(function (b) {
+        var n = countBrandHelps(cat, b.id);
+        shown += 1;
+        html +=
+          '<button type="button" class="brand-folder open-brand" data-c="' +
+          cat +
+          '" data-b="' +
+          b.id +
+          '" data-name="' +
+          String(b.name).replace(/"/g, "&quot;") +
+          '">' +
+          brandThumb(cat, b.id) +
+          '<div class="brand-folder-body">' +
+          "<strong>" +
+          b.name +
+          "</strong>" +
+          "<span>" +
+          n +
+          (n === 1 ? " ayuda" : " ayudas") +
+          " · carpeta " +
+          cat +
+          "/" +
+          b.id +
+          "</span>" +
+          "<em>Abrir carpeta →</em>" +
+          "</div></button>";
+      });
+      html += "</div>";
+    });
+    return { html: html, shown: shown };
+  }
+
+  function renderBrandHelps(cat, brandId, brandName) {
+    var html =
+      '<div class="inv-brand-head">' +
+      '<button type="button" class="btn btn-ghost" id="btnBackBrands">← Todas las marcas</button>' +
+      "<div><strong>📁 " +
+      brandName +
+      "</strong><span class='muted tiny'> " +
+      cat +
+      "/" +
+      brandId +
+      "</span></div></div>";
+    var shown = 0;
+    var brand = (((catalog.categories[cat] || {}).brands || {})[brandId]) || { models: {} };
+    Object.keys(brand.models || {}).forEach(function (mid) {
+      var m = brand.models[mid];
+      (m.versions || []).forEach(function (v) {
+        shown += 1;
+        var href = helpHref(cat, brandId, mid, v.id);
+        var absHelp = new URL(href, location.href).href;
+        var label = brandName + " " + m.name + " · " + (v.name || v.id);
+        html +=
+          '<article class="inv-item">' +
+          thumbHtml(v.photos) +
+          '<div class="inv-body">' +
+          "<strong>" +
+          m.name +
+          "</strong>" +
+          "<span>" +
+          (v.name || v.id) +
+          " · EEPROM " +
+          (v.eeprom || "—") +
+          "</span>" +
+          '<span class="inv-folder">📁 ' +
+          folderPath(cat, brandId, mid) +
+          "</span>" +
+          '<div class="tree-actions">' +
+          "<button type='button' class='edit-help' data-c='" +
+          cat +
+          "' data-b='" +
+          brandId +
+          "' data-m='" +
+          mid +
+          "' data-v='" +
+          v.id +
+          "'>Editar</button>" +
+          "<a href='" +
+          href +
+          "' target='_blank' rel='noopener'>Ver ayuda cliente</a>" +
+          "<button type='button' class='copy-help' data-help-url='" +
+          absHelp.replace(/'/g, "&#39;") +
+          "'>Copiar link</button>" +
+          "<button type='button' class='delete-help' data-c='" +
+          cat +
+          "' data-b='" +
+          brandId +
+          "' data-m='" +
+          mid +
+          "' data-v='" +
+          v.id +
+          "' data-label='" +
+          label.replace(/'/g, "&#39;") +
+          "'>Borrar</button>" +
+          "</div></div></article>";
+      });
+    });
+    return { html: html, shown: shown };
+  }
+
+  function renderTree() {
+    var box = $("catalogTree");
+    var empty = $("invEmpty");
+    var crumb = $("invBreadcrumb");
+    if (!box) return;
+
+    var cats = listFilter === "all" ? ["autos", "motos"] : [listFilter];
+    var result;
+
+    if (brandView) {
+      if (crumb) {
+        crumb.hidden = false;
+        crumb.innerHTML =
+          "Carpetas / <strong>" +
+          (brandView.cat || "").toUpperCase() +
+          "</strong> / <strong>" +
+          brandView.brandName +
+          "</strong>";
+      }
+      result = renderBrandHelps(brandView.cat, brandView.brandId, brandView.brandName);
+    } else {
+      if (crumb) {
+        crumb.hidden = true;
+        crumb.innerHTML = "";
+      }
+      result = renderBrandFolders(cats);
+    }
+
+    box.innerHTML = result.html || "";
+    if (empty) {
+      if (countItems() === 0) {
+        empty.hidden = false;
+        empty.textContent = "Aún no hay ayudas. Guarda la primera en catálogo.";
+      } else if (result.shown === 0) {
+        empty.hidden = false;
+        empty.textContent = brandView
+          ? "Esta marca no tiene ayudas."
+          : "No hay marcas en este filtro.";
+      } else {
+        empty.hidden = true;
+      }
+    }
+    updateFolderCount();
+    syncFoldersFromCatalog();
+    bindInventoryActions(box);
   }
 
   function loadIntoForm(cat, brandId, modelId, versionId) {
@@ -450,14 +605,15 @@
             });
           });
         })
-        .then(function (helpUnit) {
+        .then(function () {
           var folder = folderPath(category, brandId, modelId);
+          brandView = {
+            cat: category,
+            brandId: brandId,
+            brandName: brandName.toUpperCase()
+          };
           renderTree();
           syncFoldersFromCatalog();
-
-          try {
-            C.exportHelpUnit(helpUnit);
-          } catch (e) {}
 
           var href = helpHref(category, brandId, modelId, versionId);
           var abs = new URL(href, location.href).href;
@@ -465,13 +621,13 @@
           if (msg) {
             msg.hidden = false;
             msg.innerHTML =
-              "✓ Guardado y confirmado · <strong>" +
+              "✓ Guardado · <strong>" +
               brandName.toUpperCase() +
               " " +
               modelName.toUpperCase() +
-              "</strong><br>Carpeta <code>" +
+              "</strong> en carpeta <code>" +
               folder +
-              "</code> · ya está en la lista<br>Abriendo ayuda cliente…<br><code style='word-break:break-all'>" +
+              "</code><br>Abriendo ayuda cliente…<br><code style='word-break:break-all'>" +
               abs +
               "</code>";
           }
@@ -569,6 +725,7 @@
     document.querySelectorAll(".inv-filter").forEach(function (btn) {
       btn.addEventListener("click", function () {
         listFilter = btn.getAttribute("data-filter") || "all";
+        brandView = null;
         document.querySelectorAll(".inv-filter").forEach(function (b) {
           b.classList.toggle("is-active", b === btn);
         });

@@ -25,11 +25,75 @@
   width: 100%;
   padding-top: 0;
 }
-.inv-folder {
-  display: block;
-  font-size: 0.72rem;
-  color: var(--accent);
+.inv-breadcrumb {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
   letter-spacing: 0.04em;
+}
+.inv-breadcrumb strong { color: var(--accent); }
+
+.brand-folder {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 10px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px;
+  margin-bottom: 8px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+}
+.brand-folder:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.brand-folder-body {
+  display: grid;
+  gap: 4px;
+  align-content: center;
+}
+.brand-folder-body strong {
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  font-size: 0.95rem;
+}
+.brand-folder-body span {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+.brand-folder-body em {
+  font-style: normal;
+  color: var(--accent);
+  font-size: 0.78rem;
+}
+
+.inv-brand-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.inv-brand-head .btn { min-height: 40px; padding: 8px 12px; font-size: 0.75rem; }
+
+.delete-help {
+  border: 1px solid color-mix(in srgb, #ff5a5a 45%, var(--line));
+  background: transparent;
+  color: #ff8a8a;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.delete-help:hover {
+  border-color: #ff5a5a;
+  color: #ff5a5a;
 }
 .folder-count {
   margin: 0 0 8px;

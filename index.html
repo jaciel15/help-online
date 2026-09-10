@@ -207,15 +207,16 @@
           </section>
 
           <section class="admin-card inventory-card">
-            <h2>Lista de ayudas (carpetas)</h2>
-            <p class="muted">Crece sola. Edita cualquier auto/moto. El cliente solo ve su link.</p>
-            <p class="muted tiny">Se guarda en este navegador (IndexedDB). Si cambias de link/túnel o borras datos del sitio, la lista puede vaciarse: vuelve a guardar o usa Exportar JSON.</p>
+            <h2>Carpetas por marca</h2>
+            <p class="muted">Nissan, Yamaha, Toyota… Cada marca es una carpeta. Entra para ver, editar o borrar sus ayudas.</p>
+            <p class="muted tiny">Al guardar ya <strong>no</strong> se descarga JSON automáticamente (evita el popup del teléfono). Usa Exportar JSON solo cuando quieras respaldo.</p>
             <p class="folder-count" id="folderCount">Carpetas: 0</p>
             <div class="inv-filters">
               <button type="button" class="inv-filter is-active" data-filter="all">Todas</button>
               <button type="button" class="inv-filter" data-filter="autos">Autos</button>
               <button type="button" class="inv-filter" data-filter="motos">Motos</button>
             </div>
+            <div id="invBreadcrumb" class="inv-breadcrumb" hidden></div>
             <div id="catalogTree" class="catalog-tree"></div>
             <p id="invEmpty" class="muted" hidden>Aún no hay ayudas.</p>
             <hr>
