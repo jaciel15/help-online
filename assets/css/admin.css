@@ -37,3 +37,22 @@
 @media (max-width: 900px) {
   .admin-grid, .form-row, .photo-grid { grid-template-columns: 1fr; }
 }
+
+/* aliases for current admin markup */
+.admin-top { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:18px; }
+.admin-top-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.photo-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.form-actions { display:flex; gap:10px; flex-wrap:wrap; }
+.form-msg { color:var(--accent); font-weight:700; }
+.catalog-tree { display:grid; gap:10px; max-height:520px; overflow:auto; }
+.tree-brand { border:1px solid var(--line); border-radius:12px; padding:10px 12px; background:var(--bg-elevated); }
+.tree-model { margin:8px 0 0 10px; padding-left:10px; border-left:2px solid var(--line); }
+.tree-version { margin-top:6px; font-size:0.88rem; color:var(--text-muted); }
+.tree-version a { color:var(--accent); }
+.muted { color:var(--text-muted); font-size:0.9rem; }
+.tiny { font-size:0.8rem; }
+.back-quiet { color:var(--accent); text-decoration:none; }
+.hint { color:var(--text-muted); font-size:0.88rem; }
+.preview.show, .preview[src] { display:block; }
+@media (max-width:900px){ .form-row,.photo-grid{grid-template-columns:1fr;} }
