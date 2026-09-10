@@ -120,7 +120,8 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 10px 12px;
   padding: 12px 18px;
   background: color-mix(in srgb, var(--bg-deep) 82%, transparent);
   backdrop-filter: blur(14px);
@@ -196,18 +197,24 @@ a {
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .theme-switch,
 .lang-switch {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   padding: 4px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--bg-elevated);
   flex-shrink: 0;
+}
+
+.lang-switch .theme-btn {
+  min-width: 40px;
+  padding: 8px 10px;
 }
 
 .theme-btn {
