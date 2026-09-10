@@ -36,6 +36,9 @@
     var app = $("adminApp");
     if (gate) gate.hidden = on;
     if (app) app.hidden = !on;
+    try {
+      document.body.classList.toggle("admin-unlocked", !!on);
+    } catch (e) {}
   }
 
   function isPlaceholderPhoto(path) {

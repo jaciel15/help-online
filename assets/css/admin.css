@@ -1,6 +1,9 @@
 .home-hub { position: relative; isolation: isolate; }
 .home-hub-bg { opacity: 0.25; }
 .home-hero--hub { min-height: min(62vh, 560px); }
+body.admin-unlocked .home-hero--hub {
+  min-height: min(42vh, 380px);
+}
 .btn-admin-jump {
   min-height: 44px !important;
   padding: 10px 14px !important;
@@ -408,7 +411,20 @@
 }
 
 @media (max-width: 640px) {
-  .home-hero--hub { min-height: calc(100svh - 130px); }
+  .home-hero--hub { min-height: min(52vh, 420px); }
+  body.admin-unlocked .home-hero--hub {
+    min-height: 180px;
+  }
+  body.admin-unlocked .home-hero--hub .home-hero-content {
+    padding: 20px 0 16px;
+  }
+  body.admin-unlocked .home-hero--hub .brand-mega {
+    font-size: clamp(1.6rem, 9vw, 2.2rem);
+  }
+  body.admin-unlocked .home-hero--hub .lead,
+  body.admin-unlocked .home-hero--hub .cta-row {
+    display: none;
+  }
   .btn-admin-jump {
     flex: 1 1 auto;
     min-width: 9rem;
