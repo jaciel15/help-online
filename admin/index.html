@@ -12,10 +12,15 @@
   </script>
 </head>
 <body class="admin-body">
+  <div class="admin-bg" aria-hidden="true">
+    <img src="../assets/img/velocimetro-2026.jpg" alt="">
+  </div>
+
   <div id="loginGate" class="admin-gate">
     <form id="loginForm" class="admin-card login-card">
+      <p class="admin-badge">SOLO ADMINISTRADOR</p>
       <h1>ADMIN HELP ONLINE</h1>
-      <p class="hint">Solo tú subes y editas ayudas. El cliente recibe un link específico (ej. MT-09 o Ford Fusion) y solo ve esa ficha, sin catálogo.</p>
+      <p class="hint">Solo tú subes y editas ayudas. Autos/motos nuevos se crean solos. El cliente recibe un link específico y solo ve esa ficha.</p>
       <label>Contraseña
         <input type="password" id="loginPass" autocomplete="current-password" required>
       </label>
@@ -28,8 +33,9 @@
   <div id="adminApp" class="admin-app" hidden>
     <header class="admin-top">
       <div>
-        <strong>Panel administrador</strong>
-        <span>Autos/Motos → marca → modelo → versión (+ fotos + EEPROM)</span>
+        <p class="admin-badge">PANEL ADMINISTRADOR</p>
+        <strong>Subida rápida de ayudas</strong>
+        <span>Autos/Motos → marca → modelo → versión · fotos en orden 1·2·3 · EEPROM editable</span>
       </div>
       <div class="admin-top-actions">
         <button type="button" id="btnExport" class="btn btn-ghost">Exportar JSON</button>
@@ -39,7 +45,8 @@
 
     <main class="admin-grid">
       <section class="admin-card">
-        <h2>Agregar / actualizar ficha</h2>
+        <h2 id="formTitle">Nueva ayuda / editar</h2>
+        <p class="muted tiny">Marca o modelo nuevos se crean en automático. Si el modelo ya existe, se agrega otra versión.</p>
         <form id="entryForm" class="admin-form">
           <div class="form-row">
             <label>Categoría
@@ -49,20 +56,22 @@
               </select>
             </label>
             <label>Marca
-              <input id="fBrand" required placeholder="Ford">
+              <input id="fBrand" required placeholder="Ford / Yamaha">
             </label>
           </div>
           <div class="form-row">
             <label>Modelo
-              <input id="fModel" required placeholder="Territory">
+              <input id="fModel" required placeholder="Fusion / MT-09">
             </label>
             <label>Versión
               <input id="fVersion" required value="Base" placeholder="Base / 2022 / Otra">
             </label>
           </div>
+
+          <h3 class="admin-sub">Datos técnicos (editables)</h3>
           <div class="form-row">
-            <label>EEPROM
-              <input id="fEeprom" placeholder="93C56">
+            <label>Memoria / EEPROM
+              <input id="fEeprom" placeholder="93C56 / 93C86 × 16">
             </label>
             <label>Programador
               <input id="fProgrammer" value="UPA USB" placeholder="UPA USB">
@@ -72,24 +81,46 @@
             <input id="fType" value="SERIAL EEPROM" placeholder="SERIAL EEPROM">
           </label>
           <label>Notas (una por línea)
-            <textarea id="fNotes" rows="4" placeholder="Nota 1"></textarea>
+            <textarea id="fNotes" rows="3" placeholder="Nota 1"></textarea>
           </label>
+
+          <h3 class="admin-sub">Fotos en orden (obligatorio para publicar rápido)</h3>
+          <p class="muted tiny">Al elegir FOTO 1 se abre sola la FOTO 2, luego la 3. O suelta las 3 juntas abajo.</p>
+
+          <label class="multi-drop">
+            <span>Soltar 3 fotos juntas (orden: dashboard → conexiones → pin-out)</span>
+            <input type="file" id="pMulti" accept="image/*" multiple>
+          </label>
+
           <div class="photo-grid">
-            <label>1 · Tablero
+            <label class="photo-slot" data-slot="1">
+              <span class="photo-num">FOTO 1</span>
+              <strong>Dashboard</strong>
+              <small>Tablero</small>
               <input type="file" id="pDashboard" accept="image/*">
               <img id="prevDashboard" class="preview" alt="">
+              <span class="photo-status" id="stDashboard">Pendiente</span>
             </label>
-            <label>2 · Conexión
+            <label class="photo-slot" data-slot="2">
+              <span class="photo-num">FOTO 2</span>
+              <strong>Conexiones</strong>
+              <small>Cableado / pin</small>
               <input type="file" id="pConnection" accept="image/*">
               <img id="prevConnection" class="preview" alt="">
+              <span class="photo-status" id="stConnection">Pendiente</span>
             </label>
-            <label>3 · Conexión encendido
+            <label class="photo-slot" data-slot="3">
+              <span class="photo-num">FOTO 3</span>
+              <strong>Pin-out encendido</strong>
+              <small>Encendido / EEPROM</small>
               <input type="file" id="pIgnition" accept="image/*">
               <img id="prevIgnition" class="preview" alt="">
+              <span class="photo-status" id="stIgnition">Pendiente</span>
             </label>
           </div>
+
           <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Guardar en catálogo</button>
+            <button type="submit" class="btn btn-primary" id="btnPublish">Publicar ayuda automáticamente</button>
             <button type="button" id="btnClear" class="btn btn-ghost">Limpiar</button>
           </div>
           <p id="formMsg" class="form-msg" hidden></p>
@@ -97,8 +128,8 @@
       </section>
 
       <section class="admin-card">
-        <h2>Catálogo</h2>
-        <p class="muted">Usa <strong>Copiar link cliente</strong> para enviar solo esa ficha (sin acceso a otras ayudas).</p>
+        <h2>Catálogo publicado</h2>
+        <p class="muted">Edita cualquier ficha o copia el <strong>link cliente</strong> (solo esa unidad).</p>
         <div id="catalogTree" class="catalog-tree"></div>
         <hr>
         <h3>Cambiar contraseña</h3>
@@ -108,7 +139,7 @@
           </label>
           <button type="submit" class="btn btn-ghost">Actualizar clave</button>
         </form>
-        <p class="muted tiny">Exporta JSON y reemplaza <code>data/catalog.json</code> en el hosting para respaldo.</p>
+        <p class="muted tiny">Al publicar se descarga el JSON de esa ayuda → súbelo a <code>data/help/...</code>. Exporta también <code>catalog.json</code> para respaldo.</p>
       </section>
     </main>
   </div>

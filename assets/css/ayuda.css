@@ -1,5 +1,19 @@
 .help-locked {
   min-height: 100vh;
+  position: relative;
+  isolation: isolate;
+}
+
+.help-locked::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--bg-deep) 90%, transparent), color-mix(in srgb, var(--bg) 70%, transparent)),
+    url("../img/velocimetro-2026.jpg") right 20% center / cover no-repeat;
+  opacity: 0.35;
+  filter: saturate(1.1) brightness(0.55);
 }
 
 .help-top {

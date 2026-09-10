@@ -367,10 +367,21 @@ a {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 35%;
-  filter: saturate(1.05) contrast(1.05);
-  transform: scale(1.04);
-  animation: kenburns 18s ease-in-out infinite alternate;
+  object-position: 72% 45%;
+  filter: saturate(1.12) contrast(1.08) brightness(0.92);
+  transform: scale(1.08);
+  animation: kenburns 22s ease-in-out infinite alternate;
+}
+
+.home-hero-media.hero-gauge-photo::after {
+  background:
+    linear-gradient(105deg,
+      color-mix(in srgb, var(--bg-deep) 94%, transparent) 0%,
+      color-mix(in srgb, var(--bg-deep) 72%, transparent) 38%,
+      color-mix(in srgb, #1a0508 35%, transparent) 62%,
+      color-mix(in srgb, var(--bg-deep) 55%, transparent) 100%),
+    linear-gradient(180deg, transparent 28%, var(--bg-deep) 100%),
+    radial-gradient(ellipse at 78% 42%, color-mix(in srgb, #ff2a2a 22%, transparent), transparent 42%);
 }
 
 .home-hero-media::after {

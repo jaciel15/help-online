@@ -23,12 +23,13 @@ También sirve el link de carpeta fija, p. ej. `/motos/yamaha/mt09/` (ya bloquea
 
 ## Admin
 
-1. Entra a `/admin/`.
-2. Sube Autos/Motos → marca → modelo → versión + 3 fotos + EEPROM.
-3. Si el modelo ya existe, se agrega **otra versión** sola.
-4. Copia el **link cliente** (botón en el catálogo del admin) y envíaselo al usuario.
-5. Al guardar, se descarga el JSON de esa ayuda → súbelo a `data/help/{autos|motos}/{marca}/{modelo}/{version}.json`.
-6. Exporta `catalog.json` completo solo para tu respaldo interno (no se carga en la vista cliente).
+1. Entra a `/admin/` (solo administrador).
+2. Completa Autos/Motos → marca → modelo → versión.
+3. Edita EEPROM / programador / tipo / notas.
+4. Sube fotos en orden: **FOTO 1 dashboard** → **FOTO 2 conexiones** → **FOTO 3 pin-out encendido** (al elegir la 1 se abre sola la 2, luego la 3; o suelta las 3 juntas).
+5. Pulsa **Publicar ayuda automáticamente**.
+6. Copia el **link cliente** y/o edita fichas desde el catálogo.
+7. Sube el JSON descargado a `data/help/{cat}/{marca}/{modelo}/{version}.json`.
 
 ## Notas
 
