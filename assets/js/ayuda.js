@@ -93,10 +93,17 @@
           s.src +
           '" alt="' +
           escapeHtml(s.alt) +
-          '" data-lightbox></div>'
+          '" data-lightbox loading="eager"></div>'
         );
       })
       .join("");
+
+    if (!slidesHtml) {
+      slidesHtml =
+        '<div class="slide"><p class="lead" style="padding:24px;text-align:center">' +
+        escapeHtml(tt("ayuda.missing", "Sin fotos aún. Pide a soporte que vuelva a guardar la ayuda.")) +
+        "</p></div>";
+    }
 
     root.innerHTML =
       '<header class="detail-header">' +
@@ -176,6 +183,16 @@
 
     document.title = "HELP · " + brandName + " " + modelName;
 
+    Array.prototype.forEach.call(root.querySelectorAll(".slide img"), function (img) {
+      img.addEventListener("error", function () {
+        var slide = img.closest(".slide");
+        if (slide && slide.parentNode) {
+          slide.innerHTML =
+            '<p class="lead" style="padding:20px;text-align:center;opacity:.8">Foto no disponible</p>';
+        }
+      });
+    });
+
     if (window.VCDMX && typeof window.VCDMX.initDynamic === "function") {
       window.VCDMX.initDynamic();
       if (typeof window.VCDMX.applyLang === "function") {
@@ -186,8 +203,11 @@
     }
   })
   .catch(function () {
-    status.innerHTML =
-      tt("ayuda.missing", "Ayuda no encontrada para este enlace.") +
-      "<br><small>Pide a soporte que vuelva a <strong>Guardar en catálogo</strong> y te reenvíe el link.</small>";
+    var statusEl = document.getElementById("fichaStatus") || root;
+    if (statusEl) {
+      statusEl.innerHTML =
+        tt("ayuda.missing", "Ayuda no encontrada para este enlace.") +
+        "<br><small>Pide a soporte que vuelva a <strong>Guardar en catálogo</strong> y te reenvíe el link.</small>";
+    }
   });
 })();

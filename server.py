@@ -163,7 +163,19 @@ def extract_photos(unit: dict) -> tuple[dict, list[str]]:
                     rel = rel[3:]
                 disk = ROOT / rel
                 if disk.is_file() and disk.stat().st_size >= 32:
-                    photos_out[key] = rel if rel.startswith("data/help/") else val
+                    # Normaliza a data/help/... para que el link del cliente siempre resuelva
+                    if rel.startswith("data/help/"):
+                        photos_out[key] = rel
+                    else:
+                        ext = disk.suffix.lstrip(".").lower() or "jpg"
+                        if ext not in ("jpg", "jpeg", "png", "webp", "gif"):
+                            ext = "jpg"
+                        fname = photo_filename(vid, key, ext)
+                        try:
+                            shutil.copy2(disk, out_dir / fname)
+                            photos_out[key] = f"data/help/{c}/{b}/{m}/{fname}"
+                        except OSError:
+                            photos_out[key] = rel
                 else:
                     existing = find_existing_photo(out_dir, vid, key)
                     photos_out[key] = f"data/help/{c}/{b}/{m}/{existing}" if existing else ""

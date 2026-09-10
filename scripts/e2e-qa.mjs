@@ -198,13 +198,32 @@ async function main() {
   if (ready < 4) throw new Error("photos not ready: " + ready);
   ok("4 photos loaded into form", "ready=" + ready);
 
-  // Intercept navigation after save
-  const [nav] = await Promise.all([
-    page.waitForURL(/ayuda\/\?c=autos&b=pruebaqa&m=modelo-e2e/, { timeout: 25000 }),
+  await page.locator("#linkShareClose").click({ timeout: 3000 }).catch(function () {});
+  await page.waitForFunction(() => {
+    const p = document.getElementById("linkSharePanel");
+    return p && p.hidden;
+  }, { timeout: 5000 }).catch(function () {});
+
+  await Promise.all([
+    page.waitForFunction(() => {
+      const input = document.getElementById("linkShareInput");
+      const panel = document.getElementById("linkSharePanel");
+      return (
+        panel &&
+        !panel.hidden &&
+        input &&
+        /pruebaqa/i.test(input.value || "")
+      );
+    }, { timeout: 25000 }),
     page.click("#btnPublish"),
   ]);
-  ok("publish redirects to client help", page.url());
+  const clientLink = await page.inputValue("#linkShareInput");
+  if (!/ayuda\/\?c=autos&b=pruebaqa&m=modelo-e2e/.test(clientLink)) {
+    throw new Error("bad client link after save: " + clientLink);
+  }
+  ok("publish shows client link panel", clientLink);
 
+  await page.goto(clientLink, { waitUntil: "networkidle" });
   await page.waitForSelector("#fichaRoot h1");
   const title = await page.locator("#fichaRoot h1").textContent();
   if (!/PRUEBAQA/i.test(title || "")) throw new Error("bad client title " + title);

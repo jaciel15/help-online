@@ -94,13 +94,23 @@
       if (i >= names.length) return Promise.resolve("");
       var rel = "data/help/" + c + "/" + b + "/" + m + "/" + names[i];
       var url = dir + encodeURIComponent(names[i]);
-      return fetch(url, { method: "GET", cache: "no-store" })
+      return fetch(url, { method: "HEAD", cache: "no-store" })
         .then(function (r) {
-          if (!r.ok) return tryAt(i + 1);
-          return r.blob().then(function (blob) {
-            if (!blob || blob.size < 32) return tryAt(i + 1);
+          if (r.ok) {
+            var len = parseInt(r.headers.get("content-length") || "0", 10);
+            if (len && len < 32) return tryAt(i + 1);
             return rel;
-          });
+          }
+          // Algunos hosts no permiten HEAD → intenta GET corto
+          return fetch(url, { method: "GET", cache: "no-store", headers: { Range: "bytes=0-64" } }).then(
+            function (r2) {
+              if (!r2.ok) return tryAt(i + 1);
+              return r2.blob().then(function (blob) {
+                if (!blob || blob.size < 16) return tryAt(i + 1);
+                return rel;
+              });
+            }
+          );
         })
         .catch(function () {
           return tryAt(i + 1);
@@ -418,13 +428,18 @@
     var panel = $("linkSharePanel");
     var input = $("linkShareInput");
     var hint = $("linkShareHint");
+    var openBtn = $("linkShareOpen");
     if (!panel || !input) return;
     panel.hidden = false;
     input.value = url || "";
+    if (openBtn) {
+      openBtn.href = url || "#";
+      openBtn.style.display = url ? "" : "none";
+    }
     if (hint) {
       hint.textContent =
         note ||
-        "Si el teléfono no pegó solo, toca el cuadro, selecciona todo y copia. O usa Compartir.";
+        "Toca Copiar link o selecciona el texto del cuadro. Luego pégalo en WhatsApp.";
     }
     try {
       input.focus();
@@ -919,10 +934,13 @@
         btn.disabled = true;
         btn.textContent = "Guardando…";
       }
+      hideLinkSharePanel();
 
       var brandId = C.ensureBrand(catalog, category, brandName);
       var modelId = C.ensureModel(catalog, category, brandId, modelName);
-      var versionId = C.slugify(versionName);
+      // Al editar, conservar el id de versión (si no, al renombrar se crea otra y “faltan fotos”)
+      var versionId =
+        editing && editing.versionId ? editing.versionId : C.slugify(versionName);
       var existing = C.getVersion(catalog, category, brandId, modelId, versionId);
       var prev = (existing && existing.photos) || {};
 
@@ -952,9 +970,18 @@
           var compressJobs = PHOTO_KEYS.map(function (k) {
             var val = photos[k];
             if (val && String(val).indexOf("data:") === 0) {
-              return C.compressDataUrl(val).then(function (out) {
-                photos[k] = out;
-              });
+              return C.compressDataUrl(val)
+                .then(function (out) {
+                  photos[k] = out;
+                })
+                .catch(function (err) {
+                  throw new Error(
+                    "Foto " +
+                      k +
+                      ": " +
+                      ((err && err.message) || "no se pudo comprimir")
+                  );
+                });
             }
             return Promise.resolve();
           });
@@ -1056,25 +1083,29 @@
               folder +
               "</code><br>" +
               (pub.ok
-                ? "Link listo para el cliente."
-                : "El link NO funcionará en otro teléfono hasta que Guardar publique bien en el servidor. Revisa el mensaje e intenta otra vez.") +
+                ? "Link listo abajo: cópialo y envíaselo al cliente."
+                : "El link NO funcionará en otro teléfono hasta que Guardar publique bien en el servidor.") +
               "<br><code style='word-break:break-all'>" +
               abs +
               "</code>";
           }
 
-          if (pub.ok) {
-            if (msg) msg.innerHTML += "<br>Abriendo ayuda…";
-            setTimeout(function () {
-              location.assign(href);
-            }, 700);
-          } else {
-            showLinkSharePanel(
-              abs,
-              "Publicación incompleta. No envíes este link aún. Vuelve a pulsar Guardar en catálogo."
-            );
+          // Siempre mostrar el panel del link (antes se redirigía y el link “desaparecía”)
+          showLinkSharePanel(
+            abs,
+            pub.ok
+              ? "✓ Guardado. Copia este link o ábrelo para ver la ayuda del cliente."
+              : "Publicación incompleta. No envíes este link aún. Vuelve a Guardar con el servidor encendido."
+          );
+          copyTextNow(abs).then(function (ok) {
+            if (ok) {
+              showLinkSharePanel(abs, "✓ Guardado y link copiado. Pégalo en WhatsApp o ábrelo abajo.");
+            }
+          });
+
+          if (!pub.ok) {
             alert(
-              "Se guardó en este navegador, pero NO en el servidor público. Vuelve a Guardar. Si falla otra vez, avisa (puede ser espacio o conexión)."
+              "Se guardó en este navegador, pero NO en el servidor público. Vuelve a Guardar con el link del servidor (no solo GitHub Pages)."
             );
           }
         })
@@ -1083,7 +1114,7 @@
           var text = (err && err.message) || String(err);
           if (/quota|QuotaExceeded/i.test(text)) {
             text =
-              "Espacio del navegador lleno. Ya usamos IndexedDB + fotos comprimidas. Recarga la página, vuelve a entrar y guarda de nuevo. Si sigue, en el navegador borra datos del sitio o exporta y limpia ayudas viejas.";
+              "Espacio del navegador lleno. Recarga, vuelve a entrar y guarda de nuevo.";
             try {
               C.clearBloatedLocalStorage();
             } catch (e) {}
@@ -1092,12 +1123,19 @@
             msg.hidden = false;
             msg.textContent = "Error al guardar: " + text;
           }
-          alert(text);
+          try {
+            alert(text);
+          } catch (e) {}
         })
         .then(function () {
           if (btn) {
             btn.disabled = false;
             btn.textContent = "Guardar en catálogo";
+            try {
+              if (window.VCDMX && typeof window.VCDMX.applyLang === "function") {
+                window.VCDMX.applyLang(window.VCDMX.getPreferredLang());
+              }
+            } catch (e) {}
           }
         });
     } catch (err) {
@@ -1110,7 +1148,7 @@
         msg.hidden = false;
         msg.textContent = "Error al guardar: " + (err && err.message ? err.message : String(err));
       }
-      alert("No se pudo guardar. Revisa marca, modelo y vuelve a intentar.");
+      alert("No se pudo guardar. Revisa marca, modelo y fotos, y vuelve a intentar.");
     }
   }
 

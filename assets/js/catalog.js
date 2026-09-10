@@ -560,18 +560,53 @@
 
   /** Publica la ficha en el servidor (data/help/...) para que el link funcione a cualquiera. */
   function publishToServer(unit) {
+    var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timer = null;
+    if (ctrl) {
+      timer = setTimeout(function () {
+        try {
+          ctrl.abort();
+        } catch (e) {}
+      }, 60000);
+    }
     return fetch(apiBase() + "api/publish", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(unit)
-    }).then(function (r) {
-      return r.json().then(function (body) {
-        if (!r.ok || !body.ok) {
-          throw new Error((body && body.error) || "No se pudo publicar en el servidor");
+      body: JSON.stringify(unit),
+      signal: ctrl ? ctrl.signal : undefined
+    })
+      .then(function (r) {
+        return r.text().then(function (raw) {
+          var body = null;
+          try {
+            body = raw ? JSON.parse(raw) : null;
+          } catch (e) {
+            body = null;
+          }
+          if (!r.ok || !body || !body.ok) {
+            throw new Error(
+              (body && body.error) ||
+                (r.status === 404
+                  ? "API no disponible (¿servidor apagado?). Abre con el link del servidor, no solo GitHub Pages."
+                  : "No se pudo publicar en el servidor (" + r.status + ")")
+            );
+          }
+          return body;
+        });
+      })
+      .catch(function (err) {
+        if (err && err.name === "AbortError") {
+          throw new Error("Tiempo agotado al guardar. Revisa la conexión y vuelve a intentar.");
         }
+        throw err;
+      })
+      .then(function (body) {
+        if (timer) clearTimeout(timer);
         return body;
+      }, function (err) {
+        if (timer) clearTimeout(timer);
+        throw err;
       });
-    });
   }
 
   function deleteFromServer(c, b, m, v) {
