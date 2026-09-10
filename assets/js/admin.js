@@ -261,16 +261,56 @@
     box.querySelectorAll(".copy-help").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var url = btn.getAttribute("data-help-url");
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(url).then(function () {
-            btn.textContent = "¡Copiado!";
-            setTimeout(function () {
-              btn.textContent = "Copiar link";
-            }, 1200);
-          });
-        } else {
-          prompt("Link cliente:", url);
+        var c = btn.getAttribute("data-c");
+        var b = btn.getAttribute("data-b");
+        var m = btn.getAttribute("data-m");
+        var v = btn.getAttribute("data-v");
+        var original = btn.textContent;
+
+        function done(ok) {
+          btn.textContent = ok ? "¡Copiado!" : "Error";
+          setTimeout(function () {
+            btn.textContent = original;
+          }, 1400);
         }
+
+        // Verifica que el archivo público exista (para que el cliente sí abra la ayuda)
+        var checkUrl =
+          (CFG.root || "") +
+          "data/help/" +
+          encodeURIComponent(c) +
+          "/" +
+          encodeURIComponent(b) +
+          "/" +
+          encodeURIComponent(m) +
+          "/" +
+          encodeURIComponent(v || "base") +
+          ".json";
+
+        fetch(checkUrl, { cache: "no-store" })
+          .then(function (r) {
+            if (!r.ok) throw new Error("missing");
+            return true;
+          })
+          .catch(function () {
+            return false;
+          })
+          .then(function (publicOk) {
+            if (!publicOk) {
+              alert(
+                "Esta ayuda aún no está publicada en el servidor, por eso el link falla en otro teléfono. Vuelve a pulsar Guardar en catálogo y luego Copiar link."
+              );
+              done(false);
+              return;
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              return navigator.clipboard.writeText(url).then(function () {
+                done(true);
+              });
+            }
+            prompt("Link cliente (cópialo):", url);
+            done(true);
+          });
       });
     });
 
@@ -294,8 +334,15 @@
         var label = btn.getAttribute("data-label") || "esta ayuda";
         if (!confirm("¿Borrar " + label + "? Esta acción no se puede deshacer.")) return;
         C.deleteVersion(catalog, c, b, m, v);
-        C.deleteHelpUnit(c, b, m, v)
-          .catch(function () {})
+        Promise.resolve()
+          .then(function () {
+            return C.deleteFromServer(c, b, m, v).catch(function () {
+              return null;
+            });
+          })
+          .then(function () {
+            return C.deleteHelpUnit(c, b, m, v).catch(function () {});
+          })
           .then(function () {
             return C.saveCatalog(catalog);
           })
@@ -407,6 +454,14 @@
           "' target='_blank' rel='noopener'>Ver ayuda cliente</a>" +
           "<button type='button' class='copy-help' data-help-url='" +
           absHelp.replace(/'/g, "&#39;") +
+          "' data-c='" +
+          cat +
+          "' data-b='" +
+          brandId +
+          "' data-m='" +
+          mid +
+          "' data-v='" +
+          v.id +
           "'>Copiar link</button>" +
           "<button type='button' class='delete-help' data-c='" +
           cat +
@@ -595,17 +650,26 @@
           return C.saveCatalog(catalog).then(function () {
             var helpUnit = C.buildHelpUnit(catalog, category, brandId, modelId, versionId);
             return C.saveHelpUnit(helpUnit).then(function () {
-              // Confirmar que quedó en IndexedDB antes de redirigir
-              return C.loadHelpUnit(category, brandId, modelId, versionId).then(function (verify) {
-                if (!verify || !verify.version) {
-                  throw new Error("No se pudo confirmar el guardado en el navegador. Intenta de nuevo.");
-                }
-                return helpUnit;
-              });
+              return C.publishToServer(helpUnit)
+                .catch(function (err) {
+                  // Si no hay API (hosting estático puro), sigue con IndexedDB local
+                  console.warn("publish API", err);
+                  return { ok: false, offline: true, error: err && err.message };
+                })
+                .then(function (pub) {
+                  return C.loadHelpUnit(category, brandId, modelId, versionId).then(function (verify) {
+                    if (!verify || !verify.version) {
+                      throw new Error("No se pudo confirmar el guardado. Intenta de nuevo.");
+                    }
+                    return { helpUnit: helpUnit, pub: pub || { ok: false } };
+                  });
+                });
             });
           });
         })
-        .then(function () {
+        .then(function (result) {
+          var helpUnit = result.helpUnit;
+          var pub = result.pub || {};
           var folder = folderPath(category, brandId, modelId);
           brandView = {
             cat: category,
@@ -625,11 +689,15 @@
               brandName.toUpperCase() +
               " " +
               modelName.toUpperCase() +
-              "</strong> en carpeta <code>" +
+              "</strong> · carpeta <code>" +
               folder +
-              "</code><br>Abriendo ayuda cliente…<br><code style='word-break:break-all'>" +
+              "</code><br>" +
+              (pub.ok
+                ? "Link público listo para enviar al cliente."
+                : "Guardado en este navegador. Para que el link funcione en otro teléfono, el servidor de publicación debe estar activo.") +
+              "<br><code style='word-break:break-all'>" +
               abs +
-              "</code>";
+              "</code><br>Abriendo ayuda…";
           }
 
           setTimeout(function () {

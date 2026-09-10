@@ -1,0 +1,24 @@
+{
+  "c": "autos",
+  "b": "nissan",
+  "m": "altima",
+  "v": "base",
+  "brandName": "NISSAN",
+  "modelName": "ALTIMA",
+  "version": {
+    "id": "base",
+    "name": "Base",
+    "eeprom": "93C56",
+    "programmer": "UPA USB",
+    "type": "SERIAL EEPROM",
+    "notes": [
+      "demo publica"
+    ],
+    "photos": {
+      "main": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
+      "dashboard": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
+      "connection": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
+      "ignition": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+    }
+  }
+}

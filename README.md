@@ -34,9 +34,15 @@ El cliente solo ve su link, p. ej. `/ayuda/?c=motos&b=kawasaki&m=zr&v=base` — 
 
 ### Almacenamiento (muchas ayudas)
 - Las fotos se **comprimen** (JPEG ~1280px) al subir.
-- Catálogo y fichas van a **IndexedDB** (no a localStorage de 5 MB).
-- Así puedes crecer con muchas ayudas en el mismo teléfono/PC.
-- Para publicar en internet: exporta JSON / sube `data/help/...` al hosting.
+- Catálogo local en **IndexedDB**.
+- Al **Guardar**, se publica en `data/help/...` por API (`python3 server.py`) para que el **link copiado funcione en cualquier teléfono**.
+- Carpetas por marca: Nissan / Yamaha / Toyota… con editar y borrar.
+
+### Servidor local / túnel
+```bash
+python3 server.py
+# luego abre / o el túnel Cloudflare
+```
 
 `/admin/` redirige a la página inicial.
 

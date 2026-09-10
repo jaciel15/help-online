@@ -453,6 +453,58 @@
     });
   }
 
+  function apiBase() {
+    var scripts = document.getElementsByTagName("script");
+    for (var i = 0; i < scripts.length; i++) {
+      var src = scripts[i].src || "";
+      if (src.indexOf("catalog.js") !== -1) {
+        return src.replace(/assets\/js\/catalog\.js.*/, "");
+      }
+    }
+    return "/";
+  }
+
+  /** Publica la ficha en el servidor (data/help/...) para que el link funcione a cualquiera. */
+  function publishToServer(unit) {
+    return fetch(apiBase() + "api/publish", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(unit)
+    }).then(function (r) {
+      return r.json().then(function (body) {
+        if (!r.ok || !body.ok) {
+          throw new Error((body && body.error) || "No se pudo publicar en el servidor");
+        }
+        return body;
+      });
+    });
+  }
+
+  function deleteFromServer(c, b, m, v) {
+    return fetch(apiBase() + "api/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ c: c, b: b, m: m, v: v || "base" })
+    }).then(function (r) {
+      return r.json().then(function (body) {
+        if (!r.ok || !body.ok) {
+          throw new Error((body && body.error) || "No se pudo borrar en el servidor");
+        }
+        return body;
+      });
+    });
+  }
+
+  function pingApi() {
+    return fetch(apiBase() + "api/health", { cache: "no-store" })
+      .then(function (r) {
+        return r.ok;
+      })
+      .catch(function () {
+        return false;
+      });
+  }
+
   function getVersion(catalog, category, brandId, modelId, versionId) {
     try {
       var versions = catalog.categories[category].brands[brandId].models[modelId].versions || [];
@@ -613,6 +665,9 @@
     upsertVersion: upsertVersion,
     deleteVersion: deleteVersion,
     deleteHelpUnit: deleteHelpUnit,
+    publishToServer: publishToServer,
+    deleteFromServer: deleteFromServer,
+    pingApi: pingApi,
     getVersion: getVersion,
     listBrands: listBrands,
     listModels: listModels,

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-10T00:00:00.000Z",
+  "updatedAt": "2026-09-10T08:08:28.644907+00:00",
   "categories": {
     "autos": {
       "label": "AUTOS",
@@ -7,6 +7,56 @@
         "chevrolet": {
           "name": "CHEVROLET",
           "models": {}
+        },
+        "nissan": {
+          "name": "NISSAN",
+          "models": {
+            "altima": {
+              "name": "ALTIMA",
+              "versions": [
+                {
+                  "id": "base",
+                  "name": "Base",
+                  "eeprom": "93C56",
+                  "programmer": "UPA USB",
+                  "type": "SERIAL EEPROM",
+                  "notes": [
+                    "demo publica"
+                  ],
+                  "photos": {
+                    "main": "[published]",
+                    "dashboard": "[published]",
+                    "connection": "[published]",
+                    "ignition": "[published]"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "ford": {
+          "name": "FORD",
+          "models": {
+            "focus": {
+              "name": "FOCUS",
+              "versions": [
+                {
+                  "id": "base",
+                  "name": "Base",
+                  "eeprom": "93C66",
+                  "programmer": "UPA USB",
+                  "type": "SERIAL EEPROM",
+                  "notes": [],
+                  "photos": {
+                    "main": "[published]",
+                    "dashboard": "[published]",
+                    "connection": "[published]",
+                    "ignition": "[published]"
+                  }
+                }
+              ]
+            }
+          }
         }
       }
     },

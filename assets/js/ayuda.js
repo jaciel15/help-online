@@ -44,7 +44,8 @@
 
   C.loadHelpUnit(p.c, p.b, p.m, p.v).then(function (unit) {
     if (!unit || !unit.version) {
-      status.textContent = "Ayuda no encontrada para este enlace.";
+      status.innerHTML =
+        "Ayuda no encontrada para este enlace.<br><small>Pide a soporte que vuelva a <strong>Guardar en catálogo</strong> (así se publica el archivo) y te reenvíe el link.</small>";
       return;
     }
 
