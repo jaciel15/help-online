@@ -7,8 +7,15 @@
   <title>MOTOS | VELOCÍMETROS CDMX</title>
   <link rel="icon" href="../assets/img/logo-velocimetros-digitales-cdmx.jpg">
   <link rel="stylesheet" href="../assets/css/site.css">
-  <script>
-    (function(){try{var t=localStorage.getItem('vcdmx-theme');if(t==='warm'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+    <script>
+    (function(){
+      try{
+        var t=localStorage.getItem('vcdmx-theme');
+        if(t==='warm'||t==='dark')document.documentElement.setAttribute('data-theme',t);
+        var l=localStorage.getItem('vcdmx-lang');
+        if(l==='es'||l==='en'){document.documentElement.setAttribute('lang',l);document.documentElement.setAttribute('data-lang',l);}
+      }catch(e){}
+    })();
   </script>
 </head>
 <body>
@@ -19,35 +26,41 @@
       </span>
       <span class="brand-text">
         <span class="brand-name">VELOCÍMETROS CDMX</span>
-        <span class="brand-tag">Sistema Velocímetros Digitales CDMX</span>
+        <span class="brand-tag" data-i18n="brand.tag">Sistema Velocímetros Digitales CDMX</span>
       </span>
     </a>
-    <div class="theme-switch" role="group" aria-label="Tema visual">
-      <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true">Oscuro</button>
-      <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false">Cálido</button>
+        <div class="topbar-controls">
+      <div class="theme-switch" role="group" data-i18n-aria="theme.label" aria-label="Tema visual">
+        <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true" data-i18n="theme.dark">Oscuro</button>
+        <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false" data-i18n="theme.warm">Cálido</button>
+      </div>
+      <div class="lang-switch" role="group" data-i18n-aria="lang.label" aria-label="Idioma">
+        <button type="button" class="theme-btn" data-lang-set="es" aria-pressed="true">ES</button>
+        <button type="button" class="theme-btn" data-lang-set="en" aria-pressed="false">EN</button>
+      </div>
     </div>
   </header>
 
-  <nav class="breadcrumbs" aria-label="Migas de pan">
-    <a href="../">Inicio</a>
+  <nav class="breadcrumbs" data-i18n-aria="nav.crumbs" aria-label="Migas de pan">
+    <a href="../" data-i18n="nav.home">Inicio</a>
     <span class="sep">/</span>
-    <span class="current">Motos</span>
+    <span class="current" data-i18n="nav.bikes">Motos</span>
   </nav>
   <div class="back-row">
-    <a class="back-link" href="../">← Regresar al inicio</a>
+    <a class="back-link" href="../" data-i18n="back.home">← Regresar al inicio</a>
   </div>
 
   <main class="page">
     <header class="page-hero">
-      <span class="eyebrow">Categoría</span>
+      <span class="eyebrow" data-i18n="bikes.eyebrow">Categoría</span>
       <h1>MOTOS</h1>
-      <p>Marcas de motocicletas con fichas de EEPROM, tablero y conexión.</p>
+      <p data-i18n="bikes.lead">Marcas de motocicletas con fichas de EEPROM, tablero y conexión.</p>
     </header>
 
     <div class="toolbar">
       <label class="search-wrap">
         <span class="icon" aria-hidden="true">⌕</span>
-        <input type="search" data-filter-input placeholder="Buscar marca…" autocomplete="off">
+        <input type="search" data-filter-input placeholder="Buscar marca…" data-i18n-placeholder="bikes.search" autocomplete="off">
       </label>
       <span class="count-chip" data-filter-count></span>
     </div>
@@ -55,51 +68,51 @@
     <div class="menu-grid" data-filter-grid>
       <a class="menu-card" href="yamaha/" data-filter-item="yamaha">
         <span class="label">YAMAHA</span>
-        <span class="meta">MT-09 disponible</span>
+        <span class="meta" data-i18n="bikes.available">MT-09 disponible</span>
       </a>
       <a class="menu-card is-disabled" href="#" data-filter-item="honda" aria-disabled="true">
         <span class="label">HONDA</span>
-        <span class="meta">Próximamente</span>
+        <span class="meta" data-i18n="soon">Próximamente</span>
       </a>
       <a class="menu-card is-disabled" href="#" data-filter-item="suzuki" aria-disabled="true">
         <span class="label">SUZUKI</span>
-        <span class="meta">Próximamente</span>
+        <span class="meta" data-i18n="soon">Próximamente</span>
       </a>
       <a class="menu-card is-disabled" href="#" data-filter-item="kawasaki" aria-disabled="true">
         <span class="label">KAWASAKI</span>
-        <span class="meta">Próximamente</span>
+        <span class="meta" data-i18n="soon">Próximamente</span>
       </a>
       <a class="menu-card is-disabled" href="#" data-filter-item="ktm" aria-disabled="true">
         <span class="label">KTM</span>
-        <span class="meta">Próximamente</span>
+        <span class="meta" data-i18n="soon">Próximamente</span>
       </a>
       <a class="menu-card is-disabled" href="#" data-filter-item="ducati" aria-disabled="true">
         <span class="label">DUCATI</span>
-        <span class="meta">Próximamente</span>
+        <span class="meta" data-i18n="soon">Próximamente</span>
       </a>
       <a class="menu-card is-disabled" href="#" data-filter-item="bmw" aria-disabled="true">
         <span class="label">BMW</span>
-        <span class="meta">Próximamente</span>
+        <span class="meta" data-i18n="soon">Próximamente</span>
       </a>
       <a class="menu-card is-disabled" href="#" data-filter-item="italika" aria-disabled="true">
         <span class="label">ITALIKA</span>
-        <span class="meta">Próximamente</span>
+        <span class="meta" data-i18n="soon">Próximamente</span>
       </a>
       <a class="menu-card is-disabled" href="#" data-filter-item="harley davidson" aria-disabled="true">
         <span class="label">HARLEY DAVIDSON</span>
-        <span class="meta">Próximamente</span>
+        <span class="meta" data-i18n="soon">Próximamente</span>
       </a>
     </div>
-    <div class="empty-state" data-filter-empty>No hay marcas con ese nombre.</div>
+    <div class="empty-state" data-filter-empty data-i18n="bikes.empty">No hay marcas con ese nombre.</div>
   </main>
 
   <footer class="site-footer">
     <div class="maker-credit">
       <img class="maker-logo" src="../assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="Velocímetros Digitales CDMX">
       <div class="maker-copy">
-        <p class="maker-eyebrow">Sistema desarrollado por</p>
+        <p class="maker-eyebrow" data-i18n="footer.developedBy">Sistema desarrollado por</p>
         <p class="maker-name">VELOCÍMETROS DIGITALES CDMX</p>
-        <p class="maker-note">HELP ONLINE © VELOCÍMETROS CDMX — Uso técnico responsable</p>
+        <p class="maker-note" data-i18n="footer.note">HELP ONLINE © VELOCÍMETROS CDMX — Uso técnico responsable</p>
       </div>
     </div>
   </footer>

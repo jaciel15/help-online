@@ -7,8 +7,15 @@
   <title>YAMAHA MT-09 | VELOCÍMETROS CDMX</title>
   <link rel="icon" href="../../../assets/img/logo-velocimetros-digitales-cdmx.jpg">
   <link rel="stylesheet" href="../../../assets/css/site.css">
-  <script>
-    (function(){try{var t=localStorage.getItem('vcdmx-theme');if(t==='warm'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+    <script>
+    (function(){
+      try{
+        var t=localStorage.getItem('vcdmx-theme');
+        if(t==='warm'||t==='dark')document.documentElement.setAttribute('data-theme',t);
+        var l=localStorage.getItem('vcdmx-lang');
+        if(l==='es'||l==='en'){document.documentElement.setAttribute('lang',l);document.documentElement.setAttribute('data-lang',l);}
+      }catch(e){}
+    })();
   </script>
 </head>
 <body>
@@ -19,26 +26,32 @@
       </span>
       <span class="brand-text">
         <span class="brand-name">VELOCÍMETROS CDMX</span>
-        <span class="brand-tag">Sistema Velocímetros Digitales CDMX</span>
+        <span class="brand-tag" data-i18n="brand.tag">Sistema Velocímetros Digitales CDMX</span>
       </span>
     </a>
-    <div class="theme-switch" role="group" aria-label="Tema visual">
-      <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true">Oscuro</button>
-      <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false">Cálido</button>
+        <div class="topbar-controls">
+      <div class="theme-switch" role="group" data-i18n-aria="theme.label" aria-label="Tema visual">
+        <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true" data-i18n="theme.dark">Oscuro</button>
+        <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false" data-i18n="theme.warm">Cálido</button>
+      </div>
+      <div class="lang-switch" role="group" data-i18n-aria="lang.label" aria-label="Idioma">
+        <button type="button" class="theme-btn" data-lang-set="es" aria-pressed="true">ES</button>
+        <button type="button" class="theme-btn" data-lang-set="en" aria-pressed="false">EN</button>
+      </div>
     </div>
   </header>
 
-  <nav class="breadcrumbs" aria-label="Migas de pan">
-    <a href="../../../">Inicio</a>
+  <nav class="breadcrumbs" data-i18n-aria="nav.crumbs" aria-label="Migas de pan">
+    <a href="../../../" data-i18n="nav.home">Inicio</a>
     <span class="sep">/</span>
-    <a href="../../">Motos</a>
+    <a href="../../" data-i18n="nav.bikes">Motos</a>
     <span class="sep">/</span>
     <a href="../">Yamaha</a>
     <span class="sep">/</span>
     <span class="current">MT-09</span>
   </nav>
   <div class="back-row">
-    <a class="back-link" href="../">← Regresar a Yamaha</a>
+    <a class="back-link" href="../" data-i18n="back.yamaha">← Regresar a Yamaha</a>
   </div>
 
   <div class="detail-shell">
@@ -58,26 +71,26 @@
           <p class="value">93C86 × 16</p>
         </article>
         <article class="tech-card">
-          <h2>PROGRAMADOR</h2>
+          <h2 data-i18n="mt09.programmer">PROGRAMADOR</h2>
           <p class="value">UPA USB</p>
         </article>
         <article class="tech-card">
-          <h2>TIPO</h2>
+          <h2 data-i18n="mt09.type">TIPO</h2>
           <p class="value">SERIAL EEPROM</p>
         </article>
         <article class="tech-card notes">
-          <h2>NOTAS</h2>
+          <h2 data-i18n="mt09.notes">NOTAS</h2>
           <ul>
-            <li>Velocímetros digitales CDMX</li>
-            <li>No se hace responsable del mal uso</li>
-            <li>El usuario es responsable de cada edición</li>
-            <li>y modificación del sistema</li>
+            <li data-i18n="mt09.note1">Velocímetros digitales CDMX</li>
+            <li data-i18n="mt09.note2">No se hace responsable del mal uso</li>
+            <li data-i18n="mt09.note3">El usuario es responsable de cada edición</li>
+            <li data-i18n="mt09.note4">y modificación del sistema</li>
           </ul>
         </article>
       </aside>
 
-      <section class="slider-shell" data-slider aria-label="Galería MT-09">
-        <button type="button" class="slider-arrow prev" aria-label="Anterior">❮</button>
+      <section class="slider-shell" data-slider data-i18n-aria="mt09.gallery" aria-label="Galería MT-09">
+        <button type="button" class="slider-arrow prev" data-i18n-aria="mt09.prev" aria-label="Anterior">❮</button>
         <div class="slider-track">
           <div class="slide">
             <img src="moto.PNG" alt="Yamaha MT-09" data-lightbox>
@@ -92,27 +105,27 @@
             <img src="conexion.png" alt="Conexión MT-09" data-lightbox>
           </div>
         </div>
-        <button type="button" class="slider-arrow next" aria-label="Siguiente">❯</button>
-        <div class="slider-dots" role="tablist" aria-label="Indicadores"></div>
+        <button type="button" class="slider-arrow next" data-i18n-aria="mt09.next" aria-label="Siguiente">❯</button>
+        <div class="slider-dots" role="tablist" data-i18n-aria="mt09.dots" aria-label="Indicadores"></div>
       </section>
     </div>
 
     <div class="feature-row">
       <div class="feature-box">
-        <h3>100% SEGURO</h3>
-        <p>Lectura y escritura</p>
+        <h3 data-i18n="mt09.safe">100% SEGURO</h3>
+        <p data-i18n="mt09.safeDesc">Lectura y escritura</p>
       </div>
       <div class="feature-box">
-        <h3>SOPORTE TÉCNICO</h3>
-        <p>Expertos en UPA</p>
+        <h3 data-i18n="mt09.support">SOPORTE TÉCNICO</h3>
+        <p data-i18n="mt09.supportDesc">Expertos en UPA</p>
       </div>
       <div class="feature-box">
-        <h3>CONTACTO</h3>
+        <h3 data-i18n="mt09.contact">CONTACTO</h3>
         <p><a href="tel:+525578914191">+52 55 7891 4191</a></p>
       </div>
       <div class="feature-box">
-        <h3>PROYECTO YAMAHA</h3>
-        <p>Kilometraje</p>
+        <h3 data-i18n="mt09.project">PROYECTO YAMAHA</h3>
+        <p data-i18n="mt09.mileage">Kilometraje</p>
       </div>
     </div>
   </div>
@@ -121,15 +134,15 @@
     <div class="maker-credit">
       <img class="maker-logo" src="../../../assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="Velocímetros Digitales CDMX">
       <div class="maker-copy">
-        <p class="maker-eyebrow">Sistema desarrollado por</p>
+        <p class="maker-eyebrow" data-i18n="footer.developedBy">Sistema desarrollado por</p>
         <p class="maker-name">VELOCÍMETROS DIGITALES CDMX</p>
-        <p class="maker-note">HELP ONLINE © VELOCÍMETROS CDMX — Uso técnico responsable</p>
+        <p class="maker-note" data-i18n="footer.note">HELP ONLINE © VELOCÍMETROS CDMX — Uso técnico responsable</p>
       </div>
     </div>
   </footer>
 
-  <div id="imageModal" class="modal" role="dialog" aria-modal="true" aria-label="Vista ampliada">
-    <button type="button" class="modal-close" aria-label="Cerrar">&times;</button>
+  <div id="imageModal" class="modal" role="dialog" aria-modal="true" data-i18n-aria="mt09.zoom" aria-label="Vista ampliada">
+    <button type="button" class="modal-close" data-i18n-aria="mt09.close" aria-label="Cerrar">&times;</button>
     <img id="modalImg" alt="">
   </div>
 

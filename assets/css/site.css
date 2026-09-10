@@ -191,7 +191,15 @@ a {
   text-overflow: ellipsis;
 }
 
-.theme-switch {
+.topbar-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.theme-switch,
+.lang-switch {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1204,6 +1212,17 @@ a {
     height: 44px;
     border-radius: 12px;
   }
+
+  .topbar-controls {
+    gap: 6px;
+  }
+
+  .lang-switch .theme-btn {
+    min-width: 34px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
 
   .maker-credit {
     flex-direction: column;

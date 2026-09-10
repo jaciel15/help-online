@@ -7,8 +7,15 @@
   <title>VELOCÍMETROS CDMX | HELP ONLINE</title>
   <link rel="icon" href="assets/img/logo-velocimetros-digitales-cdmx.jpg">
   <link rel="stylesheet" href="assets/css/site.css">
-  <script>
-    (function(){try{var t=localStorage.getItem('vcdmx-theme');if(t==='warm'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+    <script>
+    (function(){
+      try{
+        var t=localStorage.getItem('vcdmx-theme');
+        if(t==='warm'||t==='dark')document.documentElement.setAttribute('data-theme',t);
+        var l=localStorage.getItem('vcdmx-lang');
+        if(l==='es'||l==='en'){document.documentElement.setAttribute('lang',l);document.documentElement.setAttribute('data-lang',l);}
+      }catch(e){}
+    })();
   </script>
 </head>
 <body>
@@ -19,17 +26,23 @@
       </span>
       <span class="brand-text">
         <span class="brand-name">VELOCÍMETROS CDMX</span>
-        <span class="brand-tag">Sistema Velocímetros Digitales CDMX</span>
+        <span class="brand-tag" data-i18n="brand.tag">Sistema Velocímetros Digitales CDMX</span>
       </span>
     </a>
-    <div class="theme-switch" role="group" aria-label="Tema visual">
-      <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true">Oscuro</button>
-      <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false">Cálido</button>
+        <div class="topbar-controls">
+      <div class="theme-switch" role="group" data-i18n-aria="theme.label" aria-label="Tema visual">
+        <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true" data-i18n="theme.dark">Oscuro</button>
+        <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false" data-i18n="theme.warm">Cálido</button>
+      </div>
+      <div class="lang-switch" role="group" data-i18n-aria="lang.label" aria-label="Idioma">
+        <button type="button" class="theme-btn" data-lang-set="es" aria-pressed="true">ES</button>
+        <button type="button" class="theme-btn" data-lang-set="en" aria-pressed="false">EN</button>
+      </div>
     </div>
   </header>
 
-  <nav class="breadcrumbs" aria-label="Navegación">
-    <span class="current">Inicio</span>
+  <nav class="breadcrumbs" data-i18n-aria="nav.nav" aria-label="Navegación">
+    <span class="current" data-i18n="nav.home">Inicio</span>
   </nav>
 
   <section class="home-hero">
@@ -39,10 +52,10 @@
     <div class="home-hero-content">
       <div class="maker-seal">
         <img src="assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="Velocímetros Digitales CDMX">
-        <span>Creado por Velocímetros Digitales CDMX</span>
+        <span data-i18n="home.seal">Creado por Velocímetros Digitales CDMX</span>
       </div>
       <h1 class="brand-mega">VELOCÍMETROS<br>CDMX</h1>
-      <p class="lead">Referencia técnica para EEPROM, programadores UPA, conexiones y dashboards automotrices.</p>
+      <p class="lead" data-i18n="home.lead">Referencia técnica para EEPROM, programadores UPA, conexiones y dashboards automotrices.</p>
       <div class="cta-row">
         <a class="btn btn-primary" href="autos/">AUTOS</a>
         <a class="btn btn-ghost" href="motos/">MOTOS</a>
@@ -52,39 +65,39 @@
 
   <main class="home-sections">
     <section class="section-block">
-      <h2>CATÁLOGO RÁPIDO</h2>
-      <p>Elige la categoría y entra a marcas, modelos y fichas técnicas con fotos de tablero, EEPROM y conexión.</p>
+      <h2 data-i18n="home.catalogTitle">CATÁLOGO RÁPIDO</h2>
+      <p data-i18n="home.catalogLead">Elige la categoría y entra a marcas, modelos y fichas técnicas con fotos de tablero, EEPROM y conexión.</p>
       <div class="menu-grid">
         <a class="menu-card" href="autos/">
           <span class="label">AUTOS</span>
-          <span class="meta">Chevrolet y más</span>
+          <span class="meta" data-i18n="home.carsMeta">Chevrolet y más</span>
         </a>
         <a class="menu-card" href="motos/">
           <span class="label">MOTOS</span>
-          <span class="meta">Yamaha MT-09 listo</span>
+          <span class="meta" data-i18n="home.bikesMeta">Yamaha MT-09 listo</span>
         </a>
         <a class="menu-card" href="motos/yamaha/mt09/">
           <span class="label">MT-09</span>
-          <span class="meta">Ficha completa</span>
+          <span class="meta" data-i18n="home.mt09Meta">Ficha completa</span>
         </a>
       </div>
     </section>
 
     <section class="section-block">
-      <h2>HELP ONLINE SYSTEM</h2>
-      <p>Plataforma para talleres y técnicos: datos de chip, programador, tipo de memoria y notas de seguridad.</p>
+      <h2 data-i18n="home.helpTitle">HELP ONLINE SYSTEM</h2>
+      <p data-i18n="home.helpLead">Plataforma para talleres y técnicos: datos de chip, programador, tipo de memoria y notas de seguridad.</p>
       <div class="info-strip">
         <div class="info-item">
           <strong>EEPROM</strong>
-          <span>Identificación de chips y organización</span>
+          <span data-i18n="home.eepromDesc">Identificación de chips y organización</span>
         </div>
         <div class="info-item">
           <strong>UPA / SERIAL</strong>
-          <span>Programadores y flujos de lectura</span>
+          <span data-i18n="home.upaDesc">Programadores y flujos de lectura</span>
         </div>
         <div class="info-item">
           <strong>DASHBOARD</strong>
-          <span>Fotos de tablero y conexiones</span>
+          <span data-i18n="home.dashDesc">Fotos de tablero y conexiones</span>
         </div>
         <div class="info-item">
           <strong>SOPORTE</strong>
@@ -94,14 +107,14 @@
     </section>
 
     <section class="section-block maker-spotlight">
-      <h2>¿QUIÉN HACE ESTE SISTEMA?</h2>
-      <p>HELP ONLINE es un desarrollo de <strong>Velocímetros Digitales CDMX</strong>: soporte técnico automotriz con identidad propia.</p>
+      <h2 data-i18n="home.whoTitle">¿QUIÉN HACE ESTE SISTEMA?</h2>
+      <p data-i18n="home.whoLeadHtml" data-i18n-html="true">HELP ONLINE es un desarrollo de <strong>Velocímetros Digitales CDMX</strong>: soporte técnico automotriz con identidad propia.</p>
       <div class="maker-credit maker-credit--hero">
         <img class="maker-logo" src="assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="Velocímetros Digitales CDMX">
         <div class="maker-copy">
-          <p class="maker-eyebrow">Marca oficial</p>
+          <p class="maker-eyebrow" data-i18n="home.officialBrand">Marca oficial</p>
           <p class="maker-name">VELOCÍMETROS DIGITALES CDMX</p>
-          <p class="maker-note">EEPROM · UPA · Dashboards · Conexiones · Soporte técnico CDMX</p>
+          <p class="maker-note" data-i18n="home.makerServices">EEPROM · UPA · Dashboards · Conexiones · Soporte técnico CDMX</p>
         </div>
       </div>
     </section>
@@ -112,9 +125,9 @@
     <div class="maker-credit">
       <img class="maker-logo" src="assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="Velocímetros Digitales CDMX">
       <div class="maker-copy">
-        <p class="maker-eyebrow">Sistema desarrollado por</p>
+        <p class="maker-eyebrow" data-i18n="footer.developedBy">Sistema desarrollado por</p>
         <p class="maker-name">VELOCÍMETROS DIGITALES CDMX</p>
-        <p class="maker-note">HELP ONLINE © VELOCÍMETROS CDMX — Uso técnico responsable</p>
+        <p class="maker-note" data-i18n="footer.note">HELP ONLINE © VELOCÍMETROS CDMX — Uso técnico responsable</p>
       </div>
     </div>
   </footer>
