@@ -177,6 +177,9 @@
       });
 
       C.saveCatalog(catalog);
+      var helpUnit = C.buildHelpUnit(catalog, category, brandId, modelId, versionId);
+      C.saveHelpUnit(helpUnit);
+      C.exportHelpUnit(helpUnit);
       renderTree();
       var helpUrl =
         new URL(
@@ -199,7 +202,15 @@
         modelName.toUpperCase() +
         " / " +
         versionName +
-        "</strong>. Link cliente (solo esa ficha): <code style='word-break:break-all'>" +
+        "</strong>. Se descargó el JSON de ayuda (súbelo a <code>data/help/" +
+        category +
+        "/" +
+        brandId +
+        "/" +
+        modelId +
+        "/" +
+        versionId +
+        ".json</code>). Link cliente: <code style='word-break:break-all'>" +
         helpUrl +
         "</code>";
       clearForm();

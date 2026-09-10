@@ -2,11 +2,9 @@
   "use strict";
 
   var STORAGE_KEY = "vcdmx-catalog-v1";
+  var HELP_UNIT_PREFIX = "vcdmx-help-unit:";
   var PASS_KEY = "vcdmx-admin-pass";
   var SESSION_KEY = "vcdmx-admin-session";
-  // Default password: adminupa2026 (SHA-256)
-  var DEFAULT_PASS_HASH =
-    "8f3c6d1e9b2a4c7d0e1f5a6b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7";
 
   // Real SHA-256 of "adminupa2026" computed at runtime on first load if needed
   async function sha256(text) {
@@ -117,6 +115,104 @@
     a.download = "catalog.json";
     a.click();
     URL.revokeObjectURL(a.href);
+  }
+
+  function helpUnitKey(c, b, m, v) {
+    return HELP_UNIT_PREFIX + [c, b, m, v || "base"].join(":");
+  }
+
+  function buildHelpUnit(catalog, c, b, m, v) {
+    try {
+      var brand = catalog.categories[c].brands[b];
+      var model = brand.models[m];
+      var version = getVersion(catalog, c, b, m, v);
+      if (!brand || !model || !version) return null;
+      return {
+        c: c,
+        b: b,
+        m: m,
+        v: version.id,
+        brandName: brand.name,
+        modelName: model.name,
+        version: version
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function saveHelpUnit(unit) {
+    if (!unit || !unit.c || !unit.b || !unit.m || !unit.v) return null;
+    try {
+      localStorage.setItem(helpUnitKey(unit.c, unit.b, unit.m, unit.v), JSON.stringify(unit));
+    } catch (e) {}
+    return unit;
+  }
+
+  function exportHelpUnit(unit) {
+    if (!unit) return;
+    var blob = new Blob([JSON.stringify(unit, null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = [unit.c, unit.b, unit.m, unit.v].join("-") + ".json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function resolveHelpUnitPath(c, b, m, v) {
+    var scripts = document.getElementsByTagName("script");
+    for (var i = 0; i < scripts.length; i++) {
+      var src = scripts[i].src || "";
+      if (src.indexOf("catalog.js") !== -1) {
+        return (
+          src.replace(/assets\/js\/catalog\.js.*/, "data/help/") +
+          encodeURIComponent(c) +
+          "/" +
+          encodeURIComponent(b) +
+          "/" +
+          encodeURIComponent(m) +
+          "/" +
+          encodeURIComponent(v || "base") +
+          ".json"
+        );
+      }
+    }
+    return (
+      "../data/help/" +
+      encodeURIComponent(c) +
+      "/" +
+      encodeURIComponent(b) +
+      "/" +
+      encodeURIComponent(m) +
+      "/" +
+      encodeURIComponent(v || "base") +
+      ".json"
+    );
+  }
+
+  /** Solo una ficha: no descarga el catálogo completo (vista cliente). */
+  function loadHelpUnit(c, b, m, v) {
+    var versionId = v || "base";
+    try {
+      var raw = localStorage.getItem(helpUnitKey(c, b, m, versionId));
+      if (raw) {
+        return Promise.resolve(JSON.parse(raw));
+      }
+    } catch (e) {}
+
+    var path = resolveHelpUnitPath(c, b, m, versionId);
+    return fetch(path, { cache: "no-store" })
+      .then(function (r) {
+        if (!r.ok) throw new Error("help unit missing");
+        return r.json();
+      })
+      .catch(function () {
+        // Fallback solo si el admin tiene sesión (mismo navegador) y hay catálogo local
+        if (!isAdminSession()) return null;
+        return loadCatalog().then(function (catalog) {
+          return buildHelpUnit(catalog, c, b, m, versionId);
+        });
+      });
   }
 
   function ensureBrand(catalog, category, brandName) {
@@ -243,6 +339,10 @@
     loadCatalog: loadCatalog,
     saveCatalog: saveCatalog,
     exportCatalog: exportCatalog,
+    buildHelpUnit: buildHelpUnit,
+    saveHelpUnit: saveHelpUnit,
+    exportHelpUnit: exportHelpUnit,
+    loadHelpUnit: loadHelpUnit,
     ensureBrand: ensureBrand,
     ensureModel: ensureModel,
     upsertVersion: upsertVersion,

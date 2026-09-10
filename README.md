@@ -27,10 +27,13 @@ También sirve el link de carpeta fija, p. ej. `/motos/yamaha/mt09/` (ya bloquea
 2. Sube Autos/Motos → marca → modelo → versión + 3 fotos + EEPROM.
 3. Si el modelo ya existe, se agrega **otra versión** sola.
 4. Copia el **link cliente** (botón en el catálogo del admin) y envíaselo al usuario.
-5. Exporta JSON y reemplaza `data/catalog.json` en el hosting para respaldo.
+5. Al guardar, se descarga el JSON de esa ayuda → súbelo a `data/help/{autos|motos}/{marca}/{modelo}/{version}.json`.
+6. Exporta `catalog.json` completo solo para tu respaldo interno (no se carga en la vista cliente).
 
 ## Notas
 
 - Slider de fotos: solo con flechas (sin autoplay).
 - Logo solo como logotipo, no encima de fotos técnicas.
 - Solo el administrador puede editar o subir ayudas.
+- La vista `/ayuda/` carga **solo** el JSON de esa unidad (`data/help/...`), no el catálogo completo.
+- `/ficha/` es interna: sin sesión admin redirige a `/ayuda/`.

@@ -9,7 +9,7 @@
       c: q.get("c") || "",
       b: q.get("b") || "",
       m: q.get("m") || "",
-      v: q.get("v") || ""
+      v: q.get("v") || "base"
     };
   }
 
@@ -26,7 +26,6 @@
       .replace(/>/g, "&gt;");
   }
 
-  // Bloqueo suave de menú contextual en fotos
   document.addEventListener("contextmenu", function (e) {
     if (e.target && e.target.tagName === "IMG") e.preventDefault();
   });
@@ -34,25 +33,24 @@
     if (e.target && e.target.tagName === "IMG") e.preventDefault();
   });
 
-  C.loadCatalog().then(function (catalog) {
-    var p = params();
-    var root = document.getElementById("fichaRoot");
-    var status = document.getElementById("fichaStatus");
+  var p = params();
+  var root = document.getElementById("fichaRoot");
+  var status = document.getElementById("fichaStatus");
 
-    if (!p.c || !p.b || !p.m) {
-      status.textContent = "Enlace de ayuda incompleto. Pide al soporte el link específico de tu unidad.";
-      return;
-    }
+  if (!p.c || !p.b || !p.m) {
+    status.textContent = "Enlace de ayuda incompleto. Pide al soporte el link específico de tu unidad.";
+    return;
+  }
 
-    var brand = (((catalog.categories[p.c] || {}).brands || {})[p.b]) || null;
-    var model = brand && brand.models ? brand.models[p.m] : null;
-    var version = C.getVersion(catalog, p.c, p.b, p.m, p.v);
-
-    if (!brand || !model || !version) {
+  C.loadHelpUnit(p.c, p.b, p.m, p.v).then(function (unit) {
+    if (!unit || !unit.version) {
       status.textContent = "Ayuda no encontrada para este enlace.";
       return;
     }
 
+    var brandName = unit.brandName || "";
+    var modelName = unit.modelName || "";
+    var version = unit.version;
     var photos = version.photos || {};
     var slides = [];
     if (photos.dashboard) slides.push({ src: asset(photos.dashboard), alt: "Tablero" });
@@ -61,7 +59,7 @@
       slides.push({ src: asset(photos.ignition || photos.eeprom), alt: "Conexión encendido" });
     }
     if (photos.main && slides.length < 1) {
-      slides.push({ src: asset(photos.main), alt: model.name });
+      slides.push({ src: asset(photos.main), alt: modelName });
     }
 
     var notes = (version.notes || [])
@@ -85,9 +83,9 @@
     root.innerHTML =
       '<header class="detail-header">' +
       "<h1>" +
-      escapeHtml(brand.name) +
+      escapeHtml(brandName) +
       " " +
-      escapeHtml(model.name) +
+      escapeHtml(modelName) +
       "</h1>" +
       '<p class="subtitle">' +
       escapeHtml(version.name || "") +
@@ -126,7 +124,7 @@
       '<div class="feature-box"><h3>SOPORTE</h3><p>UPA USB</p></div>' +
       "</div>";
 
-    document.title = "HELP · " + brand.name + " " + model.name;
+    document.title = "HELP · " + brandName + " " + modelName;
 
     if (window.VCDMX && typeof window.VCDMX.initDynamic === "function") {
       window.VCDMX.initDynamic();

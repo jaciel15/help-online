@@ -7,7 +7,22 @@
   <link rel="icon" href="../assets/img/logo-velocimetros-digitales-cdmx.jpg">
   <link rel="stylesheet" href="../assets/css/site.css">
   <script>
-    (function(){try{var t=localStorage.getItem('vcdmx-theme');if(t==='warm'||t==='dark')document.documentElement.setAttribute('data-theme',t);var l=localStorage.getItem('vcdmx-lang');if(l==='es'||l==='en'){document.documentElement.setAttribute('lang',l);document.documentElement.setAttribute('data-lang',l);}}catch(e){}})();
+    (function(){
+      try{
+        var t=localStorage.getItem('vcdmx-theme');
+        if(t==='warm'||t==='dark')document.documentElement.setAttribute('data-theme',t);
+        var l=localStorage.getItem('vcdmx-lang');
+        if(l==='es'||l==='en'){document.documentElement.setAttribute('lang',l);document.documentElement.setAttribute('data-lang',l);}
+      }catch(e){}
+      // Ficha interna solo para admin; el cliente va a /ayuda/
+      try{
+        if(sessionStorage.getItem('vcdmx-admin-session')!=='1'){
+          location.replace('../ayuda/'+location.search);
+        }
+      }catch(e){
+        location.replace('../ayuda/'+location.search);
+      }
+    })();
   </script>
 </head>
 <body>
