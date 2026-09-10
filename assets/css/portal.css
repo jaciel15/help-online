@@ -1,0 +1,75 @@
+.portal-body {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.portal-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg-deep) 88%, transparent);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.portal-brand strong {
+  display: block;
+  font-family: var(--font-display);
+  letter-spacing: 0.12em;
+}
+
+.portal-brand span {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.portal-main {
+  width: min(1100px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0 48px;
+}
+
+.portal-hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+}
+
+.portal-hero p {
+  color: var(--text-muted);
+  max-width: 40rem;
+  margin-bottom: 18px;
+}
+
+.portal-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.portal-footer {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  padding: 24px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 40%, transparent);
+}
+
+/* Basic image protection on portal detail links destination */
+.portal-body img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.menu-card.protected-thumb img {
+  pointer-events: none;
+}

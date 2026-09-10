@@ -1,0 +1,58 @@
+.admin-body { min-height: 100vh; background: var(--bg); color: var(--text); }
+.admin-gate { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.admin-card { background: var(--bg-panel); border: 1px solid var(--line); border-radius: 18px; padding: 22px; box-shadow: var(--shadow); }
+.login-card { width: min(420px, 100%); display: grid; gap: 12px; }
+.login-card h1 { font-family: var(--font-display); letter-spacing: 0.08em; font-size: 1.35rem; }
+.hint, .muted { color: var(--text-muted); font-size: 0.88rem; }
+.tiny { font-size: 0.8rem; }
+.back-quiet { color: var(--accent); text-decoration: none; }
+.admin-app { width: min(1100px, calc(100% - 24px)); margin: 0 auto; padding: 20px 0 48px; }
+.admin-top { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 18px; }
+.admin-top strong { display: block; font-family: var(--font-display); letter-spacing: 0.08em; }
+.admin-top span { color: var(--text-muted); font-size: 0.9rem; }
+.admin-top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.admin-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 16px; }
+.admin-form { display: grid; gap: 12px; }
+.admin-form.compact { gap: 8px; }
+.admin-form label { display: grid; gap: 6px; font-size: 0.85rem; color: var(--text-muted); }
+.admin-form input, .admin-form select, .admin-form textarea {
+  width: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-elevated);
+  color: var(--text); padding: 10px 12px; font: inherit;
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.preview { display: none; width: 100%; max-height: 120px; object-fit: cover; border-radius: 10px; margin-top: 8px; border: 1px solid var(--line); }
+.preview.show { display: block; }
+.form-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.form-msg { color: var(--accent); font-weight: 700; }
+.catalog-tree { display: grid; gap: 10px; max-height: 520px; overflow: auto; }
+.tree-brand { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--bg-elevated); }
+.tree-brand strong { font-family: var(--font-display); letter-spacing: 0.06em; }
+.tree-model { margin: 8px 0 0 10px; padding-left: 10px; border-left: 2px solid var(--line); }
+.tree-version { margin-top: 6px; font-size: 0.88rem; color: var(--text-muted); }
+.tree-version a { color: var(--accent); }
+.btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid transparent; padding: 10px 14px; font-family: var(--font-display); letter-spacing: 0.08em; cursor: pointer; text-decoration: none; }
+.btn-primary { background: var(--accent); color: #061018; }
+.btn-ghost { background: transparent; border-color: var(--line); color: var(--text); }
+@media (max-width: 900px) {
+  .admin-grid, .form-row, .photo-grid { grid-template-columns: 1fr; }
+}
+
+/* aliases for current admin markup */
+.admin-top { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:18px; }
+.admin-top-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.photo-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.form-actions { display:flex; gap:10px; flex-wrap:wrap; }
+.form-msg { color:var(--accent); font-weight:700; }
+.catalog-tree { display:grid; gap:10px; max-height:520px; overflow:auto; }
+.tree-brand { border:1px solid var(--line); border-radius:12px; padding:10px 12px; background:var(--bg-elevated); }
+.tree-model { margin:8px 0 0 10px; padding-left:10px; border-left:2px solid var(--line); }
+.tree-version { margin-top:6px; font-size:0.88rem; color:var(--text-muted); }
+.tree-version a { color:var(--accent); }
+.muted { color:var(--text-muted); font-size:0.9rem; }
+.tiny { font-size:0.8rem; }
+.back-quiet { color:var(--accent); text-decoration:none; }
+.hint { color:var(--text-muted); font-size:0.88rem; }
+.preview.show, .preview[src] { display:block; }
+@media (max-width:900px){ .form-row,.photo-grid{grid-template-columns:1fr;} }

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-portal="1">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="Portal técnico de ayuda UPA / EEPROM — solo consulta.">
+  <title>UPA Technical Help</title>
+  <link rel="stylesheet" href="../assets/css/site.css">
+  <link rel="stylesheet" href="../assets/css/portal.css">
+  <script>
+    (function(){try{var t=localStorage.getItem('vcdmx-theme');if(t==='warm'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+  </script>
+</head>
+<body class="portal-body">
+  <header class="portal-top">
+    <div class="portal-brand">
+      <strong>UPA TECHNICAL HELP</strong>
+      <span>Support reference · read only</span>
+    </div>
+    <div class="topbar-controls">
+      <div class="theme-switch" role="group" aria-label="Theme">
+        <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true">Dark</button>
+        <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false">Warm</button>
+      </div>
+      <div class="lang-switch" role="group" aria-label="Language">
+        <button type="button" class="theme-btn" data-lang-set="es" aria-pressed="true">ES</button>
+        <button type="button" class="theme-btn" data-lang-set="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="portal-main">
+    <section class="portal-hero">
+      <h1>HELP DESK</h1>
+      <p>Consulta técnica de tablero, conexión y EEPROM. Este portal es solo lectura.</p>
+      <div class="portal-tabs">
+        <button type="button" class="btn btn-primary" data-portal-cat="autos">AUTOS</button>
+        <button type="button" class="btn btn-ghost" data-portal-cat="motos">MOTOS</button>
+      </div>
+    </section>
+
+    <section class="section-block">
+      <div class="toolbar">
+        <label class="search-wrap">
+          <span class="icon" aria-hidden="true">⌕</span>
+          <input type="search" id="portalSearch" placeholder="Buscar marca o modelo…" autocomplete="off">
+        </label>
+      </div>
+      <div id="portalList" class="menu-grid"></div>
+      <p id="portalEmpty" class="empty-state">No hay resultados.</p>
+    </section>
+  </main>
+
+  <footer class="portal-footer">
+    <p>Read-only technical desk · No public owner identity on this portal</p>
+  </footer>
+
+  <script src="../assets/js/catalog.js"></script>
+  <script src="../assets/js/portal.js"></script>
+  <script src="../assets/js/site.js"></script>
+</body>
+</html>

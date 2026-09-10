@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marca | HELP ONLINE</title>
+  <link rel="icon" href="../assets/img/logo-velocimetros-digitales-cdmx.jpg">
+  <link rel="stylesheet" href="../assets/css/site.css">
+  <script>
+    (function(){try{var t=localStorage.getItem('vcdmx-theme');if(t==='warm'||t==='dark')document.documentElement.setAttribute('data-theme',t);var l=localStorage.getItem('vcdmx-lang');if(l==='es'||l==='en'){document.documentElement.setAttribute('lang',l);document.documentElement.setAttribute('data-lang',l);}}catch(e){}})();
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand-lockup" href="../">
+      <span class="brand-logo-wrap" aria-hidden="true">
+        <img class="brand-logo" src="../assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="">
+      </span>
+      <span class="brand-text">
+        <span class="brand-name">VELOCÍMETROS CDMX</span>
+        <span class="brand-tag" data-i18n="brand.tag">Sistema Velocímetros Digitales CDMX</span>
+      </span>
+    </a>
+    <div class="topbar-controls">
+      <div class="theme-switch" role="group" aria-label="Tema">
+        <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true" data-i18n="theme.dark">Oscuro</button>
+        <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false" data-i18n="theme.warm">Cálido</button>
+      </div>
+      <div class="lang-switch" role="group" aria-label="Idioma">
+        <button type="button" class="theme-btn" data-lang-set="es" aria-pressed="true">ES</button>
+        <button type="button" class="theme-btn" data-lang-set="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="breadcrumbs" id="crumbs" aria-label="Migas"></nav>
+  <div class="back-row"><a class="back-link" id="backLink" href="./">← Regresar</a></div>
+
+  <main class="page">
+    <header class="page-hero">
+      <span class="eyebrow" id="eyebrow">Marca</span>
+      <h1 id="title">—</h1>
+      <p id="lead">Modelos y versiones disponibles.</p>
+    </header>
+    <div class="menu-grid" id="modelGrid"></div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="maker-credit">
+      <img class="maker-logo" src="../assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="">
+      <div class="maker-copy">
+        <p class="maker-eyebrow" data-i18n="footer.developedBy">Sistema desarrollado por</p>
+        <p class="maker-name">VELOCÍMETROS DIGITALES CDMX</p>
+        <p class="maker-note" data-i18n="footer.note">HELP ONLINE © VELOCÍMETROS CDMX — Uso técnico responsable</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/js/catalog.js"></script>
+  <script>
+    (function () {
+      var C = window.VCDMXCatalog;
+      var q = new URLSearchParams(location.search);
+      var cat = q.get("c") || "autos";
+      var brandId = q.get("b") || "";
+      C.loadCatalog().then(function (catalog) {
+        var brand = (((catalog.categories[cat] || {}).brands) || {})[brandId];
+        if (!brand) {
+          document.getElementById("title").textContent = "No encontrada";
+          return;
+        }
+        document.title = brand.name + " | HELP ONLINE";
+        document.getElementById("title").textContent = brand.name;
+        document.getElementById("eyebrow").textContent = cat === "autos" ? "AUTOS" : "MOTOS";
+        var back = cat === "autos" ? "./" : "../motos/";
+        if (cat === "motos") {
+          document.getElementById("backLink").href = "../motos/";
+          // when page is under autos/, motos brand pages should live in both folders - this file is in autos/
+          // For motos brands opened from motos/marca.html - we also copy this file
+        }
+        document.getElementById("backLink").href = cat === "autos" ? "./" : "../motos/";
+        document.getElementById("crumbs").innerHTML =
+          '<a href="../">Inicio</a><span class="sep">/</span><a href="' +
+          (cat === "autos" ? "./" : "../motos/") +
+          '">' +
+          (cat === "autos" ? "Autos" : "Motos") +
+          '</a><span class="sep">/</span><span class="current">' +
+          brand.name +
+          "</span>";
+
+        var html = "";
+        Object.keys(brand.models || {}).forEach(function (mid) {
+          var m = brand.models[mid];
+          (m.versions || []).forEach(function (v) {
+            var href =
+              "../ficha/?c=" +
+              encodeURIComponent(cat) +
+              "&b=" +
+              encodeURIComponent(brandId) +
+              "&m=" +
+              encodeURIComponent(mid) +
+              "&v=" +
+              encodeURIComponent(v.id);
+            html +=
+              '<a class="menu-card" href="' +
+              href +
+              '"><span class="label">' +
+              m.name +
+              '</span><span class="meta">' +
+              (v.name || v.id) +
+              " · " +
+              (v.eeprom || "EEPROM") +
+              "</span></a>";
+          });
+        });
+        document.getElementById("modelGrid").innerHTML = html || "<p>Sin versiones.</p>";
+      });
+    })();
+  </script>
+  <script src="../assets/js/site.js"></script>
+</body>
+</html>

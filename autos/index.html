@@ -1,235 +1,86 @@
 <!DOCTYPE html>
-
-<html lang="es">
-
+<html lang="es" data-theme="dark">
 <head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>AUTOS</title>
-
-<style>
-
-body{
-
-    margin:0;
-
-    padding:0;
-
-    background:#050505;
-
-    font-family:Arial;
-
-    color:white;
-
-}
-
-.header{
-
-    text-align:center;
-
-    padding-top:50px;
-
-}
-
-.title{
-
-    font-size:38px;
-
-    color:#00ffe1;
-
-    font-weight:bold;
-
-    text-shadow:
-
-        0 0 10px #00ffe1,
-
-        0 0 20px #00ffe1;
-
-}
-
-.subtitle{
-
-    margin-top:10px;
-
-    color:#999;
-
-    font-size:18px;
-
-}
-
-.container{
-
-    width:90%;
-
-    max-width:500px;
-
-    margin:auto;
-
-    margin-top:50px;
-
-}
-
-.brand{
-
-    display:block;
-
-    margin-bottom:20px;
-
-    padding:22px;
-
-    border-radius:20px;
-
-    background:#111;
-
-    border:2px solid #00ffe1;
-
-    color:#00ffe1;
-
-    text-decoration:none;
-
-    text-align:center;
-
-    font-size:24px;
-
-    font-weight:bold;
-
-    box-shadow:
-
-        0 0 20px #00ffe144;
-
-    transition:0.3s;
-
-}
-
-.brand:hover{
-
-    background:#00ffe1;
-
-    color:black;
-
-}
-
-.footer{
-
-    margin-top:80px;
-
-    margin-bottom:30px;
-
-    text-align:center;
-
-    color:#555;
-
-    font-size:13px;
-
-}
-
-</style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Marcas de autos — VELOCÍMETROS CDMX HELP ONLINE">
+  <title>AUTOS | VELOCÍMETROS CDMX</title>
+  <link rel="icon" href="../assets/img/logo-velocimetros-digitales-cdmx.jpg">
+  <link rel="stylesheet" href="../assets/css/site.css">
+    <script>
+    (function(){
+      try{
+        var t=localStorage.getItem('vcdmx-theme');
+        if(t==='warm'||t==='dark')document.documentElement.setAttribute('data-theme',t);
+        var l=localStorage.getItem('vcdmx-lang');
+        if(l==='es'||l==='en'){document.documentElement.setAttribute('lang',l);document.documentElement.setAttribute('data-lang',l);}
+      }catch(e){}
+    })();
+  </script>
 </head>
-
 <body>
+  <header class="topbar">
+        <a class="brand-lockup" href="../">
+      <span class="brand-logo-wrap" aria-hidden="true">
+        <img class="brand-logo" src="../assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="">
+      </span>
+      <span class="brand-text">
+        <span class="brand-name">VELOCÍMETROS CDMX</span>
+        <span class="brand-tag" data-i18n="brand.tag">Sistema Velocímetros Digitales CDMX</span>
+      </span>
+    </a>
+        <div class="topbar-controls">
+      <div class="theme-switch" role="group" data-i18n-aria="theme.label" aria-label="Tema visual">
+        <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true" data-i18n="theme.dark">Oscuro</button>
+        <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false" data-i18n="theme.warm">Cálido</button>
+      </div>
+      <div class="lang-switch" role="group" data-i18n-aria="lang.label" aria-label="Idioma">
+        <button type="button" class="theme-btn" data-lang-set="es" aria-pressed="true">ES</button>
+        <button type="button" class="theme-btn" data-lang-set="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </header>
 
-<div class="header">
+  <nav class="breadcrumbs" data-i18n-aria="nav.crumbs" aria-label="Migas de pan">
+    <a href="../" data-i18n="nav.home">Inicio</a>
+    <span class="sep">/</span>
+    <span class="current" data-i18n="nav.cars">Autos</span>
+  </nav>
+  <div class="back-row">
+    <a class="back-link" href="../" data-i18n="back.home">← Regresar al inicio</a>
+  </div>
 
-    <div class="title">
+  <main class="page">
+    <header class="page-hero">
+      <span class="eyebrow" data-i18n="cars.eyebrow">Categoría</span>
+      <h1>AUTOS</h1>
+      <p data-i18n="cars.lead">Selecciona la marca para ver modelos y fichas técnicas de velocímetros.</p>
+    </header>
 
-        AUTOS
-
+    <div class="toolbar">
+      <label class="search-wrap">
+        <span class="icon" aria-hidden="true">⌕</span>
+        <input type="search" data-filter-input placeholder="Buscar marca…" data-i18n-placeholder="cars.search" autocomplete="off">
+      </label>
+      <span class="count-chip" data-filter-count></span>
     </div>
 
-    <div class="subtitle">
+    <div class="menu-grid" data-filter-grid data-catalog-category="autos" data-ficha-base="../ficha/"></div>
+    <div class="empty-state" data-filter-empty>No hay resultados.</div>
+  </main>
 
-        VELOCÍMETROS CDMX
-
+  <footer class="site-footer">
+    <div class="maker-credit">
+      <img class="maker-logo" src="../assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="Velocímetros Digitales CDMX">
+      <div class="maker-copy">
+        <p class="maker-eyebrow" data-i18n="footer.developedBy">Sistema desarrollado por</p>
+        <p class="maker-name">VELOCÍMETROS DIGITALES CDMX</p>
+        <p class="maker-note" data-i18n="footer.note">HELP ONLINE © VELOCÍMETROS CDMX — Uso técnico responsable</p>
+      </div>
     </div>
-
-</div>
-
-<div class="container">
-
-    <a class="brand" href="#">
-
-        CHEVROLET
-
-    </a>
-
-    <a class="brand" href="#">
-
-        NISSAN
-
-    </a>
-
-    <a class="brand" href="#">
-
-        HYUNDAI
-
-    </a>
-
-    <a class="brand" href="#">
-
-        TOYOTA
-
-    </a>
-
-    <a class="brand" href="#">
-
-        HONDA
-
-    </a>
-
-    <a class="brand" href="#">
-
-        KIA
-
-    </a>
-
-    <a class="brand" href="#">
-
-        FORD
-
-    </a>
-
-    <a class="brand" href="#">
-
-        VOLKSWAGEN
-
-    </a>
-
-    <a class="brand" href="#">
-
-        BMW
-
-    </a>
-
-    <a class="brand" href="#">
-
-        AUDI
-
-    </a>
-
-    <a class="brand" href="#">
-
-        MAZDA
-
-    </a>
-
-    <a class="brand" href="#">
-
-        MITSUBISHI
-
-    </a>
-
-</div>
-
-<div class="footer">
-
-    HELP ONLINE © VELOCÍMETROS CDMX
-
-</div>
-
+  </footer>
+  <script src="../assets/js/catalog.js"></script>
+  <script src="../assets/js/browse.js"></script>
+  <script src="../assets/js/site.js"></script>
 </body>
-
 </html>

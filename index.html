@@ -1,226 +1,158 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>VELOCÍMETROS CDMX</title>
-
-<style>
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
-
-body{
-    background:#050505;
-    font-family:Arial;
-    color:white;
-    overflow-x:hidden;
-}
-
-/* HEADER */
-
-.header{
-    text-align:center;
-    padding-top:60px;
-}
-
-.logo{
-    font-size:42px;
-    font-weight:bold;
-    color:#00ffe1;
-    text-shadow:
-        0 0 10px #00ffe1,
-        0 0 20px #00ffe1,
-        0 0 40px #00ffe1;
-    letter-spacing:2px;
-}
-
-.subtitle{
-    margin-top:15px;
-    color:#bbbbbb;
-    font-size:18px;
-    letter-spacing:3px;
-}
-
-/* MAIN */
-
-.main{
-    width:100%;
-    max-width:500px;
-    margin:auto;
-    margin-top:80px;
-    padding:20px;
-}
-
-/* BUTTONS */
-
-.menu-btn{
-    width:100%;
-    display:block;
-    margin-bottom:25px;
-    padding:28px;
-    border-radius:25px;
-
-    background:linear-gradient(
-        145deg,
-        #111111,
-        #1a1a1a
-    );
-
-    border:2px solid #00ffe1;
-
-    color:#00ffe1;
-    text-decoration:none;
-
-    font-size:32px;
-    font-weight:bold;
-
-    text-align:center;
-
-    box-shadow:
-        0 0 20px #00ffe144,
-        inset 0 0 10px #00ffe122;
-
-    transition:0.3s;
-}
-
-.menu-btn:hover{
-    transform:scale(1.03);
-
-    background:#00ffe1;
-    color:black;
-
-    box-shadow:
-        0 0 30px #00ffe1,
-        0 0 60px #00ffe188;
-}
-
-/* INFO PANEL */
-
-.info-panel{
-    width:100%;
-    margin-top:60px;
-    padding:25px;
-
-    border-radius:20px;
-
-    background:#0d0d0d;
-
-    border:1px solid #222;
-
-    box-shadow:
-        0 0 15px #000;
-}
-
-.info-title{
-    color:#00ffe1;
-    font-size:20px;
-    margin-bottom:15px;
-    text-align:center;
-}
-
-.info-text{
-    color:#999;
-    line-height:1.8;
-    text-align:center;
-    font-size:15px;
-}
-
-/* FOOTER */
-
-.footer{
-    margin-top:80px;
-    margin-bottom:30px;
-
-    text-align:center;
-
-    color:#555;
-    font-size:13px;
-}
-
-/* MOBILE */
-
-@media(max-width:600px){
-
-    .logo{
-        font-size:34px;
-    }
-
-    .menu-btn{
-        font-size:28px;
-        padding:24px;
-    }
-
-}
-
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="VELOCÍMETROS CDMX — Plataforma técnica HELP ONLINE para EEPROM, CAN BUS, dashboards y sistemas automotrices.">
+  <title>VELOCÍMETROS CDMX | HELP ONLINE</title>
+  <link rel="icon" href="assets/img/logo-velocimetros-digitales-cdmx.jpg">
+  <link rel="stylesheet" href="assets/css/site.css">
+    <script>
+    (function(){
+      try{
+        var t=localStorage.getItem('vcdmx-theme');
+        if(t==='warm'||t==='dark')document.documentElement.setAttribute('data-theme',t);
+        var l=localStorage.getItem('vcdmx-lang');
+        if(l==='es'||l==='en'){document.documentElement.setAttribute('lang',l);document.documentElement.setAttribute('data-lang',l);}
+      }catch(e){}
+    })();
+  </script>
 </head>
-
 <body>
-
-<!-- HEADER -->
-
-<div class="header">
-
-    <div class="logo">
-        VELOCÍMETROS CDMX
-    </div>
-
-    <div class="subtitle">
-        UPA HELP ONLINE
-    </div>
-
-</div>
-
-<!-- MAIN -->
-
-<div class="main">
-
-    <!-- AUTOS -->
-
-    <a class="menu-btn" href="autos/">
-        AUTOS
+  <header class="topbar">
+        <a class="brand-lockup" href="./">
+      <span class="brand-logo-wrap" aria-hidden="true">
+        <img class="brand-logo" src="assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="">
+      </span>
+      <span class="brand-text">
+        <span class="brand-name">VELOCÍMETROS CDMX</span>
+        <span class="brand-tag" data-i18n="brand.tag">Sistema Velocímetros Digitales CDMX</span>
+      </span>
     </a>
-
-    <!-- MOTOS -->
-
-    <a class="menu-btn" href="motos/">
-        MOTOS
-    </a>
-
-    <!-- INFO -->
-
-    <div class="info-panel">
-
-        <div class="info-title">
-            HELP ONLINE SYSTEM
-        </div>
-
-        <div class="info-text">
-
-            Plataforma técnica para
-            EEPROM, CAN BUS,
-            conexiones, dashboards,
-            offsets, BIN y sistemas
-            automotrices.
-
-        </div>
-
+        <div class="topbar-controls">
+      <div class="theme-switch" role="group" data-i18n-aria="theme.label" aria-label="Tema visual">
+        <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true" data-i18n="theme.dark">Oscuro</button>
+        <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false" data-i18n="theme.warm">Cálido</button>
+      </div>
+      <div class="lang-switch" role="group" data-i18n-aria="lang.label" aria-label="Idioma">
+        <button type="button" class="theme-btn" data-lang-set="es" aria-pressed="true">ES</button>
+        <button type="button" class="theme-btn" data-lang-set="en" aria-pressed="false">EN</button>
+      </div>
     </div>
+  </header>
 
-</div>
+  <nav class="breadcrumbs" data-i18n-aria="nav.nav" aria-label="Navegación">
+    <span class="current" data-i18n="nav.home">Inicio</span>
+  </nav>
 
-<!-- FOOTER -->
+  <section class="home-hero">
+    <div class="home-hero-media gauges-bg" aria-hidden="true">
+      <div class="gauge gauge-left">
+        <svg viewBox="0 0 200 200" role="img">
+          <circle cx="100" cy="100" r="88" class="gauge-ring"/>
+          <circle cx="100" cy="100" r="70" class="gauge-face"/>
+          <path class="gauge-arc" d="M30 130 A80 80 0 1 1 170 130" fill="none"/>
+          <line class="gauge-needle" x1="100" y1="100" x2="100" y2="28"/>
+          <circle cx="100" cy="100" r="8" class="gauge-hub"/>
+          <text x="100" y="155" text-anchor="middle" class="gauge-label">RPM</text>
+        </svg>
+      </div>
+      <div class="gauge gauge-right">
+        <svg viewBox="0 0 200 200" role="img">
+          <circle cx="100" cy="100" r="88" class="gauge-ring"/>
+          <circle cx="100" cy="100" r="70" class="gauge-face"/>
+          <path class="gauge-arc hot" d="M30 130 A80 80 0 1 1 170 130" fill="none"/>
+          <line class="gauge-needle hot" x1="100" y1="100" x2="155" y2="45"/>
+          <circle cx="100" cy="100" r="8" class="gauge-hub"/>
+          <text x="100" y="155" text-anchor="middle" class="gauge-label">KM/H</text>
+        </svg>
+      </div>
+    </div>
+    <div class="home-hero-content">
+      <div class="maker-seal">
+        <img src="assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="Velocímetros Digitales CDMX">
+        <span data-i18n="home.seal">Creado por Velocímetros Digitales CDMX</span>
+      </div>
+      <h1 class="brand-mega">VELOCÍMETROS<br>CDMX</h1>
+      <p class="lead" data-i18n="home.lead">Referencia técnica para EEPROM, programadores UPA, conexiones y dashboards automotrices.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="autos/">AUTOS</a>
+        <a class="btn btn-ghost" href="motos/">MOTOS</a>
+        <a class="btn btn-ghost" href="portal/">PORTAL SEGURO</a>
+      </div>
+    </div>
+  </section>
 
-<div class="footer">
+  <main class="home-sections">
+    <section class="section-block">
+      <h2 data-i18n="home.catalogTitle">CATÁLOGO RÁPIDO</h2>
+      <p data-i18n="home.catalogLead">Elige la categoría y entra a marcas, modelos y fichas técnicas con fotos de tablero, EEPROM y conexión.</p>
+      <div class="menu-grid">
+        <a class="menu-card" href="autos/">
+          <span class="label">AUTOS</span>
+          <span class="meta" data-i18n="home.carsMeta">Chevrolet y más</span>
+        </a>
+        <a class="menu-card" href="motos/">
+          <span class="label">MOTOS</span>
+          <span class="meta" data-i18n="home.bikesMeta">Yamaha MT-09 listo</span>
+        </a>
+        <a class="menu-card" href="motos/yamaha/mt09/">
+          <span class="label">MT-09</span>
+          <span class="meta" data-i18n="home.mt09Meta">Ficha completa</span>
+        </a>
+      </div>
+    </section>
 
-    HELP ONLINE © VELOCÍMETROS CDMX
+    <section class="section-block">
+      <h2 data-i18n="home.helpTitle">HELP ONLINE SYSTEM</h2>
+      <p data-i18n="home.helpLead">Plataforma para talleres y técnicos: datos de chip, programador, tipo de memoria y notas de seguridad.</p>
+      <div class="info-strip">
+        <div class="info-item">
+          <strong>EEPROM</strong>
+          <span data-i18n="home.eepromDesc">Identificación de chips y organización</span>
+        </div>
+        <div class="info-item">
+          <strong>UPA / SERIAL</strong>
+          <span data-i18n="home.upaDesc">Programadores y flujos de lectura</span>
+        </div>
+        <div class="info-item">
+          <strong>DASHBOARD</strong>
+          <span data-i18n="home.dashDesc">Fotos de tablero y conexiones</span>
+        </div>
+        <div class="info-item">
+          <strong>SOPORTE</strong>
+          <span>+52 55 7891 4191</span>
+        </div>
+      </div>
+    </section>
 
-</div>
+    <section class="section-block maker-spotlight">
+      <h2 data-i18n="home.whoTitle">¿QUIÉN HACE ESTE SISTEMA?</h2>
+      <p data-i18n="home.whoLeadHtml" data-i18n-html="true">HELP ONLINE es un desarrollo de <strong>Velocímetros Digitales CDMX</strong>: soporte técnico automotriz con identidad propia.</p>
+      <div class="maker-credit maker-credit--hero">
+        <img class="maker-logo" src="assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="Velocímetros Digitales CDMX">
+        <div class="maker-copy">
+          <p class="maker-eyebrow" data-i18n="home.officialBrand">Marca oficial</p>
+          <p class="maker-name">VELOCÍMETROS DIGITALES CDMX</p>
+          <p class="maker-note" data-i18n="home.makerServices">EEPROM · UPA · Dashboards · Conexiones · Soporte técnico CDMX</p>
+        </div>
+      </div>
+    </section>
 
+  </main>
+
+  <footer class="site-footer">
+    <div class="maker-credit">
+      <img class="maker-logo" src="assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="Velocímetros Digitales CDMX">
+      <div class="maker-copy">
+        <p class="maker-eyebrow" data-i18n="footer.developedBy">Sistema desarrollado por</p>
+        <p class="maker-name">VELOCÍMETROS DIGITALES CDMX</p>
+        <p class="maker-note" data-i18n="footer.note">HELP ONLINE © VELOCÍMETROS CDMX — Uso técnico responsable</p>
+      </div>
+    </div>
+    <p class="admin-entry"><a href="admin/">Admin</a> · <a href="portal/">Portal seguro</a></p>
+  </footer>
+
+  <script src="assets/js/site.js"></script>
 </body>
 </html>

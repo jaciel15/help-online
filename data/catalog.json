@@ -1,0 +1,48 @@
+{
+  "updatedAt": "2026-09-10T00:00:00.000Z",
+  "categories": {
+    "autos": {
+      "label": "AUTOS",
+      "brands": {
+        "chevrolet": {
+          "name": "CHEVROLET",
+          "models": {}
+        }
+      }
+    },
+    "motos": {
+      "label": "MOTOS",
+      "brands": {
+        "yamaha": {
+          "name": "YAMAHA",
+          "models": {
+            "mt09": {
+              "name": "MT-09",
+              "versions": [
+                {
+                  "id": "base",
+                  "name": "Base",
+                  "eeprom": "93C86 × 16",
+                  "programmer": "UPA USB",
+                  "type": "SERIAL EEPROM",
+                  "notes": [
+                    "Velocímetros digitales CDMX",
+                    "No se hace responsable del mal uso",
+                    "El usuario es responsable de cada edición",
+                    "y modificación del sistema"
+                  ],
+                  "photos": {
+                    "dashboard": "motos/yamaha/mt09/dashboard.png",
+                    "connection": "motos/yamaha/mt09/conexion.png",
+                    "ignition": "motos/yamaha/mt09/eeprom.jpg",
+                    "main": "motos/yamaha/mt09/moto.PNG"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
