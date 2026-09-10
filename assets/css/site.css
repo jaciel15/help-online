@@ -983,11 +983,22 @@ a {
 @media (max-width: 640px) {
   .topbar {
     padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .brand-lockup .brand-name {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+  }
+
+  .brand-lockup .brand-tag {
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
   }
 
   .theme-btn {
-    padding: 8px 10px;
-    font-size: 0.68rem;
+    padding: 7px 9px;
+    font-size: 0.65rem;
   }
 
   .page {
