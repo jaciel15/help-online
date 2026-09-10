@@ -129,16 +129,49 @@ a {
 
 .brand-lockup {
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.brand-logo-wrap {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  padding: 3px;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--accent) 55%, #fff), var(--accent-2)),
+    var(--bg-elevated);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent),
+    0 0 22px var(--accent-glow);
+  overflow: hidden;
+}
+
+.brand-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 11px;
+  background: #050505;
+  display: block;
+}
+
+.brand-text {
+  display: flex;
   flex-direction: column;
   gap: 2px;
-  text-decoration: none;
   min-width: 0;
 }
 
 .brand-lockup .brand-name {
   font-family: var(--font-display);
-  font-size: clamp(0.85rem, 2.4vw, 1.05rem);
-  letter-spacing: 0.12em;
+  font-size: clamp(0.78rem, 2.2vw, 1.02rem);
+  letter-spacing: 0.1em;
   background: var(--header-grad);
   -webkit-background-clip: text;
   background-clip: text;
@@ -149,10 +182,13 @@ a {
 }
 
 .brand-lockup .brand-tag {
-  font-size: 0.68rem;
-  letter-spacing: 0.22em;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .theme-switch {
@@ -600,11 +636,10 @@ a {
   display: block;
 }
 
-/* Site footer */
+/* Site footer / maker credit */
 .site-footer {
   margin-top: auto;
-  padding: 28px 18px 36px;
-  text-align: center;
+  padding: 28px 18px 40px;
   color: var(--text-dim);
   font-size: 0.82rem;
   border-top: 1px solid color-mix(in srgb, var(--line) 40%, transparent);
@@ -613,6 +648,129 @@ a {
 .site-footer a {
   color: var(--accent);
   text-decoration: none;
+}
+
+.maker-credit {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 18px 16px;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--line) 65%, transparent);
+  background:
+    radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 45%),
+    radial-gradient(circle at 85% 80%, color-mix(in srgb, var(--accent-2) 14%, transparent), transparent 40%),
+    var(--bg-panel);
+  box-shadow: var(--shadow);
+  text-align: left;
+}
+
+.maker-logo {
+  width: clamp(88px, 18vw, 120px);
+  height: auto;
+  border-radius: 16px;
+  background: #050505;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent),
+    0 0 28px var(--accent-glow);
+  flex-shrink: 0;
+}
+
+.maker-copy {
+  min-width: 0;
+}
+
+.maker-eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.maker-name {
+  font-family: var(--font-display);
+  font-size: clamp(0.95rem, 2.6vw, 1.25rem);
+  letter-spacing: 0.06em;
+  color: var(--text);
+  line-height: 1.15;
+  margin-bottom: 6px;
+}
+
+.maker-note {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+
+.maker-credit--hero {
+  width: min(820px, 100%);
+  margin-top: 8px;
+  padding: 22px 18px;
+}
+
+.maker-credit--hero .maker-logo {
+  width: clamp(110px, 22vw, 150px);
+}
+
+.maker-spotlight strong {
+  color: var(--accent);
+}
+
+/* Home maker seal */
+.maker-seal {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 8px 14px 8px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  background: color-mix(in srgb, var(--bg-deep) 72%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 24px var(--accent-glow);
+  animation: rise 0.7s ease both;
+}
+
+.maker-seal img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #050505;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.maker-seal span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+  max-width: 16rem;
+}
+
+.side-logo--img {
+  display: inline-block;
+  width: clamp(72px, 12vw, 110px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.side-logo--img img {
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+  background: #050505;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent),
+    0 0 24px var(--accent-glow);
 }
 
 /* Detail / tech page extras used by MT-09 */
@@ -1039,6 +1197,26 @@ a {
 
   .cta-row .btn {
     width: 100%;
+  }
+
+  .brand-logo-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .maker-credit {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .maker-seal span {
+    max-width: 11rem;
+    font-size: 0.62rem;
+  }
+
+  .side-logo--img {
+    width: 84px;
   }
 }
 
