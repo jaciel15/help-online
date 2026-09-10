@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-10T10:07:56.649861+00:00",
+  "updatedAt": "2026-09-10T13:08:11.777844+00:00",
   "categories": {
     "autos": {
       "label": "AUTOS",
@@ -52,6 +52,32 @@
                     "dashboard": "data/help/autos/ford/focus/dashboard.jpg",
                     "connection": "data/help/autos/ford/focus/connection.jpg",
                     "ignition": "data/help/autos/ford/focus/ignition.jpg"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "toyota": {
+          "name": "TOYOTA",
+          "models": {
+            "hiace-vieja": {
+              "name": "HIACE VIEJA",
+              "versions": [
+                {
+                  "id": "version-1",
+                  "name": "Version 1",
+                  "eeprom": "93C56",
+                  "programmer": "UPA USB",
+                  "type": "SERIAL EEPROM",
+                  "notes": [
+                    "Recuperado tras fallo de disco. Vuelve a Editar, sube las 4 fotos reales y Guarda otra vez."
+                  ],
+                  "photos": {
+                    "main": "data/help/autos/toyota/hiace-vieja/version-1-main.gif",
+                    "dashboard": "data/help/autos/toyota/hiace-vieja/version-1-dashboard.gif",
+                    "connection": "data/help/autos/toyota/hiace-vieja/version-1-connection.gif",
+                    "ignition": "data/help/autos/toyota/hiace-vieja/version-1-ignition.gif"
                   }
                 }
               ]

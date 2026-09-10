@@ -313,7 +313,14 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._json(200, {"ok": True})
 
             return self._json(404, {"ok": False, "error": "not found"})
+        except OSError as exc:  # noqa: BLE001
+            err = str(exc)
+            if "No space" in err or getattr(exc, "errno", None) == 28:
+                err = "Disco del servidor lleno. Libera espacio e intenta Guardar de nuevo."
+            print(f"API error {path}: {exc}", flush=True)
+            return self._json(500, {"ok": False, "error": err})
         except Exception as exc:  # noqa: BLE001
+            print(f"API error {path}: {exc}", flush=True)
             return self._json(500, {"ok": False, "error": str(exc)})
 
     def log_message(self, fmt, *args):

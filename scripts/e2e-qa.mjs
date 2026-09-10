@@ -150,11 +150,11 @@ async function main() {
   await page.click("#btnBackBrands");
   await page.waitForSelector(".brand-folder");
 
-  // Publish new Toyota Corolla with 4 photos via API-like fill
+  // Publish new QA unit (not Toyota — evita borrar ayudas reales del usuario)
   await page.click("#btnNew");
   await page.selectOption("#fCategory", "autos");
-  await page.fill("#fBrand", "Toyota");
-  await page.fill("#fModel", "Corolla QA");
+  await page.fill("#fBrand", "PruebaQA");
+  await page.fill("#fModel", "Modelo E2E");
   await page.fill("#fVersion", "Base");
   await page.fill("#fEeprom", "93C66");
   await page.fill("#fNotes", "Prueba E2E automatizada");
@@ -199,20 +199,20 @@ async function main() {
 
   // Intercept navigation after save
   const [nav] = await Promise.all([
-    page.waitForURL(/ayuda\/\?c=autos&b=toyota&m=corolla-qa/, { timeout: 25000 }),
+    page.waitForURL(/ayuda\/\?c=autos&b=pruebaqa&m=modelo-e2e/, { timeout: 25000 }),
     page.click("#btnPublish"),
   ]);
   ok("publish redirects to client help", page.url());
 
   await page.waitForSelector("#fichaRoot h1");
   const title = await page.locator("#fichaRoot h1").textContent();
-  if (!/TOYOTA/i.test(title || "")) throw new Error("bad client title " + title);
+  if (!/PRUEBAQA/i.test(title || "")) throw new Error("bad client title " + title);
   const slideCount = await page.locator("#fichaRoot img[data-lightbox]").count();
   if (slideCount < 1) throw new Error("no client photos");
   ok("client view after save", title + " slides=" + slideCount);
 
   // Public file + photo files on disk/API
-  const unitRes = await fetch(BASE + "/data/help/autos/toyota/corolla-qa/base.json");
+  const unitRes = await fetch(BASE + "/data/help/autos/pruebaqa/modelo-e2e/base.json");
   if (!unitRes.ok) throw new Error("published json missing");
   const unit = await unitRes.json();
   const photos = unit.version.photos || {};
@@ -225,11 +225,11 @@ async function main() {
   }
   ok("server extracted photo files", JSON.stringify(photos));
 
-  // Catalog has toyota with path thumbs
+  // Catalog has pruebaqa with path thumbs
   const cat = await (await fetch(BASE + "/data/catalog.json")).json();
-  const toyota = cat.categories.autos.brands.toyota;
-  if (!toyota || !toyota.models["corolla-qa"]) throw new Error("toyota missing in catalog");
-  const catPhotos = toyota.models["corolla-qa"].versions[0].photos;
+  const qaBrand = cat.categories.autos.brands.pruebaqa;
+  if (!qaBrand || !qaBrand.models["modelo-e2e"]) throw new Error("pruebaqa missing in catalog");
+  const catPhotos = qaBrand.models["modelo-e2e"].versions[0].photos;
   if (!catPhotos.main || catPhotos.main === "[published]") throw new Error("catalog still placeholder");
   ok("catalog paths updated", catPhotos.main);
 
@@ -238,16 +238,15 @@ async function main() {
   if (!escapeVisible) throw new Error("admin escape hidden");
   ok("creator escape link visible");
 
-  // Back to admin, open Toyota folder, edit
+  // Back to admin, open PruebaQA folder, edit
   await page.click('#adminEscape a');
   await page.waitForSelector("#adminApp:not([hidden])");
   await page.waitForTimeout(500);
-  // may need re-show inventory
-  const toyotaFolder = page.locator('.brand-folder[data-b="toyota"]');
-  await toyotaFolder.waitFor({ state: "visible", timeout: 10000 });
-  await toyotaFolder.click();
+  const qaFolder = page.locator('.brand-folder[data-b="pruebaqa"]');
+  await qaFolder.waitFor({ state: "visible", timeout: 10000 });
+  await qaFolder.click();
   await page.waitForSelector(".edit-help");
-  ok("Toyota folder after publish");
+  ok("PruebaQA folder after publish");
 
   await page.click(".edit-help");
   await page.waitForTimeout(800);
@@ -259,13 +258,13 @@ async function main() {
   if (!mainSrc || mainSrc.includes("[published]")) throw new Error("edit photo broken: " + mainSrc);
   ok("Editar loads real photos", mainSrc.slice(0, 80));
 
-  // Delete toyota
+  // Delete QA unit
   page.once("dialog", async (d) => {
     await d.accept();
   });
   await page.locator(".delete-help").first().click();
   await page.waitForTimeout(1200);
-  const gone = await fetch(BASE + "/data/help/autos/toyota/corolla-qa/base.json");
+  const gone = await fetch(BASE + "/data/help/autos/pruebaqa/modelo-e2e/base.json");
   if (gone.status !== 404) throw new Error("delete did not remove public json: " + gone.status);
   ok("Borrar removes public help");
 

@@ -839,32 +839,47 @@
           return C.saveCatalog(catalog).then(function () {
             var helpUnit = C.buildHelpUnit(catalog, category, brandId, modelId, versionId);
             return C.saveHelpUnit(helpUnit).then(function () {
-              return C.publishToServer(helpUnit)
-                .catch(function (err) {
-                  console.warn("publish API", err);
-                  return { ok: false, offline: true, error: err && err.message };
-                })
-                .then(function (pub) {
-                  // Tras publicar, usa rutas de archivo (catálogo liviano + miniaturas)
-                  if (pub && pub.ok && pub.photos) {
-                    var ver = C.getVersion(catalog, category, brandId, modelId, versionId);
-                    if (ver) ver.photos = pub.photos;
-                    if (helpUnit && helpUnit.version) helpUnit.version.photos = pub.photos;
-                    return C.saveCatalog(catalog)
-                      .then(function () {
-                        return C.saveHelpUnit(helpUnit);
-                      })
-                      .then(function () {
-                        return { helpUnit: helpUnit, pub: pub };
-                      });
-                  }
-                  return C.loadHelpUnit(category, brandId, modelId, versionId).then(function (verify) {
-                    if (!verify || !verify.version) {
-                      throw new Error("No se pudo confirmar el guardado. Intenta de nuevo.");
+              return C.pingApi().then(function (apiUp) {
+                return C.publishToServer(helpUnit)
+                  .then(function (pub) {
+                    return { pub: pub, apiUp: apiUp };
+                  })
+                  .catch(function (err) {
+                    console.warn("publish API", err);
+                    if (apiUp) {
+                      throw new Error(
+                        "El servidor rechazó la publicación: " +
+                          ((err && err.message) || err) +
+                          ". La ayuda NO quedó pública. Vuelve a Guardar."
+                      );
                     }
-                    return { helpUnit: helpUnit, pub: pub || { ok: false } };
+                    return {
+                      pub: { ok: false, offline: true, error: err && err.message },
+                      apiUp: false
+                    };
+                  })
+                  .then(function (pack) {
+                    var pub = pack.pub || {};
+                    if (pub && pub.ok && pub.photos) {
+                      var ver = C.getVersion(catalog, category, brandId, modelId, versionId);
+                      if (ver) ver.photos = pub.photos;
+                      if (helpUnit && helpUnit.version) helpUnit.version.photos = pub.photos;
+                      return C.saveCatalog(catalog)
+                        .then(function () {
+                          return C.saveHelpUnit(helpUnit);
+                        })
+                        .then(function () {
+                          return { helpUnit: helpUnit, pub: pub };
+                        });
+                    }
+                    return C.loadHelpUnit(category, brandId, modelId, versionId).then(function (verify) {
+                      if (!verify || !verify.version) {
+                        throw new Error("No se pudo confirmar el guardado. Intenta de nuevo.");
+                      }
+                      return { helpUnit: helpUnit, pub: pub || { ok: false } };
+                    });
                   });
-                });
+              });
             });
           });
         })
@@ -886,7 +901,8 @@
           if (msg) {
             msg.hidden = false;
             msg.innerHTML =
-              "✓ Guardado · <strong>" +
+              (pub.ok ? "✓ Guardado público · " : "⚠ Guardado solo en este teléfono · ") +
+              "<strong>" +
               brandName.toUpperCase() +
               " " +
               modelName.toUpperCase() +
@@ -894,16 +910,27 @@
               folder +
               "</code><br>" +
               (pub.ok
-                ? "Link público listo para enviar al cliente."
-                : "Guardado en este navegador. Para que el link funcione en otro teléfono, el servidor de publicación debe estar activo.") +
+                ? "Link listo para el cliente."
+                : "El link NO funcionará en otro teléfono hasta que Guardar publique bien en el servidor. Revisa el mensaje e intenta otra vez.") +
               "<br><code style='word-break:break-all'>" +
               abs +
-              "</code><br>Abriendo ayuda…";
+              "</code>";
           }
 
-          setTimeout(function () {
-            location.assign(href);
-          }, 700);
+          if (pub.ok) {
+            if (msg) msg.innerHTML += "<br>Abriendo ayuda…";
+            setTimeout(function () {
+              location.assign(href);
+            }, 700);
+          } else {
+            showLinkSharePanel(
+              abs,
+              "Publicación incompleta. No envíes este link aún. Vuelve a pulsar Guardar en catálogo."
+            );
+            alert(
+              "Se guardó en este navegador, pero NO en el servidor público. Vuelve a Guardar. Si falla otra vez, avisa (puede ser espacio o conexión)."
+            );
+          }
         })
         .catch(function (err) {
           console.error(err);

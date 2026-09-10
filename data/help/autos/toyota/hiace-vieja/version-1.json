@@ -1,0 +1,24 @@
+{
+  "c": "autos",
+  "b": "toyota",
+  "m": "hiace-vieja",
+  "v": "version-1",
+  "brandName": "TOYOTA",
+  "modelName": "HIACE VIEJA",
+  "version": {
+    "id": "version-1",
+    "name": "Version 1",
+    "eeprom": "93C56",
+    "programmer": "UPA USB",
+    "type": "SERIAL EEPROM",
+    "notes": [
+      "Recuperado tras fallo de disco. Vuelve a Editar, sube las 4 fotos reales y Guarda otra vez."
+    ],
+    "photos": {
+      "main": "data/help/autos/toyota/hiace-vieja/version-1-main.gif",
+      "dashboard": "data/help/autos/toyota/hiace-vieja/version-1-dashboard.gif",
+      "connection": "data/help/autos/toyota/hiace-vieja/version-1-connection.gif",
+      "ignition": "data/help/autos/toyota/hiace-vieja/version-1-ignition.gif"
+    }
+  }
+}
