@@ -368,8 +368,44 @@
   function initModal() {
     var modal = document.getElementById("imageModal");
     var modalImg = document.getElementById("modalImg");
-    var closeBtn = document.querySelector(".modal-close");
+    var closeBtn = modal ? modal.querySelector(".modal-close") : document.querySelector(".modal-close");
     if (!modal || !modalImg) return;
+
+    // Evita listeners duplicados al regenerar fichas dinámicas
+    if (modal.dataset.lightboxReady === "1") {
+      // Solo re-enlaza fotos nuevas
+    } else {
+      modal.dataset.lightboxReady = "1";
+
+      function close() {
+        modal.classList.remove("open");
+        modalImg.removeAttribute("src");
+        document.body.style.overflow = "";
+      }
+
+      modal._vcdmxClose = close;
+
+      if (closeBtn) {
+        closeBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          close();
+        });
+      }
+
+      // Click en fondo O en la foto ampliada → cerrar
+      modal.addEventListener("click", function () {
+        close();
+      });
+      modalImg.addEventListener("click", function (e) {
+        e.stopPropagation();
+        close();
+      });
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && modal.classList.contains("open")) close();
+      });
+    }
 
     function open(src, alt) {
       modalImg.src = src;
@@ -378,24 +414,15 @@
       document.body.style.overflow = "hidden";
     }
 
-    function close() {
-      modal.classList.remove("open");
-      modalImg.removeAttribute("src");
-      document.body.style.overflow = "";
-    }
-
     document.querySelectorAll("[data-lightbox]").forEach(function (img) {
-      img.addEventListener("click", function () {
-        open(img.src, img.alt);
+      if (img.dataset.lbBound === "1") return;
+      img.dataset.lbBound = "1";
+      img.style.cursor = "zoom-in";
+      img.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        open(img.currentSrc || img.src, img.alt);
       });
-    });
-
-    if (closeBtn) closeBtn.addEventListener("click", close);
-    modal.addEventListener("click", function (e) {
-      if (e.target === modal) close();
-    });
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") close();
     });
   }
 
