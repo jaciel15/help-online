@@ -83,7 +83,7 @@
       "hub.tag": "HELP ONLINE · Sistema completo",
       "hub.admin": "Administrador",
       "hub.seal": "Creado por Velocímetros Digitales CDMX",
-      "hub.lead": "Tú creas y editas ayudas. Al guardar aparece el link para copiar o abrir la página del cliente.",
+      "hub.lead": "Para Guardar o Borrar usa el link del servidor (no GitHub Pages). Al guardar aparece el link del cliente.",
       "hub.enterAdmin": "Entrar a administrador",
       "hub.example": "Ver ejemplo cliente MT-09",
       "hub.loginBadge": "SOLO ADMINISTRADOR / CREADOR",
@@ -225,7 +225,7 @@
       "hub.tag": "HELP ONLINE · Full system",
       "hub.admin": "Administrator",
       "hub.seal": "Created by Velocímetros Digitales CDMX",
-      "hub.lead": "You create and edit helps. On save, the client link appears so you can copy or open it.",
+      "hub.lead": "To Save or Delete use the server link (not GitHub Pages). On save, the client link appears.",
       "hub.enterAdmin": "Enter administrator",
       "hub.example": "View MT-09 client example",
       "hub.loginBadge": "ADMIN / CREATOR ONLY",
@@ -580,6 +580,12 @@
     initSearch();
     initDynamic();
     staggerCards();
+    try {
+      if (location.hostname && location.hostname.indexOf("github.io") !== -1) {
+        var banner = document.getElementById("staticHostBanner");
+        if (banner) banner.hidden = false;
+      }
+    } catch (e) {}
   });
 
   document.addEventListener("VCDMX_DYNAMIC", initDynamic);

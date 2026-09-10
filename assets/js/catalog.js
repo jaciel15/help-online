@@ -128,6 +128,7 @@
   function emptyCatalog() {
     return {
       updatedAt: new Date().toISOString(),
+      deleted: [],
       categories: {
         autos: { label: "AUTOS", brands: {} },
         motos: { label: "MOTOS", brands: {} }
@@ -257,6 +258,138 @@
     return prefix + "data/catalog.json";
   }
 
+  function unitKey(c, b, m, v) {
+    return [c, b, m, v || "base"].join("/");
+  }
+
+  function ensureDeletedList(catalog) {
+    if (!catalog.deleted || !Array.isArray(catalog.deleted)) catalog.deleted = [];
+    return catalog.deleted;
+  }
+
+  function markDeleted(catalog, c, b, m, v) {
+    var key = unitKey(c, b, m, v);
+    var list = ensureDeletedList(catalog);
+    if (list.indexOf(key) === -1) list.push(key);
+  }
+
+  function unmarkDeleted(catalog, c, b, m, v) {
+    var key = unitKey(c, b, m, v);
+    catalog.deleted = ensureDeletedList(catalog).filter(function (k) {
+      return k !== key;
+    });
+  }
+
+  function isMarkedDeleted(catalog, c, b, m, v) {
+    return ensureDeletedList(catalog).indexOf(unitKey(c, b, m, v)) !== -1;
+  }
+
+  /** IDB defines which helps exist; file only fills real photo paths. Never resurrect tombstones. */
+  function mergeCatalogNoResurrect(fileCat, idbCat) {
+    if (!idbCat) return fileCat || emptyCatalog();
+    if (!fileCat) return idbCat;
+    var out = JSON.parse(JSON.stringify(idbCat));
+    ensureDeletedList(out);
+    ["autos", "motos"].forEach(function (cat) {
+      var fileBrands = (((fileCat.categories || {})[cat] || {}).brands) || {};
+      if (!out.categories[cat]) out.categories[cat] = { label: cat.toUpperCase(), brands: {} };
+      var outBrands = out.categories[cat].brands || (out.categories[cat].brands = {});
+      Object.keys(fileBrands).forEach(function (brandId) {
+        var fb = fileBrands[brandId];
+        if (!outBrands[brandId]) {
+          // New brand only from file if none of its versions are tombstoned entirely
+          // — still copy brand shell for photo enrichment of future edits, but skip deleted versions
+          outBrands[brandId] = { name: fb.name, models: {} };
+        }
+        var ob = outBrands[brandId];
+        if (fb.name) ob.name = fb.name;
+        var fModels = fb.models || {};
+        var oModels = ob.models || (ob.models = {});
+        Object.keys(fModels).forEach(function (mid) {
+          var fm = fModels[mid];
+          if (!oModels[mid]) oModels[mid] = { name: fm.name, versions: [] };
+          if (fm.name) oModels[mid].name = fm.name;
+          var oVers = oModels[mid].versions || (oModels[mid].versions = []);
+          (fm.versions || []).forEach(function (fv) {
+            var vid = fv.id || "base";
+            if (isMarkedDeleted(out, cat, brandId, mid, vid)) return;
+            var idx = -1;
+            for (var i = 0; i < oVers.length; i++) {
+              if (oVers[i].id === vid) {
+                idx = i;
+                break;
+              }
+            }
+            if (idx < 0) {
+              // Only add from file if this brand/model was empty in IDB (first sync),
+              // OR if IDB never had local edits (no updatedAt newer). Safer: add from file
+              // only when IDB doesn't know this brand at all yet — actually user wants
+              // file seeds + local deletes. So: add from file if not tombstoned AND
+              // (version already in IDB OR brand was not solely from a prior delete).
+              // Simplest correct rule: add from file if not tombstoned.
+              oVers.push(JSON.parse(JSON.stringify(fv)));
+              return;
+            }
+            var ov = oVers[idx];
+            var fp = fv.photos || {};
+            var op = ov.photos || (ov.photos = {});
+            Object.keys(fp).forEach(function (pk) {
+              if (fp[pk] && (!op[pk] || isPhotoPlaceholder(op[pk]))) op[pk] = fp[pk];
+            });
+            if (!ov.eeprom && fv.eeprom) ov.eeprom = fv.eeprom;
+            if (!ov.programmer && fv.programmer) ov.programmer = fv.programmer;
+            if (!ov.type && fv.type) ov.type = fv.type;
+            if ((!ov.notes || !ov.notes.length) && fv.notes) ov.notes = fv.notes;
+          });
+          if (!oModels[mid].versions.length) delete oModels[mid];
+        });
+        if (!Object.keys(oModels).length) delete outBrands[brandId];
+      });
+    });
+    return out;
+  }
+
+  function isStaticHost() {
+    try {
+      var h = (location.hostname || "").toLowerCase();
+      return (
+        h.indexOf("github.io") !== -1 ||
+        h.indexOf("pages.dev") !== -1 ||
+        h === "jaciel15.github.io"
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function fetchWithTimeout(url, options, ms) {
+    options = options || {};
+    ms = ms || 8000;
+    var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timer = null;
+    if (ctrl) {
+      timer = setTimeout(function () {
+        try {
+          ctrl.abort();
+        } catch (e) {}
+      }, ms);
+      options.signal = ctrl.signal;
+    }
+    return fetch(url, options).then(
+      function (r) {
+        if (timer) clearTimeout(timer);
+        return r;
+      },
+      function (err) {
+        if (timer) clearTimeout(timer);
+        if (err && err.name === "AbortError") {
+          throw new Error("Tiempo agotado. Usa el link del servidor (no GitHub Pages) para guardar.");
+        }
+        throw err;
+      }
+    );
+  }
+
   function loadCatalog() {
     var path = resolveCatalogPath();
     return migrateLocalToIdb()
@@ -267,18 +400,73 @@
         return null;
       })
       .then(function (idbCat) {
-        return fetch(path, { cache: "no-store" })
+        return fetchWithTimeout(path, { cache: "no-store" }, 10000)
           .then(function (r) {
             if (!r.ok) throw new Error("no catalog");
             return r.json();
           })
           .then(function (fileCat) {
-            return idbCat ? deepMerge(fileCat, idbCat) : fileCat;
+            return pingApi().then(function (apiUp) {
+              var result;
+              if (apiUp && fileCat) {
+                // Servidor = verdad. Conserva tombstones locales vacíos al sincronizar.
+                result = JSON.parse(JSON.stringify(fileCat));
+                ensureDeletedList(result);
+                // Enrich placeholders from IDB only for versions that still exist on server
+                if (idbCat) {
+                  result = mergePhotosOnly(result, idbCat);
+                }
+              } else if (idbCat) {
+                result = mergeCatalogNoResurrect(fileCat, idbCat);
+              } else {
+                result = fileCat || emptyCatalog();
+                ensureDeletedList(result);
+              }
+              return idbSet(IDB_CATALOG, stripHeavyPhotos(result))
+                .catch(function () {})
+                .then(function () {
+                  return result;
+                });
+            });
           })
           .catch(function () {
-            return idbCat || readLocal() || emptyCatalog();
+            var fallback = idbCat || readLocal() || emptyCatalog();
+            ensureDeletedList(fallback);
+            return fallback;
           });
       });
+  }
+
+  /** Copy real photo paths from idb into file-based catalog for matching versions only. */
+  function mergePhotosOnly(filePrimary, idbCat) {
+    var out = filePrimary;
+    ["autos", "motos"].forEach(function (cat) {
+      var brands = (((out.categories || {})[cat] || {}).brands) || {};
+      var idbBrands = (((idbCat.categories || {})[cat] || {}).brands) || {};
+      Object.keys(brands).forEach(function (bid) {
+        var models = brands[bid].models || {};
+        var idbModels = (idbBrands[bid] && idbBrands[bid].models) || {};
+        Object.keys(models).forEach(function (mid) {
+          (models[mid].versions || []).forEach(function (fv) {
+            var idbModel = idbModels[mid];
+            if (!idbModel) return;
+            var iv = null;
+            (idbModel.versions || []).forEach(function (v) {
+              if (v.id === fv.id) iv = v;
+            });
+            if (!iv || !iv.photos) return;
+            var op = fv.photos || (fv.photos = {});
+            Object.keys(iv.photos).forEach(function (pk) {
+              var val = iv.photos[pk];
+              if (val && !isPhotoPlaceholder(val) && (!op[pk] || isPhotoPlaceholder(op[pk]))) {
+                op[pk] = val;
+              }
+            });
+          });
+        });
+      });
+    });
+    return out;
   }
 
   function saveCatalog(catalog) {
@@ -499,6 +687,7 @@
     if (!model.versions) model.versions = [];
     var id = version.id || slugify(version.name || "version");
     version.id = id;
+    unmarkDeleted(catalog, category, brandId, modelId, id);
     var idx = -1;
     for (var i = 0; i < model.versions.length; i++) {
       if (model.versions[i].id === id) {
@@ -513,10 +702,11 @@
 
   function deleteVersion(catalog, category, brandId, modelId, versionId) {
     try {
+      markDeleted(catalog, category, brandId, modelId, versionId);
       var brand = catalog.categories[category].brands[brandId];
-      if (!brand) return false;
+      if (!brand) return true;
       var model = brand.models[modelId];
-      if (!model || !model.versions) return false;
+      if (!model || !model.versions) return true;
       model.versions = model.versions.filter(function (v) {
         return v.id !== versionId;
       });
@@ -560,61 +750,45 @@
 
   /** Publica la ficha en el servidor (data/help/...) para que el link funcione a cualquiera. */
   function publishToServer(unit) {
-    var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
-    var timer = null;
-    if (ctrl) {
-      timer = setTimeout(function () {
+    return fetchWithTimeout(
+      apiBase() + "api/publish",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(unit)
+      },
+      45000
+    ).then(function (r) {
+      return r.text().then(function (raw) {
+        var body = null;
         try {
-          ctrl.abort();
-        } catch (e) {}
-      }, 60000);
-    }
-    return fetch(apiBase() + "api/publish", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(unit),
-      signal: ctrl ? ctrl.signal : undefined
-    })
-      .then(function (r) {
-        return r.text().then(function (raw) {
-          var body = null;
-          try {
-            body = raw ? JSON.parse(raw) : null;
-          } catch (e) {
-            body = null;
-          }
-          if (!r.ok || !body || !body.ok) {
-            throw new Error(
-              (body && body.error) ||
-                (r.status === 404
-                  ? "API no disponible (¿servidor apagado?). Abre con el link del servidor, no solo GitHub Pages."
-                  : "No se pudo publicar en el servidor (" + r.status + ")")
-            );
-          }
-          return body;
-        });
-      })
-      .catch(function (err) {
-        if (err && err.name === "AbortError") {
-          throw new Error("Tiempo agotado al guardar. Revisa la conexión y vuelve a intentar.");
+          body = raw ? JSON.parse(raw) : null;
+        } catch (e) {
+          body = null;
         }
-        throw err;
-      })
-      .then(function (body) {
-        if (timer) clearTimeout(timer);
+        if (!r.ok || !body || !body.ok) {
+          throw new Error(
+            (body && body.error) ||
+              (r.status === 404
+                ? "API no disponible. Abre http://bore.pub:7110/ (servidor), no GitHub Pages."
+                : "No se pudo publicar en el servidor (" + r.status + ")")
+          );
+        }
         return body;
-      }, function (err) {
-        if (timer) clearTimeout(timer);
-        throw err;
       });
+    });
   }
 
   function deleteFromServer(c, b, m, v) {
-    return fetch(apiBase() + "api/delete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ c: c, b: b, m: m, v: v || "base" })
-    }).then(function (r) {
+    return fetchWithTimeout(
+      apiBase() + "api/delete",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ c: c, b: b, m: m, v: v || "base" })
+      },
+      15000
+    ).then(function (r) {
       return r.json().then(function (body) {
         if (!r.ok || !body.ok) {
           throw new Error((body && body.error) || "No se pudo borrar en el servidor");
@@ -625,9 +799,18 @@
   }
 
   function pingApi() {
-    return fetch(apiBase() + "api/health", { cache: "no-store" })
+    if (isStaticHost()) return Promise.resolve(false);
+    return fetchWithTimeout(apiBase() + "api/health", { cache: "no-store" }, 4000)
       .then(function (r) {
-        return r.ok;
+        if (!r.ok) return false;
+        return r
+          .json()
+          .then(function (body) {
+            return !!(body && body.ok);
+          })
+          .catch(function () {
+            return false;
+          });
       })
       .catch(function () {
         return false;
@@ -831,6 +1014,7 @@
     deleteHelpUnit: deleteHelpUnit,
     publishToServer: publishToServer,
     deleteFromServer: deleteFromServer,
+    isStaticHost: isStaticHost,
     pingApi: pingApi,
     getVersion: getVersion,
     listBrands: listBrands,

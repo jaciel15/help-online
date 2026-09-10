@@ -212,25 +212,64 @@
   function refreshStorageStatus() {
     var el = $("storageStatus");
     if (!el) return;
-    fetch((CFG.root || "") + "api/storage", { cache: "no-store" })
-      .then(function (r) {
-        return r.json();
-      })
-      .then(function (body) {
-        var disk = (body && body.disk) || {};
-        var free = disk.freeMb != null ? disk.freeMb : "?";
-        var ok = disk.ok !== false;
+    if (C.isStaticHost && C.isStaticHost()) {
+      el.textContent =
+        "⚠ Estás en GitHub Pages: NO se puede Guardar ni Borrar aquí. Usa el link del servidor.";
+      el.style.color = "#f5a623";
+      return;
+    }
+    C.pingApi().then(function (up) {
+      if (!up) {
         el.textContent =
-          (ok ? "✓ " : "⚠ ") +
-          "Espacio servidor: " +
-          free +
-          " MB libres" +
-          (ok ? " · listo para más ayudas" : " · libera espacio antes de guardar");
-        el.style.color = ok ? "" : "#f5a623";
-      })
-      .catch(function () {
-        el.textContent = "Espacio servidor: no disponible (¿servidor apagado?)";
-      });
+          "⚠ Servidor apagado: Guardar/Borrar no quedarán públicos. Abre el link del servidor.";
+        el.style.color = "#f5a623";
+        return;
+      }
+      fetchWithTimeoutAdmin((CFG.root || "") + "api/storage", 5000)
+        .then(function (r) {
+          return r.json();
+        })
+        .then(function (body) {
+          var disk = (body && body.disk) || {};
+          var free = disk.freeMb != null ? disk.freeMb : "?";
+          var ok = disk.ok !== false;
+          el.textContent =
+            (ok ? "✓ " : "⚠ ") +
+            "Espacio servidor: " +
+            free +
+            " MB libres" +
+            (ok ? " · listo para guardar" : " · libera espacio antes de guardar");
+          el.style.color = ok ? "" : "#f5a623";
+        })
+        .catch(function () {
+          el.textContent = "✓ Servidor activo";
+          el.style.color = "";
+        });
+    });
+  }
+
+  function fetchWithTimeoutAdmin(url, ms) {
+    var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timer = null;
+    var opts = { cache: "no-store" };
+    if (ctrl) {
+      timer = setTimeout(function () {
+        try {
+          ctrl.abort();
+        } catch (e) {}
+      }, ms || 5000);
+      opts.signal = ctrl.signal;
+    }
+    return fetch(url, opts).then(
+      function (r) {
+        if (timer) clearTimeout(timer);
+        return r;
+      },
+      function (err) {
+        if (timer) clearTimeout(timer);
+        throw err;
+      }
+    );
   }
 
   function setPhoto(key, url) {
@@ -622,12 +661,20 @@
         var v = btn.getAttribute("data-v");
         var label = btn.getAttribute("data-label") || "esta ayuda";
         if (!confirm("¿Borrar " + label + "? Esta acción no se puede deshacer.")) return;
-        C.deleteVersion(catalog, c, b, m, v);
-        Promise.resolve()
-          .then(function () {
-            return C.deleteFromServer(c, b, m, v).catch(function () {
-              return null;
-            });
+
+        btn.disabled = true;
+        var original = btn.textContent;
+        btn.textContent = "Borrando…";
+
+        C.pingApi()
+          .then(function (apiUp) {
+            if (!apiUp) {
+              throw new Error(
+                "No se puede borrar aquí. Abre el link del servidor (http://bore.pub:7110/#administrador), no GitHub Pages."
+              );
+            }
+            C.deleteVersion(catalog, c, b, m, v);
+            return C.deleteFromServer(c, b, m, v);
           })
           .then(function () {
             return C.deleteHelpUnit(c, b, m, v).catch(function () {});
@@ -636,17 +683,25 @@
             return C.saveCatalog(catalog);
           })
           .then(function () {
+            // Recarga catálogo del servidor para que no “regrese” al refrescar
+            return C.loadCatalog().then(function (cat) {
+              catalog = cat;
+            });
+          })
+          .then(function () {
             if (brandView && countBrandHelps(brandView.cat, brandView.brandId) === 0) {
               brandView = null;
             }
             renderTree();
             if ($("formMsg")) {
               $("formMsg").hidden = false;
-              $("formMsg").textContent = "Eliminado: " + label;
+              $("formMsg").textContent = "Eliminado en servidor: " + label;
             }
           })
           .catch(function (err) {
             alert("No se pudo borrar: " + ((err && err.message) || err));
+            btn.disabled = false;
+            btn.textContent = original;
           });
       });
     });
@@ -935,6 +990,7 @@
   function publish() {
     var msg = $("formMsg");
     var btn = $("btnPublish");
+    var watchdog = null;
     try {
       if (!catalog) catalog = C.emptyCatalog();
 
@@ -969,129 +1025,127 @@
       }
       hideLinkSharePanel();
 
-      var brandId = C.ensureBrand(catalog, category, brandName);
-      var modelId = C.ensureModel(catalog, category, brandId, modelName);
-      // Al editar, conservar el id de versión (si no, al renombrar se crea otra y “faltan fotos”)
-      var versionId =
-        editing && editing.versionId ? editing.versionId : C.slugify(versionName);
-      var existing = C.getVersion(catalog, category, brandId, modelId, versionId);
-      var prev = (existing && existing.photos) || {};
+      watchdog = setTimeout(function () {
+        restorePublishButton(btn);
+        if (msg) {
+          msg.hidden = false;
+          msg.textContent =
+            "Tiempo agotado. Usa el servidor http://bore.pub:7110/ — GitHub Pages no guarda.";
+        }
+        try {
+          alert("No se pudo guardar a tiempo. Abre http://bore.pub:7110/#administrador");
+        } catch (e) {}
+      }, 50000);
 
-      resolvePhotosForSave(category, brandId, modelId, versionId, prev)
-        .then(function (photos) {
-          var missing = PHOTO_KEYS.filter(function (k) {
-            return !photos[k] || isPlaceholderPhoto(photos[k]);
-          });
-          if (missing.length) {
-            var labels = {
-              main: "1 principal",
-              dashboard: "2 dashboard",
-              connection: "3 conexiones",
-              ignition: "4 pin-out"
-            };
+      C.pingApi()
+        .then(function (apiUp) {
+          if (!apiUp) {
             throw new Error(
-              "Faltan fotos: " +
-                missing
-                  .map(function (k) {
-                    return labels[k] || k;
-                  })
-                  .join(", ") +
-                ". Sube las 4 y vuelve a Guardar."
+              "NO se puede guardar en GitHub Pages. Abre este link del servidor y guarda ahí:\nhttp://bore.pub:7110/#administrador"
             );
           }
-          // Comprime cualquier dataURL que aún sea grande
-          var compressJobs = PHOTO_KEYS.map(function (k) {
-            var val = photos[k];
-            if (val && String(val).indexOf("data:") === 0) {
-              return C.compressDataUrl(val)
-                .then(function (out) {
-                  photos[k] = out;
-                })
-                .catch(function (err) {
-                  throw new Error(
-                    "Foto " +
-                      k +
-                      ": " +
-                      ((err && err.message) || "no se pudo comprimir")
-                  );
-                });
+
+          var brandId = C.ensureBrand(catalog, category, brandName);
+          var modelId = C.ensureModel(catalog, category, brandId, modelName);
+          var versionId =
+            editing && editing.versionId ? editing.versionId : C.slugify(versionName);
+          var existing = C.getVersion(catalog, category, brandId, modelId, versionId);
+          var prev = (existing && existing.photos) || {};
+
+          return resolvePhotosForSave(category, brandId, modelId, versionId, prev).then(function (
+            photos
+          ) {
+            var missing = PHOTO_KEYS.filter(function (k) {
+              return !photos[k] || isPlaceholderPhoto(photos[k]);
+            });
+            if (missing.length) {
+              var labels = {
+                main: "1 principal",
+                dashboard: "2 dashboard",
+                connection: "3 conexiones",
+                ignition: "4 pin-out"
+              };
+              throw new Error(
+                "Faltan fotos: " +
+                  missing
+                    .map(function (k) {
+                      return labels[k] || k;
+                    })
+                    .join(", ") +
+                  ". Sube las 4 y vuelve a Guardar."
+              );
             }
-            return Promise.resolve();
-          });
-
-          return Promise.all(compressJobs).then(function () {
-            return photos;
-          });
-        })
-        .then(function (photos) {
-          C.upsertVersion(catalog, category, brandId, modelId, {
-            id: versionId,
-            name: versionName,
-            eeprom: ($("fEeprom").value || "").trim(),
-            programmer: ($("fProgrammer").value || "").trim(),
-            type: ($("fType").value || "").trim(),
-            notes: ($("fNotes").value || "")
-              .split("\n")
-              .map(function (n) {
-                return n.trim();
-              })
-              .filter(Boolean),
-            photos: photos
-          });
-
-          return C.saveCatalog(catalog).then(function () {
-            var helpUnit = C.buildHelpUnit(catalog, category, brandId, modelId, versionId);
-            return C.saveHelpUnit(helpUnit).then(function () {
-              return C.pingApi().then(function (apiUp) {
-                return C.publishToServer(helpUnit)
-                  .then(function (pub) {
-                    return { pub: pub, apiUp: apiUp };
+            var compressJobs = PHOTO_KEYS.map(function (k) {
+              var val = photos[k];
+              if (val && String(val).indexOf("data:") === 0) {
+                return C.compressDataUrl(val)
+                  .then(function (out) {
+                    photos[k] = out;
                   })
                   .catch(function (err) {
-                    console.warn("publish API", err);
-                    if (apiUp) {
+                    throw new Error(
+                      "Foto " + k + ": " + ((err && err.message) || "no se pudo comprimir")
+                    );
+                  });
+              }
+              return Promise.resolve();
+            });
+
+            return Promise.all(compressJobs).then(function () {
+              C.upsertVersion(catalog, category, brandId, modelId, {
+                id: versionId,
+                name: versionName,
+                eeprom: ($("fEeprom").value || "").trim(),
+                programmer: ($("fProgrammer").value || "").trim(),
+                type: ($("fType").value || "").trim(),
+                notes: ($("fNotes").value || "")
+                  .split("\n")
+                  .map(function (n) {
+                    return n.trim();
+                  })
+                  .filter(Boolean),
+                photos: photos
+              });
+
+              return C.saveCatalog(catalog).then(function () {
+                var helpUnit = C.buildHelpUnit(catalog, category, brandId, modelId, versionId);
+                return C.saveHelpUnit(helpUnit).then(function () {
+                  return C.publishToServer(helpUnit).then(function (pub) {
+                    if (!pub || !pub.ok) {
                       throw new Error(
-                        "El servidor rechazó la publicación: " +
-                          ((err && err.message) || err) +
-                          ". La ayuda NO quedó pública. Vuelve a Guardar."
+                        (pub && pub.error) || "El servidor no confirmó la publicación."
                       );
                     }
-                    return {
-                      pub: { ok: false, offline: true, error: err && err.message },
-                      apiUp: false
-                    };
-                  })
-                  .then(function (pack) {
-                    var pub = pack.pub || {};
-                    if (pub && pub.ok && pub.photos) {
+                    if (pub.photos) {
                       var ver = C.getVersion(catalog, category, brandId, modelId, versionId);
                       if (ver) ver.photos = pub.photos;
                       if (helpUnit && helpUnit.version) helpUnit.version.photos = pub.photos;
                       PHOTO_KEYS.forEach(function (k) {
                         if (pub.photos[k]) setPhoto(k, pub.photos[k]);
                       });
-                      return C.saveCatalog(catalog)
-                        .then(function () {
-                          return C.saveHelpUnit(helpUnit);
-                        })
-                        .then(function () {
-                          return { helpUnit: helpUnit, pub: pub };
-                        });
                     }
-                    return C.loadHelpUnit(category, brandId, modelId, versionId).then(function (verify) {
-                      if (!verify || !verify.version) {
-                        throw new Error("No se pudo confirmar el guardado. Intenta de nuevo.");
-                      }
-                      return { helpUnit: helpUnit, pub: pub || { ok: false } };
-                    });
+                    return C.saveCatalog(catalog)
+                      .then(function () {
+                        return C.saveHelpUnit(helpUnit);
+                      })
+                      .then(function () {
+                        return C.loadCatalog().then(function (cat) {
+                          catalog = cat;
+                          return { helpUnit: helpUnit, pub: pub, brandId: brandId, modelId: modelId, versionId: versionId };
+                        });
+                      });
                   });
+                });
               });
             });
           });
         })
         .then(function (result) {
+          if (watchdog) clearTimeout(watchdog);
           var helpUnit = result.helpUnit;
-          var pub = result.pub || {};
+          var brandId = result.brandId || helpUnit.b;
+          var modelId = result.modelId || helpUnit.m;
+          var versionId = result.versionId || helpUnit.v;
           var folder = folderPath(category, brandId, modelId);
           brandView = {
             cat: category,
@@ -1107,42 +1161,26 @@
           if (msg) {
             msg.hidden = false;
             msg.innerHTML =
-              (pub.ok ? "✓ Guardado público · " : "⚠ Guardado solo en este teléfono · ") +
-              "<strong>" +
+              "✓ Guardado público · <strong>" +
               brandName.toUpperCase() +
               " " +
               modelName.toUpperCase() +
               "</strong> · carpeta <code>" +
               folder +
-              "</code><br>" +
-              (pub.ok
-                ? "Link listo abajo: cópialo y envíaselo al cliente."
-                : "El link NO funcionará en otro teléfono hasta que Guardar publique bien en el servidor.") +
-              "<br><code style='word-break:break-all'>" +
+              "</code><br>Link listo abajo: cópialo y envíaselo al cliente.<br><code style='word-break:break-all'>" +
               abs +
               "</code>";
           }
 
-          // Siempre mostrar el panel del link (antes se redirigía y el link “desaparecía”)
-          showLinkSharePanel(
-            abs,
-            pub.ok
-              ? "✓ Guardado. Copia este link o ábrelo para ver la ayuda del cliente."
-              : "Publicación incompleta. No envíes este link aún. Vuelve a Guardar con el servidor encendido."
-          );
+          showLinkSharePanel(abs, "✓ Guardado. Copia este link o ábrelo para ver la ayuda del cliente.");
           copyTextNow(abs).then(function (ok) {
             if (ok) {
               showLinkSharePanel(abs, "✓ Guardado y link copiado. Pégalo en WhatsApp o ábrelo abajo.");
             }
           });
-
-          if (!pub.ok) {
-            alert(
-              "Se guardó en este navegador, pero NO en el servidor público. Vuelve a Guardar con el link del servidor (no solo GitHub Pages)."
-            );
-          }
         })
         .catch(function (err) {
+          if (watchdog) clearTimeout(watchdog);
           console.error(err);
           var text = (err && err.message) || String(err);
           if (/quota|QuotaExceeded/i.test(text)) {
@@ -1161,9 +1199,11 @@
           } catch (e) {}
         })
         .then(function () {
+          if (watchdog) clearTimeout(watchdog);
           restorePublishButton(btn);
         });
     } catch (err) {
+      if (watchdog) clearTimeout(watchdog);
       console.error(err);
       restorePublishButton(btn);
       if (msg) {
