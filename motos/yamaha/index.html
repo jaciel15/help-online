@@ -1,108 +1,65 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>YAMAHA</title>
-
-<style>
-
-body{
-    margin:0;
-    padding:0;
-    background:#050505;
-    font-family:Arial;
-    color:white;
-}
-
-.header{
-    text-align:center;
-    padding-top:50px;
-}
-
-.title{
-    font-size:38px;
-    color:#00ffe1;
-    font-weight:bold;
-    text-shadow:
-        0 0 10px #00ffe1,
-        0 0 20px #00ffe1;
-}
-
-.subtitle{
-    margin-top:10px;
-    color:#999;
-    font-size:18px;
-}
-
-.container{
-    width:90%;
-    max-width:500px;
-    margin:auto;
-    margin-top:50px;
-}
-
-.model{
-    display:block;
-    margin-bottom:20px;
-    padding:22px;
-    border-radius:20px;
-    background:#111;
-    border:2px solid #00ffe1;
-    color:#00ffe1;
-    text-decoration:none;
-    text-align:center;
-    font-size:24px;
-    font-weight:bold;
-    box-shadow:
-        0 0 20px #00ffe144;
-    transition:0.3s;
-}
-
-.model:hover{
-    background:#00ffe1;
-    color:black;
-}
-
-.footer{
-    margin-top:80px;
-    margin-bottom:30px;
-    text-align:center;
-    color:#555;
-    font-size:13px;
-}
-
-</style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Modelos Yamaha — VELOCÍMETROS CDMX HELP ONLINE">
+  <title>YAMAHA | VELOCÍMETROS CDMX</title>
+  <link rel="stylesheet" href="../../assets/css/site.css">
+  <script>
+    (function(){try{var t=localStorage.getItem('vcdmx-theme');if(t==='warm'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+  </script>
 </head>
-
 <body>
-
-<div class="header">
-
-    <div class="title">
-        YAMAHA
-    </div>
-
-    <div class="subtitle">
-        HELP ONLINE SYSTEM
-    </div>
-
-</div>
-
-<div class="container">
-
-    <a class="model" href="mt09/">
-        MT-09
+  <header class="topbar">
+    <a class="brand-lockup" href="../../">
+      <span class="brand-name">VELOCÍMETROS CDMX</span>
+      <span class="brand-tag">Help Online System</span>
     </a>
+    <div class="theme-switch" role="group" aria-label="Tema visual">
+      <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true">Oscuro</button>
+      <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false">Cálido</button>
+    </div>
+  </header>
 
-</div>
+  <nav class="breadcrumbs" aria-label="Migas de pan">
+    <a href="../../">Inicio</a>
+    <span class="sep">/</span>
+    <a href="../">Motos</a>
+    <span class="sep">/</span>
+    <span class="current">Yamaha</span>
+  </nav>
+  <div class="back-row">
+    <a class="back-link" href="../">← Regresar a Motos</a>
+  </div>
 
-<div class="footer">
+  <main class="page">
+    <header class="page-hero">
+      <span class="eyebrow">Marca</span>
+      <h1>YAMAHA</h1>
+      <p>Modelos con ficha técnica completa: EEPROM, programador, fotos y notas.</p>
+    </header>
+
+    <div class="toolbar">
+      <label class="search-wrap">
+        <span class="icon" aria-hidden="true">⌕</span>
+        <input type="search" data-filter-input placeholder="Buscar modelo…" autocomplete="off">
+      </label>
+      <span class="count-chip" data-filter-count></span>
+    </div>
+
+    <div class="menu-grid" data-filter-grid>
+      <a class="menu-card" href="mt09/" data-filter-item="mt-09 mt09">
+        <span class="label">MT-09</span>
+        <span class="meta">Ficha completa</span>
+      </a>
+    </div>
+    <div class="empty-state" data-filter-empty>No hay modelos con ese nombre.</div>
+  </main>
+
+  <footer class="site-footer">
     HELP ONLINE © VELOCÍMETROS CDMX
-</div>
-
+  </footer>
+  <script src="../../assets/js/site.js"></script>
 </body>
 </html>

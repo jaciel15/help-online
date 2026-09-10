@@ -1,235 +1,107 @@
 <!DOCTYPE html>
-
-<html lang="es">
-
+<html lang="es" data-theme="dark">
 <head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>AUTOS</title>
-
-<style>
-
-body{
-
-    margin:0;
-
-    padding:0;
-
-    background:#050505;
-
-    font-family:Arial;
-
-    color:white;
-
-}
-
-.header{
-
-    text-align:center;
-
-    padding-top:50px;
-
-}
-
-.title{
-
-    font-size:38px;
-
-    color:#00ffe1;
-
-    font-weight:bold;
-
-    text-shadow:
-
-        0 0 10px #00ffe1,
-
-        0 0 20px #00ffe1;
-
-}
-
-.subtitle{
-
-    margin-top:10px;
-
-    color:#999;
-
-    font-size:18px;
-
-}
-
-.container{
-
-    width:90%;
-
-    max-width:500px;
-
-    margin:auto;
-
-    margin-top:50px;
-
-}
-
-.brand{
-
-    display:block;
-
-    margin-bottom:20px;
-
-    padding:22px;
-
-    border-radius:20px;
-
-    background:#111;
-
-    border:2px solid #00ffe1;
-
-    color:#00ffe1;
-
-    text-decoration:none;
-
-    text-align:center;
-
-    font-size:24px;
-
-    font-weight:bold;
-
-    box-shadow:
-
-        0 0 20px #00ffe144;
-
-    transition:0.3s;
-
-}
-
-.brand:hover{
-
-    background:#00ffe1;
-
-    color:black;
-
-}
-
-.footer{
-
-    margin-top:80px;
-
-    margin-bottom:30px;
-
-    text-align:center;
-
-    color:#555;
-
-    font-size:13px;
-
-}
-
-</style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Marcas de autos — VELOCÍMETROS CDMX HELP ONLINE">
+  <title>AUTOS | VELOCÍMETROS CDMX</title>
+  <link rel="stylesheet" href="../assets/css/site.css">
+  <script>
+    (function(){try{var t=localStorage.getItem('vcdmx-theme');if(t==='warm'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+  </script>
 </head>
-
 <body>
+  <header class="topbar">
+    <a class="brand-lockup" href="../">
+      <span class="brand-name">VELOCÍMETROS CDMX</span>
+      <span class="brand-tag">Help Online System</span>
+    </a>
+    <div class="theme-switch" role="group" aria-label="Tema visual">
+      <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true">Oscuro</button>
+      <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false">Cálido</button>
+    </div>
+  </header>
 
-<div class="header">
+  <nav class="breadcrumbs" aria-label="Migas de pan">
+    <a href="../">Inicio</a>
+    <span class="sep">/</span>
+    <span class="current">Autos</span>
+  </nav>
+  <div class="back-row">
+    <a class="back-link" href="../">← Regresar al inicio</a>
+  </div>
 
-    <div class="title">
+  <main class="page">
+    <header class="page-hero">
+      <span class="eyebrow">Categoría</span>
+      <h1>AUTOS</h1>
+      <p>Selecciona la marca para ver modelos y fichas técnicas de velocímetros.</p>
+    </header>
 
-        AUTOS
-
+    <div class="toolbar">
+      <label class="search-wrap">
+        <span class="icon" aria-hidden="true">⌕</span>
+        <input type="search" data-filter-input placeholder="Buscar marca…" autocomplete="off">
+      </label>
+      <span class="count-chip" data-filter-count></span>
     </div>
 
-    <div class="subtitle">
-
-        VELOCÍMETROS CDMX
-
+    <div class="menu-grid" data-filter-grid>
+      <a class="menu-card" href="chevrolet/" data-filter-item="chevrolet">
+        <span class="label">CHEVROLET</span>
+        <span class="meta">Modelos listos</span>
+      </a>
+      <a class="menu-card is-disabled" href="#" data-filter-item="nissan" aria-disabled="true">
+        <span class="label">NISSAN</span>
+        <span class="meta">Próximamente</span>
+      </a>
+      <a class="menu-card is-disabled" href="#" data-filter-item="hyundai" aria-disabled="true">
+        <span class="label">HYUNDAI</span>
+        <span class="meta">Próximamente</span>
+      </a>
+      <a class="menu-card is-disabled" href="#" data-filter-item="toyota" aria-disabled="true">
+        <span class="label">TOYOTA</span>
+        <span class="meta">Próximamente</span>
+      </a>
+      <a class="menu-card is-disabled" href="#" data-filter-item="honda" aria-disabled="true">
+        <span class="label">HONDA</span>
+        <span class="meta">Próximamente</span>
+      </a>
+      <a class="menu-card is-disabled" href="#" data-filter-item="kia" aria-disabled="true">
+        <span class="label">KIA</span>
+        <span class="meta">Próximamente</span>
+      </a>
+      <a class="menu-card is-disabled" href="#" data-filter-item="ford" aria-disabled="true">
+        <span class="label">FORD</span>
+        <span class="meta">Próximamente</span>
+      </a>
+      <a class="menu-card is-disabled" href="#" data-filter-item="volkswagen" aria-disabled="true">
+        <span class="label">VOLKSWAGEN</span>
+        <span class="meta">Próximamente</span>
+      </a>
+      <a class="menu-card is-disabled" href="#" data-filter-item="bmw" aria-disabled="true">
+        <span class="label">BMW</span>
+        <span class="meta">Próximamente</span>
+      </a>
+      <a class="menu-card is-disabled" href="#" data-filter-item="audi" aria-disabled="true">
+        <span class="label">AUDI</span>
+        <span class="meta">Próximamente</span>
+      </a>
+      <a class="menu-card is-disabled" href="#" data-filter-item="mazda" aria-disabled="true">
+        <span class="label">MAZDA</span>
+        <span class="meta">Próximamente</span>
+      </a>
+      <a class="menu-card is-disabled" href="#" data-filter-item="mitsubishi" aria-disabled="true">
+        <span class="label">MITSUBISHI</span>
+        <span class="meta">Próximamente</span>
+      </a>
     </div>
+    <div class="empty-state" data-filter-empty>No hay marcas con ese nombre.</div>
+  </main>
 
-</div>
-
-<div class="container">
-
-    <a class="brand" href="#">
-
-        CHEVROLET
-
-    </a>
-
-    <a class="brand" href="#">
-
-        NISSAN
-
-    </a>
-
-    <a class="brand" href="#">
-
-        HYUNDAI
-
-    </a>
-
-    <a class="brand" href="#">
-
-        TOYOTA
-
-    </a>
-
-    <a class="brand" href="#">
-
-        HONDA
-
-    </a>
-
-    <a class="brand" href="#">
-
-        KIA
-
-    </a>
-
-    <a class="brand" href="#">
-
-        FORD
-
-    </a>
-
-    <a class="brand" href="#">
-
-        VOLKSWAGEN
-
-    </a>
-
-    <a class="brand" href="#">
-
-        BMW
-
-    </a>
-
-    <a class="brand" href="#">
-
-        AUDI
-
-    </a>
-
-    <a class="brand" href="#">
-
-        MAZDA
-
-    </a>
-
-    <a class="brand" href="#">
-
-        MITSUBISHI
-
-    </a>
-
-</div>
-
-<div class="footer">
-
+  <footer class="site-footer">
     HELP ONLINE © VELOCÍMETROS CDMX
-
-</div>
-
+  </footer>
+  <script src="../assets/js/site.js"></script>
 </body>
-
 </html>

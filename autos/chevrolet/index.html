@@ -1,209 +1,89 @@
 <!DOCTYPE html>
-
-<html lang="es">
-
+<html lang="es" data-theme="dark">
 <head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>CHEVROLET</title>
-
-<style>
-
-body{
-
-    margin:0;
-
-    padding:0;
-
-    background:#050505;
-
-    font-family:Arial;
-
-    color:white;
-
-}
-
-.header{
-
-    text-align:center;
-
-    padding-top:50px;
-
-}
-
-.title{
-
-    font-size:42px;
-
-    color:#00ffe1;
-
-    font-weight:bold;
-
-    text-shadow:
-
-        0 0 10px #00ffe1,
-
-        0 0 20px #00ffe1,
-
-        0 0 40px #00ffe1;
-
-}
-
-.subtitle{
-
-    margin-top:10px;
-
-    color:#999;
-
-    font-size:18px;
-
-}
-
-.container{
-
-    width:90%;
-
-    max-width:500px;
-
-    margin:auto;
-
-    margin-top:50px;
-
-}
-
-.model{
-
-    display:block;
-
-    margin-bottom:22px;
-
-    padding:24px;
-
-    border-radius:22px;
-
-    background:#111;
-
-    border:2px solid #00ffe1;
-
-    color:#00ffe1;
-
-    text-decoration:none;
-
-    text-align:center;
-
-    font-size:28px;
-
-    font-weight:bold;
-
-    box-shadow:
-
-        0 0 20px #00ffe144;
-
-    transition:0.3s;
-
-}
-
-.model:hover{
-
-    background:#00ffe1;
-
-    color:black;
-
-    transform:scale(1.03);
-
-}
-
-.footer{
-
-    margin-top:80px;
-
-    margin-bottom:30px;
-
-    text-align:center;
-
-    color:#555;
-
-    font-size:13px;
-
-}
-
-</style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Modelos Chevrolet — VELOCÍMETROS CDMX HELP ONLINE">
+  <title>CHEVROLET | VELOCÍMETROS CDMX</title>
+  <link rel="stylesheet" href="../../assets/css/site.css">
+  <script>
+    (function(){try{var t=localStorage.getItem('vcdmx-theme');if(t==='warm'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+  </script>
 </head>
-
 <body>
+  <header class="topbar">
+    <a class="brand-lockup" href="../../">
+      <span class="brand-name">VELOCÍMETROS CDMX</span>
+      <span class="brand-tag">Help Online System</span>
+    </a>
+    <div class="theme-switch" role="group" aria-label="Tema visual">
+      <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true">Oscuro</button>
+      <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false">Cálido</button>
+    </div>
+  </header>
 
-<div class="header">
+  <nav class="breadcrumbs" aria-label="Migas de pan">
+    <a href="../../">Inicio</a>
+    <span class="sep">/</span>
+    <a href="../">Autos</a>
+    <span class="sep">/</span>
+    <span class="current">Chevrolet</span>
+  </nav>
+  <div class="back-row">
+    <a class="back-link" href="../">← Regresar a Autos</a>
+  </div>
 
-    <div class="title">
+  <main class="page">
+    <header class="page-hero">
+      <span class="eyebrow">Marca</span>
+      <h1>CHEVROLET</h1>
+      <p>Modelos disponibles. Las fichas técnicas se irán publicando por unidad.</p>
+    </header>
 
-        CHEVROLET
-
+    <div class="toolbar">
+      <label class="search-wrap">
+        <span class="icon" aria-hidden="true">⌕</span>
+        <input type="search" data-filter-input placeholder="Buscar modelo…" autocomplete="off">
+      </label>
+      <span class="count-chip" data-filter-count></span>
     </div>
 
-    <div class="subtitle">
-
-        VELOCÍMETROS CDMX
-
+    <div class="menu-grid" data-filter-grid>
+      <a class="menu-card is-disabled" href="#" data-filter-item="cruze" aria-disabled="true">
+        <span class="label">CRUZE</span>
+        <span class="meta">Próximamente</span>
+      </a>
+      <a class="menu-card is-disabled" href="#" data-filter-item="aveo" aria-disabled="true">
+        <span class="label">AVEO</span>
+        <span class="meta">Próximamente</span>
+      </a>
+      <a class="menu-card is-disabled" href="#" data-filter-item="spark" aria-disabled="true">
+        <span class="label">SPARK</span>
+        <span class="meta">Próximamente</span>
+      </a>
+      <a class="menu-card is-disabled" href="#" data-filter-item="silverado" aria-disabled="true">
+        <span class="label">SILVERADO</span>
+        <span class="meta">Próximamente</span>
+      </a>
+      <a class="menu-card is-disabled" href="#" data-filter-item="sonic" aria-disabled="true">
+        <span class="label">SONIC</span>
+        <span class="meta">Próximamente</span>
+      </a>
+      <a class="menu-card is-disabled" href="#" data-filter-item="captiva" aria-disabled="true">
+        <span class="label">CAPTIVA</span>
+        <span class="meta">Próximamente</span>
+      </a>
+      <a class="menu-card is-disabled" href="#" data-filter-item="malibu" aria-disabled="true">
+        <span class="label">MALIBU</span>
+        <span class="meta">Próximamente</span>
+      </a>
     </div>
+    <div class="empty-state" data-filter-empty>No hay modelos con ese nombre.</div>
+  </main>
 
-</div>
-
-<div class="container">
-
-    <a class="model" href="#">
-
-        CRUZE
-
-    </a>
-
-    <a class="model" href="#">
-
-        AVEO
-
-    </a>
-
-    <a class="model" href="#">
-
-        SPARK
-
-    </a>
-
-    <a class="model" href="#">
-
-        SILVERADO
-
-    </a>
-
-    <a class="model" href="#">
-
-        SONIC
-
-    </a>
-
-    <a class="model" href="#">
-
-        CAPTIVA
-
-    </a>
-
-    <a class="model" href="#">
-
-        MALIBU
-
-    </a>
-
-</div>
-
-<div class="footer">
-
+  <footer class="site-footer">
     HELP ONLINE © VELOCÍMETROS CDMX
-
-</div>
-
+  </footer>
+  <script src="../../assets/js/site.js"></script>
 </body>
-
 </html>
