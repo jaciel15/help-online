@@ -51,7 +51,8 @@
     return;
   }
 
-  C.loadHelpUnit(p.c, p.b, p.m, p.v).then(function (unit) {
+  C.loadHelpUnit(p.c, p.b, p.m, p.v)
+    .then(function (unit) {
     if (!unit || !unit.version) {
       status.innerHTML =
         tt("ayuda.missing", "Ayuda no encontrada para este enlace.") +
@@ -72,6 +73,12 @@
     pushPhoto(photos.dashboard, "Dashboard");
     pushPhoto(photos.connection, "Conexiones");
     pushPhoto(photos.ignition || photos.eeprom, "Pin-out");
+
+    if (!slides.length) {
+      status.innerHTML =
+        tt("ayuda.missing", "Ayuda sin fotos.") +
+        "<br><small>Pide a soporte que vuelva a subir las 4 fotos y <strong>Guardar en catálogo</strong>.</small>";
+    }
 
     var notes = (version.notes || [])
       .map(function (n) {
@@ -177,5 +184,10 @@
     } else {
       document.dispatchEvent(new Event("VCDMX_DYNAMIC"));
     }
+  })
+  .catch(function () {
+    status.innerHTML =
+      tt("ayuda.missing", "Ayuda no encontrada para este enlace.") +
+      "<br><small>Pide a soporte que vuelva a <strong>Guardar en catálogo</strong> y te reenvíe el link.</small>";
   });
 })();

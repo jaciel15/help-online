@@ -391,45 +391,91 @@
     );
   }
 
-  /** Solo una ficha: IndexedDB (creador) o archivo data/help (hosting). */
+  /** Solo una ficha: prioriza archivo público data/help; IndexedDB como respaldo (creador). */
   function loadHelpUnit(c, b, m, v) {
     var versionId = v || "base";
     var key = IDB_HELP_PREFIX + [c, b, m, versionId].join(":");
+    var path = resolveHelpUnitPath(c, b, m, versionId);
 
-    return idbGet(key)
-      .catch(function () {
-        return null;
-      })
-      .then(function (fromIdb) {
-        if (fromIdb) return fromIdb;
+    function fromServer() {
+      return fetch(path, { cache: "no-store" })
+        .then(function (r) {
+          if (!r.ok) return null;
+          return r.json();
+        })
+        .catch(function () {
+          return null;
+        });
+    }
 
-        // migración: localStorage viejo
-        try {
-          var raw = localStorage.getItem(helpUnitKey(c, b, m, versionId));
-          if (raw) {
-            var parsed = JSON.parse(raw);
-            return idbSet(key, parsed).then(function () {
-              try {
-                localStorage.removeItem(helpUnitKey(c, b, m, versionId));
-              } catch (e) {}
-              return parsed;
-            });
-          }
-        } catch (e) {}
+    function fromIdbOrLegacy() {
+      return idbGet(key)
+        .catch(function () {
+          return null;
+        })
+        .then(function (fromIdb) {
+          if (fromIdb) return fromIdb;
+          try {
+            var raw = localStorage.getItem(helpUnitKey(c, b, m, versionId));
+            if (raw) {
+              var parsed = JSON.parse(raw);
+              return idbSet(key, parsed).then(function () {
+                try {
+                  localStorage.removeItem(helpUnitKey(c, b, m, versionId));
+                } catch (e) {}
+                return parsed;
+              });
+            }
+          } catch (e) {}
+          return null;
+        });
+    }
 
-        var path = resolveHelpUnitPath(c, b, m, versionId);
-        return fetch(path, { cache: "no-store" })
-          .then(function (r) {
-            if (!r.ok) throw new Error("help unit missing");
-            return r.json();
-          })
-          .catch(function () {
-            if (!isAdminSession()) return null;
-            return loadCatalog().then(function (catalog) {
-              return buildHelpUnit(catalog, c, b, m, versionId);
-            });
-          });
+    function isRealPath(src) {
+      return !!(
+        src &&
+        src !== "[published]" &&
+        src !== "[indexed]" &&
+        String(src).indexOf("data:") !== 0
+      );
+    }
+
+    function mergeUnits(server, local) {
+      if (!server) return local;
+      if (!local) return server;
+      var out;
+      try {
+        out = JSON.parse(JSON.stringify(server));
+      } catch (e) {
+        return server;
+      }
+      if (!out.version) out.version = {};
+      var sp = server.version.photos || {};
+      var lp = (local.version && local.version.photos) || {};
+      var merged = {};
+      ["main", "dashboard", "connection", "ignition"].forEach(function (k) {
+        if (isRealPath(sp[k])) merged[k] = sp[k];
+        else if (lp[k]) merged[k] = lp[k];
+        else if (sp[k]) merged[k] = sp[k];
+        else merged[k] = "";
       });
+      if (!merged.ignition && (sp.eeprom || lp.eeprom)) {
+        merged.ignition = isRealPath(sp.eeprom) ? sp.eeprom : lp.eeprom || sp.eeprom || "";
+      }
+      out.version.photos = merged;
+      return out;
+    }
+
+    return Promise.all([fromServer(), fromIdbOrLegacy()]).then(function (pair) {
+      var server = pair[0];
+      var local = pair[1];
+      var unit = mergeUnits(server, local);
+      if (unit) return unit;
+      if (!isAdminSession()) return null;
+      return loadCatalog().then(function (catalog) {
+        return buildHelpUnit(catalog, c, b, m, versionId);
+      });
+    });
   }
 
   function ensureBrand(catalog, category, brandName) {
@@ -600,14 +646,25 @@
   function compressDataUrl(dataUrl, maxEdge, quality) {
     maxEdge = maxEdge || MAX_PHOTO_EDGE;
     quality = quality == null ? JPEG_QUALITY : quality;
-    return new Promise(function (resolve) {
+    return new Promise(function (resolve, reject) {
       if (!dataUrl) return resolve("");
-      if (dataUrl.indexOf("data:image") !== 0) return resolve(dataUrl);
+      if (dataUrl.indexOf("data:image") !== 0) {
+        return reject(new Error("Archivo no es una imagen válida."));
+      }
+      if (/data:image\/hei[cf]/i.test(dataUrl)) {
+        return reject(
+          new Error(
+            "Formato HEIC no soportado. En iPhone: Ajustes → Cámara → Formatos → Más compatible, o exporta JPG."
+          )
+        );
+      }
       var img = new Image();
       img.onload = function () {
         var w = img.naturalWidth || img.width;
         var h = img.naturalHeight || img.height;
-        if (!w || !h) return resolve(dataUrl);
+        if (!w || !h) {
+          return reject(new Error("La imagen no tiene tamaño válido."));
+        }
         var scale = Math.min(1, maxEdge / Math.max(w, h));
         var cw = Math.max(1, Math.round(w * scale));
         var ch = Math.max(1, Math.round(h * scale));
@@ -615,15 +672,26 @@
         canvas.width = cw;
         canvas.height = ch;
         var ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("No se pudo procesar la imagen."));
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, cw, ch);
         ctx.drawImage(img, 0, 0, cw, ch);
         try {
-          resolve(canvas.toDataURL("image/jpeg", quality));
+          var out = canvas.toDataURL("image/jpeg", quality);
+          if (!out || out.indexOf("data:image/jpeg") !== 0) {
+            return reject(new Error("No se pudo convertir a JPEG."));
+          }
+          resolve(out);
         } catch (e) {
-          resolve(dataUrl);
+          reject(new Error("No se pudo comprimir la imagen."));
         }
       };
       img.onerror = function () {
-        resolve(dataUrl);
+        reject(
+          new Error(
+            "No se pudo leer la imagen. Usa JPG o PNG (no HEIC/HEIF)."
+          )
+        );
       };
       img.src = dataUrl;
     });
@@ -632,6 +700,19 @@
   function fileToCompressedDataUrl(file) {
     if (!file) return Promise.resolve("");
     if (typeof file === "string") return compressDataUrl(file);
+    var name = String(file.name || "").toLowerCase();
+    var type = String(file.type || "").toLowerCase();
+    if (
+      type.indexOf("heic") >= 0 ||
+      type.indexOf("heif") >= 0 ||
+      /\.heic$|\.heif$/.test(name)
+    ) {
+      return Promise.reject(
+        new Error(
+          "El iPhone guardó HEIC. Ajustes → Cámara → Formatos → Más compatible, o elige JPG."
+        )
+      );
+    }
     return fileToDataUrl(file).then(function (url) {
       return compressDataUrl(url);
     });

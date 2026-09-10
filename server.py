@@ -106,8 +106,11 @@ def find_existing_photo(out_dir: Path, version_id: str, key: str) -> str | None:
     return None
 
 
-def extract_photos(unit: dict) -> dict:
-    """Write dataURL photos to real files; keep relative paths in the unit."""
+def extract_photos(unit: dict) -> tuple[dict, list[str]]:
+    """Write dataURL photos to real files; keep relative paths in the unit.
+
+    Returns (unit, errors). errors lists photo keys that failed when a dataURL was sent.
+    """
     c, b, m = unit["c"], unit["b"], unit["m"]
     version = dict(unit.get("version") or {})
     vid = version.get("id") or unit.get("v") or "base"
@@ -116,6 +119,7 @@ def extract_photos(unit: dict) -> dict:
     out_dir = ROOT / "data" / "help" / c / b / m
     out_dir.mkdir(parents=True, exist_ok=True)
     photos_out: dict[str, str] = {}
+    errors: list[str] = []
 
     for key in PHOTO_KEYS:
         val = photos_in.get(key) or ""
@@ -127,22 +131,44 @@ def extract_photos(unit: dict) -> dict:
                 header, b64 = val.split(",", 1)
                 ext = "jpg"
                 low = header.lower()
+                if "heic" in low or "heif" in low:
+                    raise ValueError("HEIC no soportado")
                 if "image/png" in low:
                     ext = "png"
                 elif "image/webp" in low:
                     ext = "webp"
                 elif "image/gif" in low:
                     ext = "gif"
+                elif "image/jpeg" in low or "image/jpg" in low:
+                    ext = "jpg"
+                elif "image/" not in low:
+                    raise ValueError("no es imagen")
                 raw = base64.b64decode(b64)
+                if len(raw) < 32:
+                    raise ValueError("imagen vacía")
                 fname = photo_filename(vid, key, ext)
                 atomic_write_bytes(out_dir / fname, raw)
                 photos_out[key] = f"data/help/{c}/{b}/{m}/{fname}"
-            except Exception:
+            except Exception as exc:  # noqa: BLE001
+                print(f"photo extract fail {c}/{b}/{m}/{vid}/{key}: {exc}", flush=True)
+                errors.append(key)
                 existing = find_existing_photo(out_dir, vid, key)
                 photos_out[key] = f"data/help/{c}/{b}/{m}/{existing}" if existing else ""
         elif isinstance(val, str) and val and val not in PLACEHOLDERS:
-            # Already a path (or remote URL) — keep as-is
-            photos_out[key] = val
+            if val.startswith("http://") or val.startswith("https://"):
+                photos_out[key] = val
+            else:
+                rel = val.replace("\\", "/").lstrip("./")
+                if rel.startswith("../"):
+                    rel = rel[3:]
+                disk = ROOT / rel
+                if disk.is_file() and disk.stat().st_size >= 32:
+                    photos_out[key] = rel if rel.startswith("data/help/") else val
+                else:
+                    existing = find_existing_photo(out_dir, vid, key)
+                    photos_out[key] = f"data/help/{c}/{b}/{m}/{existing}" if existing else ""
+                    if not photos_out[key]:
+                        errors.append(key)
         else:
             existing = find_existing_photo(out_dir, vid, key)
             photos_out[key] = f"data/help/{c}/{b}/{m}/{existing}" if existing else ""
@@ -150,7 +176,7 @@ def extract_photos(unit: dict) -> dict:
     version["photos"] = photos_out
     unit["version"] = version
     unit["v"] = vid
-    return unit
+    return unit, errors
 
 
 def catalog_photos(photos: dict | None) -> dict:
@@ -304,7 +330,34 @@ class Handler(SimpleHTTPRequestHandler):
                 if c not in ("autos", "motos"):
                     return self._json(400, {"ok": False, "error": "categoría inválida"})
 
-                unit = extract_photos(unit)
+                unit, photo_errors = extract_photos(unit)
+                photos = (unit.get("version") or {}).get("photos") or {}
+                missing = [k for k in PHOTO_KEYS if not photos.get(k)]
+                if photo_errors:
+                    return self._json(
+                        400,
+                        {
+                            "ok": False,
+                            "error": "No se pudieron guardar fotos: "
+                            + ", ".join(photo_errors)
+                            + ". Usa JPG o PNG e intenta de nuevo.",
+                            "photoErrors": photo_errors,
+                            "photos": photos,
+                        },
+                    )
+                if missing:
+                    return self._json(
+                        400,
+                        {
+                            "ok": False,
+                            "error": "Faltan fotos: "
+                            + ", ".join(missing)
+                            + ". Sube las 4 (principal, dashboard, conexiones, pin-out).",
+                            "missing": missing,
+                            "photos": photos,
+                        },
+                    )
+
                 v = unit["version"]["id"]
                 help_path = ROOT / "data" / "help" / c / b / m / f"{v}.json"
                 atomic_write(help_path, json.dumps(unit, ensure_ascii=False, indent=2))

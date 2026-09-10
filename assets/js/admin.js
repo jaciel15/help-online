@@ -67,6 +67,48 @@
     return base + encodeURIComponent(key + ".jpg");
   }
 
+  /** Busca un archivo de foto real en el servidor (jpg/png/webp/gif). */
+  function probePublishedPhoto(c, b, m, v, key) {
+    var vid = v || "base";
+    var exts = ["jpg", "jpeg", "png", "webp", "gif"];
+    var names = [];
+    exts.forEach(function (ext) {
+      if (vid !== "base") {
+        names.push(vid + "-" + key + "." + ext);
+      } else {
+        names.push(key + "." + ext);
+        names.push("base-" + key + "." + ext);
+      }
+    });
+    var dir =
+      (CFG.root || "") +
+      "data/help/" +
+      encodeURIComponent(c) +
+      "/" +
+      encodeURIComponent(b) +
+      "/" +
+      encodeURIComponent(m) +
+      "/";
+
+    function tryAt(i) {
+      if (i >= names.length) return Promise.resolve("");
+      var rel = "data/help/" + c + "/" + b + "/" + m + "/" + names[i];
+      var url = dir + encodeURIComponent(names[i]);
+      return fetch(url, { method: "GET", cache: "no-store" })
+        .then(function (r) {
+          if (!r.ok) return tryAt(i + 1);
+          return r.blob().then(function (blob) {
+            if (!blob || blob.size < 32) return tryAt(i + 1);
+            return rel;
+          });
+        })
+        .catch(function () {
+          return tryAt(i + 1);
+        });
+    }
+    return tryAt(0);
+  }
+
   function helpHref(cat, brandId, modelId, versionId) {
     return (
       (CFG.ayudaBase || "ayuda/") +
@@ -161,12 +203,27 @@
     var st = $(meta.st);
     var slot = document.querySelector('.photo-slot[data-slot="' + meta.slot + '"]');
     if (!img || !st) return;
+    img.onload = null;
+    img.onerror = null;
     var preview = resolvePreview(url);
     if (preview) {
+      st.textContent = "Cargando…";
+      if (slot) slot.classList.remove("is-ready");
+      img.onload = function () {
+        img.classList.add("show");
+        st.textContent = "Lista";
+        if (slot) slot.classList.add("is-ready");
+        updatePublishPulse();
+      };
+      img.onerror = function () {
+        pending[key] = "";
+        img.removeAttribute("src");
+        img.classList.remove("show");
+        st.textContent = "Error · vuelve a subir";
+        if (slot) slot.classList.remove("is-ready");
+        updatePublishPulse();
+      };
       img.src = preview;
-      img.classList.add("show");
-      st.textContent = "Lista";
-      if (slot) slot.classList.add("is-ready");
     } else {
       img.removeAttribute("src");
       img.classList.remove("show");
@@ -174,6 +231,13 @@
       if (slot) slot.classList.remove("is-ready");
     }
     updatePublishPulse();
+  }
+
+  function setPhotoStatus(key, text) {
+    var meta = PHOTO_META[key];
+    if (!meta) return;
+    var st = $(meta.st);
+    if (st) st.textContent = text;
   }
 
   function updatePublishPulse() {
@@ -194,27 +258,32 @@
   function openPicker(inputId) {
     var el = $(inputId);
     if (!el) return;
-    setTimeout(function () {
-      try {
-        el.click();
-      } catch (e) {}
-    }, 80);
+    try {
+      el.click();
+    } catch (e) {}
   }
 
   function onPhotoChosen(key, file, chain) {
     if (!file) return;
-    C.fileToCompressedDataUrl(file).then(function (url) {
-      setPhoto(key, url);
-      if (!chain) return;
-      var next = CHAIN[key];
-      if (next && next.nextGallery) {
-        markActiveSlot(next.nextSlot);
-        openPicker(next.nextGallery);
-      } else {
-        markActiveSlot(0);
-        if ($("btnPublish")) $("btnPublish").focus();
-      }
-    });
+    setPhotoStatus(key, "Comprimiendo…");
+    C.fileToCompressedDataUrl(file)
+      .then(function (url) {
+        setPhoto(key, url);
+        if (!chain) return;
+        var next = CHAIN[key];
+        if (next && next.nextSlot) {
+          markActiveSlot(next.nextSlot);
+        } else {
+          markActiveSlot(0);
+          if ($("btnPublish")) $("btnPublish").focus();
+        }
+      })
+      .catch(function (err) {
+        pending[key] = "";
+        setPhoto(key, "");
+        setPhotoStatus(key, "Error");
+        alert((err && err.message) || "No se pudo procesar la foto.");
+      });
   }
 
   function bindPhotoInput(inputId, key, chain) {
@@ -229,32 +298,43 @@
 
   function applyFilesInOrder(fileList) {
     var files = Array.prototype.slice.call(fileList || [], 0, 4);
+    PHOTO_KEYS.forEach(function (k) {
+      setPhotoStatus(k, files.length ? "Comprimiendo…" : "Pendiente");
+    });
     return Promise.all(
       files.map(function (file, i) {
-        return C.fileToCompressedDataUrl(file).then(function (url) {
-          setPhoto(PHOTO_KEYS[i], url);
-        });
+        return C.fileToCompressedDataUrl(file)
+          .then(function (url) {
+            setPhoto(PHOTO_KEYS[i], url);
+          })
+          .catch(function (err) {
+            setPhoto(PHOTO_KEYS[i], "");
+            setPhotoStatus(PHOTO_KEYS[i], "Error");
+            throw err;
+          });
       })
     );
   }
 
-  function firstRealPhoto(photos, meta) {
+  function firstRealPhoto(photos) {
     var keys = ["main", "dashboard", "connection", "ignition", "eeprom"];
     for (var i = 0; i < keys.length; i++) {
       var src = photos && photos[keys[i]];
+      if (!isPlaceholderPhoto(src) && String(src).indexOf("data:") !== 0) return src;
       if (!isPlaceholderPhoto(src)) return src;
-    }
-    if (meta && meta.c && meta.b && meta.m) {
-      return guessPublishedPhoto(meta.c, meta.b, meta.m, meta.v, "main");
     }
     return "";
   }
 
-  function thumbHtml(photos, meta) {
-    var src = firstRealPhoto(photos, meta);
+  function thumbHtml(photos) {
+    var src = firstRealPhoto(photos);
     var preview = resolvePreview(src);
     if (!preview) return '<div class="inv-thumb inv-thumb--empty">Sin foto</div>';
-    return '<div class="inv-thumb"><img src="' + preview + '" alt="" loading="lazy"></div>';
+    return (
+      '<div class="inv-thumb"><img src="' +
+      preview +
+      '" alt="" loading="lazy" onerror="this.parentNode.classList.add(\'inv-thumb--empty\');this.remove();"></div>'
+    );
   }
 
   function countItems() {
@@ -290,8 +370,7 @@
         for (var j = 0; j < versions.length; j++) {
           var v = versions[j];
           var photos = v.photos || {};
-          var meta = { c: cat, b: brandId, m: mids[i], v: v.id || "base" };
-          if (firstRealPhoto(photos, meta)) return thumbHtml(photos, meta);
+          if (firstRealPhoto(photos)) return thumbHtml(photos);
         }
       }
     } catch (e) {}
@@ -601,7 +680,7 @@
         var label = brandName + " " + m.name + " · " + (v.name || v.id);
         html +=
           '<article class="inv-item">' +
-          thumbHtml(v.photos, { c: cat, b: brandId, m: mid, v: v.id }) +
+          thumbHtml(v.photos) +
           '<div class="inv-body">' +
           "<strong>" +
           m.name +
@@ -717,10 +796,14 @@
     var photos = version.photos || {};
     PHOTO_KEYS.forEach(function (key) {
       var src = photos[key] || (key === "ignition" ? photos.eeprom : "") || "";
-      if (isPlaceholderPhoto(src)) {
-        src = guessPublishedPhoto(cat, brandId, modelId, version.id, key);
+      if (!isPlaceholderPhoto(src)) {
+        setPhoto(key, src);
+        return;
       }
-      setPhoto(key, src);
+      setPhoto(key, "");
+      probePublishedPhoto(cat, brandId, modelId, version.id, key).then(function (found) {
+        if (found && !pending[key]) setPhoto(key, found);
+      });
     });
 
     $("formCard").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -820,6 +903,18 @@
         return;
       }
 
+      var missingBefore = PHOTO_KEYS.filter(function (k) {
+        return !pending[k];
+      });
+      if (missingBefore.length === 4) {
+        if (msg) {
+          msg.hidden = false;
+          msg.textContent = "Sube las 4 fotos (principal, dashboard, conexiones, pin-out) antes de guardar.";
+        }
+        alert("Faltan las 4 fotos. Usa Galería, Cámara o elige 4 juntas.");
+        return;
+      }
+
       if (btn) {
         btn.disabled = true;
         btn.textContent = "Guardando…";
@@ -833,6 +928,26 @@
 
       resolvePhotosForSave(category, brandId, modelId, versionId, prev)
         .then(function (photos) {
+          var missing = PHOTO_KEYS.filter(function (k) {
+            return !photos[k] || isPlaceholderPhoto(photos[k]);
+          });
+          if (missing.length) {
+            var labels = {
+              main: "1 principal",
+              dashboard: "2 dashboard",
+              connection: "3 conexiones",
+              ignition: "4 pin-out"
+            };
+            throw new Error(
+              "Faltan fotos: " +
+                missing
+                  .map(function (k) {
+                    return labels[k] || k;
+                  })
+                  .join(", ") +
+                ". Sube las 4 y vuelve a Guardar."
+            );
+          }
           // Comprime cualquier dataURL que aún sea grande
           var compressJobs = PHOTO_KEYS.map(function (k) {
             var val = photos[k];
@@ -892,6 +1007,9 @@
                       var ver = C.getVersion(catalog, category, brandId, modelId, versionId);
                       if (ver) ver.photos = pub.photos;
                       if (helpUnit && helpUnit.version) helpUnit.version.photos = pub.photos;
+                      PHOTO_KEYS.forEach(function (k) {
+                        if (pub.photos[k]) setPhoto(k, pub.photos[k]);
+                      });
                       return C.saveCatalog(catalog)
                         .then(function () {
                           return C.saveHelpUnit(helpUnit);
@@ -1059,12 +1177,11 @@
       });
     });
 
-    document.querySelectorAll(".btn-photo").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        var target = btn.getAttribute("data-target");
-        var slot = btn.closest(".photo-slot");
-        if (slot) markActiveSlot(slot.getAttribute("data-slot"));
-        openPicker(target);
+    document.querySelectorAll(".photo-slot").forEach(function (slot) {
+      slot.querySelectorAll(".btn-photo").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          markActiveSlot(slot.getAttribute("data-slot"));
+        });
       });
     });
 
@@ -1079,10 +1196,18 @@
 
     if ($("pMulti")) {
       $("pMulti").addEventListener("change", function () {
-        applyFilesInOrder(this.files).then(function () {
-          markActiveSlot(0);
-          if ($("btnPublish")) $("btnPublish").focus();
-        });
+        var input = this;
+        applyFilesInOrder(this.files)
+          .then(function () {
+            markActiveSlot(0);
+            if ($("btnPublish")) $("btnPublish").focus();
+          })
+          .catch(function (err) {
+            alert((err && err.message) || "No se pudieron cargar las fotos. Usa JPG o PNG.");
+          })
+          .then(function () {
+            input.value = "";
+          });
       });
     }
 
