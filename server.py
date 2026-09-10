@@ -6,6 +6,7 @@ import base64
 import json
 import os
 import re
+import shutil
 import tempfile
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -17,6 +18,18 @@ os.chdir(ROOT)
 SAFE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 PHOTO_KEYS = ("main", "dashboard", "connection", "ignition")
 PLACEHOLDERS = {"[published]", "[indexed]", ""}
+MIN_FREE_BYTES = 150 * 1024 * 1024  # 150 MB libres mínimos para publicar
+
+
+def disk_status() -> dict:
+    usage = shutil.disk_usage(str(ROOT))
+    return {
+        "total": usage.total,
+        "used": usage.used,
+        "free": usage.free,
+        "freeMb": round(usage.free / (1024 * 1024)),
+        "ok": usage.free >= MIN_FREE_BYTES,
+    }
 
 
 def slug_ok(value: str) -> bool:
@@ -241,7 +254,9 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
         if path == "/api/health":
-            return self._json(200, {"ok": True, "service": "help-online"})
+            return self._json(200, {"ok": True, "service": "help-online", "disk": disk_status()})
+        if path == "/api/storage":
+            return self._json(200, {"ok": True, "disk": disk_status()})
         return super().do_GET()
 
     def do_OPTIONS(self):
@@ -269,6 +284,18 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._json(200, {"ok": True})
 
             if path == "/api/publish":
+                disk = disk_status()
+                if not disk["ok"]:
+                    return self._json(
+                        507,
+                        {
+                            "ok": False,
+                            "error": "Disco del servidor casi lleno ("
+                            + str(disk["freeMb"])
+                            + " MB libres). Libera espacio antes de guardar más ayudas.",
+                            "disk": disk,
+                        },
+                    )
                 unit = self._read_json()
                 c, b, m = unit.get("c"), unit.get("b"), unit.get("m")
                 v = (unit.get("version") or {}).get("id") or unit.get("v") or "base"
@@ -295,6 +322,7 @@ class Handler(SimpleHTTPRequestHandler):
                         "helpUrl": f"ayuda/?c={c}&b={b}&m={m}&v={v}",
                         "photos": unit["version"].get("photos") or {},
                         "unit": unit,
+                        "disk": disk_status(),
                     },
                 )
 

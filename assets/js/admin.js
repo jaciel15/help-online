@@ -123,6 +123,31 @@
     if (!el) return;
     var n = countItems();
     el.textContent = "Carpetas: " + n + (n === 1 ? " ayuda" : " ayudas");
+    refreshStorageStatus();
+  }
+
+  function refreshStorageStatus() {
+    var el = $("storageStatus");
+    if (!el) return;
+    fetch((CFG.root || "") + "api/storage", { cache: "no-store" })
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (body) {
+        var disk = (body && body.disk) || {};
+        var free = disk.freeMb != null ? disk.freeMb : "?";
+        var ok = disk.ok !== false;
+        el.textContent =
+          (ok ? "✓ " : "⚠ ") +
+          "Espacio servidor: " +
+          free +
+          " MB libres" +
+          (ok ? " · listo para más ayudas" : " · libera espacio antes de guardar");
+        el.style.color = ok ? "" : "#f5a623";
+      })
+      .catch(function () {
+        el.textContent = "Espacio servidor: no disponible (¿servidor apagado?)";
+      });
   }
 
   function setPhoto(key, url) {

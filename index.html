@@ -31,19 +31,19 @@
       </span>
       <span class="brand-text">
         <span class="brand-name">VELOCÍMETROS CDMX</span>
-        <span class="brand-tag">HELP ONLINE · Sistema completo</span>
+        <span class="brand-tag" data-i18n="hub.tag">HELP ONLINE · Sistema completo</span>
       </span>
     </a>
     <div class="topbar-controls">
-      <div class="theme-switch" role="group" aria-label="Tema visual">
-        <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true">Oscuro</button>
-        <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false">Cálido</button>
+      <div class="theme-switch" role="group" data-i18n-aria="theme.label" aria-label="Tema visual">
+        <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true" data-i18n="theme.dark">Oscuro</button>
+        <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false" data-i18n="theme.warm">Cálido</button>
       </div>
-      <div class="lang-switch" role="group" aria-label="Idioma">
+      <div class="lang-switch" role="group" data-i18n-aria="lang.label" aria-label="Idioma">
         <button type="button" class="theme-btn" data-lang-set="es" aria-pressed="true">ES</button>
         <button type="button" class="theme-btn" data-lang-set="en" aria-pressed="false">EN</button>
       </div>
-      <a class="btn btn-primary btn-admin-jump" href="#administrador">Administrador</a>
+      <a class="btn btn-primary btn-admin-jump" href="#administrador" data-i18n="hub.admin">Administrador</a>
     </div>
   </header>
 
@@ -54,13 +54,13 @@
     <div class="home-hero-content">
       <div class="maker-seal">
         <img src="assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="Velocímetros Digitales CDMX">
-        <span>Creado por Velocímetros Digitales CDMX</span>
+        <span data-i18n="hub.seal">Creado por Velocímetros Digitales CDMX</span>
       </div>
       <h1 class="brand-mega">VELOCÍMETROS<br>CDMX</h1>
-      <p class="lead">Tú creas y editas ayudas. Al guardar se abre la página del cliente (solo lectura, sin regresar).</p>
+      <p class="lead" data-i18n="hub.lead">Tú creas y editas ayudas. Al guardar se abre la página del cliente (solo lectura, sin regresar).</p>
       <div class="cta-row">
-        <a class="btn btn-primary" href="#administrador">Entrar a administrador</a>
-        <a class="btn btn-ghost" href="ayuda/?c=motos&amp;b=yamaha&amp;m=mt09&amp;v=base">Ver ejemplo cliente MT-09</a>
+        <a class="btn btn-primary" href="#administrador" data-i18n="hub.enterAdmin">Entrar a administrador</a>
+        <a class="btn btn-ghost" href="ayuda/?c=motos&amp;b=yamaha&amp;m=mt09&amp;v=base" data-i18n="hub.example">Ver ejemplo cliente MT-09</a>
       </div>
     </div>
   </section>
@@ -69,35 +69,35 @@
     <div class="admin-hub-wrap">
       <div id="loginGate" class="admin-gate admin-gate--inline">
         <form id="loginForm" class="admin-card login-card">
-          <p class="admin-badge">SOLO ADMINISTRADOR / CREADOR</p>
-          <h1>ADMIN HELP ONLINE</h1>
-          <p class="hint">Desde aquí ves todo el sistema: subir autos/motos, 4 fotos, editar cualquier ficha y guardar en catálogo. El cliente solo recibe el link bloqueado.</p>
-          <label>Contraseña
+          <p class="admin-badge" data-i18n="hub.loginBadge">SOLO ADMINISTRADOR / CREADOR</p>
+          <h1 data-i18n="hub.loginTitle">ADMIN HELP ONLINE</h1>
+          <p class="hint" data-i18n="hub.loginHint">Desde aquí ves todo el sistema: subir autos/motos, 4 fotos, editar cualquier ficha y guardar en catálogo. El cliente solo recibe el link bloqueado.</p>
+          <label><span data-i18n="hub.password">Contraseña</span>
             <input type="password" id="loginPass" autocomplete="current-password" required>
           </label>
-          <button type="submit" class="btn btn-primary">Entrar al sistema</button>
-          <p class="hint">Clave inicial: <code>adminupa2026</code></p>
+          <button type="submit" class="btn btn-primary" data-i18n="hub.loginBtn">Entrar al sistema</button>
+          <p class="hint"><span data-i18n="hub.passHint">Clave inicial:</span> <code>adminupa2026</code></p>
         </form>
       </div>
 
       <div id="adminApp" class="admin-app admin-app--home" hidden>
         <header class="admin-top">
           <div>
-            <p class="admin-badge">PANEL EN PÁGINA INICIAL</p>
-            <strong>Subida, catálogo y edición</strong>
-            <span>Al guardar → se crea la carpeta/ayuda y te lleva a la página del cliente (bloqueada)</span>
+            <p class="admin-badge" data-i18n="hub.panelBadge">PANEL EN PÁGINA INICIAL</p>
+            <strong data-i18n="hub.panelTitle">Subida, catálogo y edición</strong>
+            <span data-i18n="hub.panelLead">Al guardar → se crea la carpeta/ayuda y te lleva a la página del cliente (bloqueada)</span>
           </div>
           <div class="admin-top-actions">
-            <button type="button" id="btnNew" class="btn btn-primary">+ Nueva ayuda</button>
-            <button type="button" id="btnExport" class="btn btn-ghost">Exportar JSON</button>
-            <button type="button" id="btnLogout" class="btn btn-ghost">Salir</button>
+            <button type="button" id="btnNew" class="btn btn-primary" data-i18n="hub.newHelp">+ Nueva ayuda</button>
+            <button type="button" id="btnExport" class="btn btn-ghost" data-i18n="hub.export">Exportar JSON</button>
+            <button type="button" id="btnLogout" class="btn btn-ghost" data-i18n="hub.logout">Salir</button>
           </div>
         </header>
 
         <main class="admin-grid">
           <section class="admin-card" id="formCard">
-            <h2 id="formTitle">Nueva ayuda</h2>
-            <p class="muted tiny">Autos/motos nuevos crean carpeta sola. Completa datos + 4 fotos y pulsa <strong>Guardar en catálogo</strong>. Las fotos se comprimen y se guardan en IndexedDB (puedes añadir muchas ayudas sin llenar el navegador).</p>
+            <h2 id="formTitle" data-i18n="hub.formTitle">Nueva ayuda</h2>
+            <p class="muted tiny" data-i18n="hub.formHelp">Autos/motos nuevos crean carpeta sola. Completa datos + 4 fotos y pulsa Guardar en catálogo. Las fotos se comprimen; el catálogo guarda rutas livianas para escalar a muchas ayudas.</p>
             <form id="entryForm" class="admin-form">
               <div class="form-row">
                 <label>Categoría
@@ -199,34 +199,35 @@
               </div>
 
               <div class="form-actions">
-                <button type="submit" class="btn btn-primary" id="btnPublish">Guardar en catálogo</button>
-                <button type="button" id="btnClear" class="btn btn-ghost">Limpiar</button>
+                <button type="submit" class="btn btn-primary" id="btnPublish" data-i18n="hub.save">Guardar en catálogo</button>
+                <button type="button" id="btnClear" class="btn btn-ghost" data-i18n="hub.clear">Limpiar</button>
               </div>
               <p id="formMsg" class="form-msg" hidden></p>
             </form>
           </section>
 
           <section class="admin-card inventory-card">
-            <h2>Carpetas por marca</h2>
-            <p class="muted">Nissan, Yamaha, Toyota… Cada marca es una carpeta. Entra para ver, editar o borrar sus ayudas.</p>
+            <h2 data-i18n="hub.foldersTitle">Carpetas por marca</h2>
+            <p class="muted" data-i18n="hub.foldersLead">Nissan, Yamaha, Toyota… Cada marca es una carpeta. Entra para ver, editar o borrar sus ayudas.</p>
             <p class="muted tiny">Al guardar ya <strong>no</strong> se descarga JSON automáticamente (evita el popup del teléfono). Usa Exportar JSON solo cuando quieras respaldo.</p>
             <p class="folder-count" id="folderCount">Carpetas: 0</p>
+            <p class="muted tiny" id="storageStatus" data-i18n="hub.storage">Espacio servidor</p>
             <div class="inv-filters">
-              <button type="button" class="inv-filter is-active" data-filter="all">Todas</button>
-              <button type="button" class="inv-filter" data-filter="autos">Autos</button>
-              <button type="button" class="inv-filter" data-filter="motos">Motos</button>
+              <button type="button" class="inv-filter is-active" data-filter="all" data-i18n="hub.filterAll">Todas</button>
+              <button type="button" class="inv-filter" data-filter="autos" data-i18n="hub.filterCars">Autos</button>
+              <button type="button" class="inv-filter" data-filter="motos" data-i18n="hub.filterBikes">Motos</button>
             </div>
             <div id="invBreadcrumb" class="inv-breadcrumb" hidden></div>
             <div id="catalogTree" class="catalog-tree"></div>
             <p id="invEmpty" class="muted" hidden>Aún no hay ayudas.</p>
             <div id="linkSharePanel" class="link-share-panel" hidden>
-              <strong>Link para el cliente</strong>
+              <strong data-i18n="hub.shareTitle">Link para el cliente</strong>
               <p class="muted tiny" id="linkShareHint">Selecciona el texto, cópialo o usa Compartir.</p>
               <input type="text" id="linkShareInput" readonly aria-label="Link cliente">
               <div class="link-share-actions">
-                <button type="button" class="btn btn-primary" id="linkShareCopy">Copiar otra vez</button>
-                <button type="button" class="btn btn-ghost" id="linkShareShare">Compartir</button>
-                <button type="button" class="btn btn-ghost" id="linkShareClose">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="linkShareCopy" data-i18n="hub.shareCopy">Copiar otra vez</button>
+                <button type="button" class="btn btn-ghost" id="linkShareShare" data-i18n="hub.shareShare">Compartir</button>
+                <button type="button" class="btn btn-ghost" id="linkShareClose" data-i18n="hub.shareClose">Cerrar</button>
               </div>
             </div>
             <hr>

@@ -9,8 +9,8 @@
   var DB_VER = 1;
   var IDB_CATALOG = "catalog";
   var IDB_HELP_PREFIX = "help:";
-  var MAX_PHOTO_EDGE = 1280;
-  var JPEG_QUALITY = 0.72;
+  var MAX_PHOTO_EDGE = 1024;
+  var JPEG_QUALITY = 0.65;
 
   function openDb() {
     return new Promise(function (resolve, reject) {
@@ -283,12 +283,12 @@
 
   function saveCatalog(catalog) {
     catalog.updatedAt = new Date().toISOString();
-    // IndexedDB aguanta muchas ayudas con fotos comprimidas
-    return idbSet(IDB_CATALOG, catalog)
+    // Nunca guardar dataURLs en el índice del catálogo: escala a cientos de ayudas
+    var light = stripHeavyPhotos(catalog);
+    return idbSet(IDB_CATALOG, light)
       .then(function () {
         try {
-          // respaldo liviano opcional (sin dataURLs) — ignora si no cabe
-          localStorage.setItem(STORAGE_KEY + "-meta", JSON.stringify(stripHeavyPhotos(catalog)));
+          localStorage.setItem(STORAGE_KEY + "-meta", JSON.stringify(light));
         } catch (e) {}
         return catalog;
       })
@@ -296,7 +296,7 @@
         var msg = (err && err.message) || String(err);
         if (/quota|QuotaExceeded/i.test(msg) || (err && err.name === "QuotaExceededError")) {
           throw new Error(
-            "Almacenamiento lleno. Las fotos se comprimen y guardan en IndexedDB; recarga e intenta de nuevo. Si persiste, exporta JSON y limpia datos viejos del navegador."
+            "Almacenamiento lleno. Las fotos se comprimen y el catálogo ya no guarda fotos pesadas; recarga e intenta de nuevo. Si persiste, exporta JSON y limpia datos viejos del navegador."
           );
         }
         throw err;
@@ -340,9 +340,9 @@
     if (!unit || !unit.c || !unit.b || !unit.m || !unit.v) {
       return Promise.resolve(null);
     }
+    // Si ya son rutas de archivo (publicado), la ficha es liviana y escala bien
     var key = IDB_HELP_PREFIX + [unit.c, unit.b, unit.m, unit.v].join(":");
     return idbSet(key, unit).then(function () {
-      // ya no usamos localStorage para fichas con fotos
       try {
         localStorage.removeItem(helpUnitKey(unit.c, unit.b, unit.m, unit.v));
       } catch (e) {}

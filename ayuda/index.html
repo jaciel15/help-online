@@ -16,7 +16,6 @@
         var l=localStorage.getItem('vcdmx-lang');
         if(l==='es'||l==='en'){document.documentElement.setAttribute('lang',l);document.documentElement.setAttribute('data-lang',l);}
       }catch(e){}
-      // Evita volver al catálogo con el botón atrás del navegador
       try{
         if(location.search.indexOf('c=')!==-1){
           history.replaceState({helpLocked:1},'',location.href);
@@ -33,35 +32,35 @@
   <header class="help-top">
     <div class="help-top-brand">
       <strong>HELP ONLINE</strong>
-      <span>Soporte técnico · Solo esta ficha</span>
+      <span data-i18n="ayuda.sub">Soporte técnico · Solo esta ficha</span>
     </div>
     <div class="topbar-controls">
-      <div class="theme-switch" role="group" aria-label="Tema">
-        <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true">Oscuro</button>
-        <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false">Cálido</button>
+      <div class="theme-switch" role="group" data-i18n-aria="theme.label" aria-label="Tema">
+        <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true" data-i18n="theme.dark">Oscuro</button>
+        <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false" data-i18n="theme.warm">Cálido</button>
       </div>
-      <div class="lang-switch" role="group" aria-label="Idioma">
+      <div class="lang-switch" role="group" data-i18n-aria="lang.label" aria-label="Idioma">
         <button type="button" class="theme-btn" data-lang-set="es" aria-pressed="true">ES</button>
         <button type="button" class="theme-btn" data-lang-set="en" aria-pressed="false">EN</button>
       </div>
     </div>
   </header>
 
-  <p class="help-lock-banner">Vista de ayuda bloqueada · No hay acceso al catálogo ni a otras fichas</p>
+  <p class="help-lock-banner" data-i18n="ayuda.lock">Vista de ayuda bloqueada · No hay acceso al catálogo ni a otras fichas</p>
 
   <div class="detail-shell" id="fichaRoot">
-    <p class="lead" id="fichaStatus">Cargando ayuda…</p>
+    <p class="lead" id="fichaStatus" data-i18n="ayuda.loading">Cargando ayuda…</p>
   </div>
 
   <footer class="help-footer">
-    <p>Solo lectura · HELP ONLINE</p>
+    <p data-i18n="ayuda.readonly">Solo lectura · HELP ONLINE</p>
     <p id="adminEscape" class="admin-escape" hidden>
-      <a href="../#administrador">← Volver al administrador (solo creador)</a>
+      <a href="../#administrador" data-i18n="ayuda.backAdmin">← Volver al administrador (solo creador)</a>
     </p>
   </footer>
 
-  <div id="imageModal" class="modal" role="dialog" aria-modal="true" aria-label="Vista ampliada">
-    <button type="button" class="modal-close" aria-label="Cerrar">&times;</button>
+  <div id="imageModal" class="modal" role="dialog" aria-modal="true" data-i18n-aria="mt09.zoom" aria-label="Vista ampliada">
+    <button type="button" class="modal-close" data-i18n-aria="mt09.close" aria-label="Cerrar">&times;</button>
     <img id="modalImg" alt="">
   </div>
 

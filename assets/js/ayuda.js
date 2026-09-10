@@ -3,6 +3,15 @@
 
   var C = window.VCDMXCatalog;
 
+  function tt(key, fallback) {
+    try {
+      if (window.VCDMX && typeof window.VCDMX.t === "function") {
+        return window.VCDMX.t(key, window.VCDMX.getPreferredLang());
+      }
+    } catch (e) {}
+    return fallback || key;
+  }
+
   function params() {
     var q = new URLSearchParams(location.search);
     return {
@@ -38,14 +47,15 @@
   var status = document.getElementById("fichaStatus");
 
   if (!p.c || !p.b || !p.m) {
-    status.textContent = "Enlace de ayuda incompleto. Pide al soporte el link específico de tu unidad.";
+    status.textContent = tt("ayuda.incomplete", "Enlace de ayuda incompleto. Pide al soporte el link específico de tu unidad.");
     return;
   }
 
   C.loadHelpUnit(p.c, p.b, p.m, p.v).then(function (unit) {
     if (!unit || !unit.version) {
       status.innerHTML =
-        "Ayuda no encontrada para este enlace.<br><small>Pide a soporte que vuelva a <strong>Guardar en catálogo</strong> (así se publica el archivo) y te reenvíe el link.</small>";
+        tt("ayuda.missing", "Ayuda no encontrada para este enlace.") +
+        "<br><small>Pide a soporte que vuelva a <strong>Guardar en catálogo</strong> y te reenvíe el link.</small>";
       return;
     }
 
@@ -61,7 +71,7 @@
     pushPhoto(photos.main, modelName || "Principal");
     pushPhoto(photos.dashboard, "Dashboard");
     pushPhoto(photos.connection, "Conexiones");
-    pushPhoto(photos.ignition || photos.eeprom, "Pin-out encendido");
+    pushPhoto(photos.ignition || photos.eeprom, "Pin-out");
 
     var notes = (version.notes || [])
       .map(function (n) {
@@ -94,41 +104,76 @@
       "</header>" +
       '<div class="detail-main">' +
       '<aside class="tech-stack">' +
-      '<article class="tech-card"><h2>EEPROM</h2><p class="value">' +
+      '<article class="tech-card"><h2 data-i18n="ayuda.eeprom">' +
+      tt("ayuda.eeprom", "EEPROM") +
+      '</h2><p class="value">' +
       escapeHtml(version.eeprom || "—") +
       "</p></article>" +
-      '<article class="tech-card"><h2>PROGRAMADOR</h2><p class="value">' +
+      '<article class="tech-card"><h2 data-i18n="ayuda.programmer">' +
+      tt("ayuda.programmer", "PROGRAMADOR") +
+      '</h2><p class="value">' +
       escapeHtml(version.programmer || "—") +
       "</p></article>" +
-      '<article class="tech-card"><h2>TIPO</h2><p class="value">' +
+      '<article class="tech-card"><h2 data-i18n="ayuda.type">' +
+      tt("ayuda.type", "TIPO") +
+      '</h2><p class="value">' +
       escapeHtml(version.type || "—") +
       "</p></article>" +
-      '<article class="tech-card notes"><h2>NOTAS</h2><ul>' +
+      '<article class="tech-card notes"><h2 data-i18n="ayuda.notes">' +
+      tt("ayuda.notes", "NOTAS") +
+      "</h2><ul>" +
       (notes || "<li>—</li>") +
       "</ul></article>" +
       "</aside>" +
       (slides.length
-        ? '<section class="slider-shell" data-slider aria-label="Galería de ayuda">' +
-          '<button type="button" class="slider-arrow prev" aria-label="Anterior">❮</button>' +
+        ? '<section class="slider-shell" data-slider data-i18n-aria="ayuda.gallery" aria-label="' +
+          tt("ayuda.gallery", "Galería de ayuda") +
+          '">' +
+          '<button type="button" class="slider-arrow prev" data-i18n-aria="ayuda.prev" aria-label="' +
+          tt("ayuda.prev", "Anterior") +
+          '">❮</button>' +
           '<div class="slider-track">' +
           slidesHtml +
           "</div>" +
-          '<button type="button" class="slider-arrow next" aria-label="Siguiente">❯</button>' +
-          '<div class="slider-dots" role="tablist" aria-label="Indicadores"></div>' +
+          '<button type="button" class="slider-arrow next" data-i18n-aria="ayuda.next" aria-label="' +
+          tt("ayuda.next", "Siguiente") +
+          '">❯</button>' +
+          '<div class="slider-dots" role="tablist" data-i18n-aria="mt09.dots" aria-label="' +
+          tt("mt09.dots", "Indicadores") +
+          '"></div>' +
           "</section>"
-        : '<section class="slider-shell"><p class="lead" style="padding:24px">Sin fotos en esta ayuda.</p></section>') +
+        : '<section class="slider-shell"><p class="lead" style="padding:24px">—</p></section>') +
       "</div>" +
       '<div class="feature-row">' +
-      '<div class="feature-box"><h3>SOLO ESTA UNIDAD</h3><p>Enlace específico</p></div>' +
-      '<div class="feature-box"><h3>SOLO LECTURA</h3><p>No se puede editar</p></div>' +
-      '<div class="feature-box"><h3>FOTOS</h3><p>Usa las flechas</p></div>' +
-      '<div class="feature-box"><h3>SOPORTE</h3><p>UPA USB</p></div>' +
+      '<div class="feature-box"><h3 data-i18n="ayuda.onlyUnit">' +
+      tt("ayuda.onlyUnit", "SOLO ESTA UNIDAD") +
+      '</h3><p data-i18n="ayuda.onlyUnitDesc">' +
+      tt("ayuda.onlyUnitDesc", "Enlace específico") +
+      "</p></div>" +
+      '<div class="feature-box"><h3 data-i18n="ayuda.readOnly">' +
+      tt("ayuda.readOnly", "SOLO LECTURA") +
+      '</h3><p data-i18n="ayuda.readOnlyDesc">' +
+      tt("ayuda.readOnlyDesc", "No se puede editar") +
+      "</p></div>" +
+      '<div class="feature-box"><h3 data-i18n="ayuda.photos">' +
+      tt("ayuda.photos", "FOTOS") +
+      '</h3><p data-i18n="ayuda.photosDesc">' +
+      tt("ayuda.photosDesc", "Usa las flechas") +
+      "</p></div>" +
+      '<div class="feature-box"><h3 data-i18n="ayuda.support">' +
+      tt("ayuda.support", "SOPORTE") +
+      '</h3><p data-i18n="ayuda.supportDesc">' +
+      tt("ayuda.supportDesc", "UPA USB") +
+      "</p></div>" +
       "</div>";
 
     document.title = "HELP · " + brandName + " " + modelName;
 
     if (window.VCDMX && typeof window.VCDMX.initDynamic === "function") {
       window.VCDMX.initDynamic();
+      if (typeof window.VCDMX.applyLang === "function") {
+        window.VCDMX.applyLang(window.VCDMX.getPreferredLang());
+      }
     } else {
       document.dispatchEvent(new Event("VCDMX_DYNAMIC"));
     }

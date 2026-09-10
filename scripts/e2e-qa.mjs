@@ -100,6 +100,7 @@ async function main() {
   await page.fill("#loginPass", PASS);
   await page.click('#loginForm button[type="submit"]');
   await page.waitForSelector("#adminApp:not([hidden])");
+  await page.waitForSelector(".brand-folder", { timeout: 15000 });
   ok("admin login");
 
   // Filters + brand folders
@@ -271,6 +272,7 @@ async function main() {
   // Fresh context client links (no admin session)
   const client = await browser.newContext();
   const cpage = await client.newPage();
+  await cpage.addInitScript(() => localStorage.setItem("vcdmx-lang", "es"));
   await clientHelpLoads(cpage, "c=motos&b=yamaha&m=mt09&v=base", "YAMAHA");
   await clientHelpLoads(cpage, "c=autos&b=ford&m=focus&v=base", "FORD");
   await clientHelpLoads(cpage, "c=autos&b=nissan&m=altima&v=base", "NISSAN");
@@ -313,7 +315,7 @@ async function main() {
   await cpage.waitForSelector("#fichaStatus", { timeout: 10000 });
   await cpage.waitForTimeout(500);
   const missing = await cpage.locator("#fichaStatus").textContent();
-  if (!/no encontrada/i.test(missing || "")) throw new Error("missing help should show error: " + missing);
+  if (!/no encontrada|not found/i.test(missing || "")) throw new Error("missing help should show error: " + missing);
   ok("missing help message", (missing || "").slice(0, 60));
 
   // Portal redirect with query
@@ -344,6 +346,7 @@ async function main() {
   const adminCtx = await browser.newContext();
   await adminCtx.grantPermissions(["clipboard-read", "clipboard-write"]).catch(() => {});
   const ap = await adminCtx.newPage();
+  await ap.addInitScript(() => localStorage.setItem("vcdmx-lang", "es"));
   await ap.goto(BASE + "/#administrador", { waitUntil: "networkidle" });
   await ap.fill("#loginPass", "wrong-password");
   ap.once("dialog", async (d) => d.accept());
