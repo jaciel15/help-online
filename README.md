@@ -21,19 +21,18 @@ También sirve el link de carpeta fija, p. ej. `/motos/yamaha/mt09/` (ya bloquea
 | Tú (admin) | `/admin/` clave `adminupa2026` | Subir / editar / copiar links |
 | Tú (interno) | `/` `/autos/` `/motos/` `/ficha/` | Navegar catálogo completo |
 
-## Admin
+## Página inicial = sistema completo (creador)
 
-1. Entra a `/admin/` (solo administrador).
-2. Completa Autos/Motos → marca → modelo → versión.
-3. Edita EEPROM / programador / tipo / notas.
-4. Sube **4 fotos** en orden (Galería o Cámara):
-   1. Principal (auto/moto)
-   2. Dashboard
-   3. Conexiones
-   4. Pin-out encendido
-5. Pulsa **Publicar / guardar automáticamente**.
-6. En la **lista** de la derecha ves todo lo publicado; filtra Autos/Motos y pulsa **Editar**.
-7. Sube el JSON descargado a `data/help/{cat}/{marca}/{modelo}/{version}.json`.
+Abre `/` (o `/#administrador`):
+
+1. Entra con clave `adminupa2026`.
+2. Añade auto/moto + datos + **4 fotos**.
+3. Pulsa **Guardar en catálogo** → se crea la carpeta en el catálogo y **te lleva a la página del cliente** (bloqueada).
+4. Si no te gusta, vuelve a `/#administrador`, pulsa **Editar** y vuelve a guardar.
+
+El cliente solo ve su link, p. ej. `/ayuda/?c=motos&b=kawasaki&m=zr&v=base` — sin regresar ni editar.
+
+`/admin/` redirige a la página inicial.
 
 ## Notas
 

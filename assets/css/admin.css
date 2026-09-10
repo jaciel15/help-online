@@ -1,9 +1,42 @@
-.admin-body {
+.home-hub { position: relative; isolation: isolate; }
+.home-hub-bg { opacity: 0.25; }
+.home-hero--hub { min-height: min(62vh, 560px); }
+.btn-admin-jump {
+  min-height: 40px !important;
+  padding: 8px 12px !important;
+  font-size: 0.75rem !important;
+  text-decoration: none;
+}
+.admin-hub-section {
   position: relative;
-  min-height: 100vh;
-  background: var(--bg);
-  color: var(--text);
-  isolation: isolate;
+  z-index: 2;
+  padding: 28px 0 48px;
+  scroll-margin-top: 80px;
+}
+.admin-hub-wrap {
+  width: min(1180px, calc(100% - 24px));
+  margin: 0 auto;
+}
+.admin-gate--inline {
+  min-height: auto;
+  padding: 12px 0 24px;
+}
+.admin-app--home {
+  width: 100%;
+  padding-top: 0;
+}
+.inv-folder {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+.folder-count {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-size: 0.85rem;
 }
 
 .admin-bg {

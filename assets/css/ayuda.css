@@ -66,6 +66,15 @@
   margin-top: 24px;
 }
 
+.admin-escape {
+  margin-top: 10px;
+}
+.admin-escape a {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
 /* Sin navegación de catálogo en modo ayuda */
 .help-locked .breadcrumbs,
 .help-locked .back-row,

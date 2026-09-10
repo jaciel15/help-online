@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="VELOCÍMETROS CDMX — Plataforma técnica HELP ONLINE para EEPROM, CAN BUS, dashboards y sistemas automotrices.">
+  <meta name="description" content="VELOCÍMETROS CDMX — HELP ONLINE: crea ayudas, guarda en catálogo y comparte link bloqueado al cliente.">
   <title>VELOCÍMETROS CDMX | HELP ONLINE</title>
   <link rel="icon" href="assets/img/logo-velocimetros-digitales-cdmx.jpg">
   <link rel="stylesheet" href="assets/css/site.css">
-    <script>
+  <link rel="stylesheet" href="assets/css/admin.css">
+  <script>
     (function(){
       try{
         var t=localStorage.getItem('vcdmx-theme');
@@ -18,122 +19,234 @@
     })();
   </script>
 </head>
-<body>
+<body class="home-hub">
+  <div class="admin-bg home-hub-bg" aria-hidden="true">
+    <img src="assets/img/velocimetro-2026.jpg" alt="">
+  </div>
+
   <header class="topbar">
-        <a class="brand-lockup" href="./">
+    <a class="brand-lockup" href="./">
       <span class="brand-logo-wrap" aria-hidden="true">
         <img class="brand-logo" src="assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="">
       </span>
       <span class="brand-text">
         <span class="brand-name">VELOCÍMETROS CDMX</span>
-        <span class="brand-tag" data-i18n="brand.tag">Sistema Velocímetros Digitales CDMX</span>
+        <span class="brand-tag">HELP ONLINE · Sistema completo</span>
       </span>
     </a>
-        <div class="topbar-controls">
-      <div class="theme-switch" role="group" data-i18n-aria="theme.label" aria-label="Tema visual">
-        <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true" data-i18n="theme.dark">Oscuro</button>
-        <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false" data-i18n="theme.warm">Cálido</button>
+    <div class="topbar-controls">
+      <div class="theme-switch" role="group" aria-label="Tema visual">
+        <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="true">Oscuro</button>
+        <button type="button" class="theme-btn" data-theme-set="warm" aria-pressed="false">Cálido</button>
       </div>
-      <div class="lang-switch" role="group" data-i18n-aria="lang.label" aria-label="Idioma">
+      <div class="lang-switch" role="group" aria-label="Idioma">
         <button type="button" class="theme-btn" data-lang-set="es" aria-pressed="true">ES</button>
         <button type="button" class="theme-btn" data-lang-set="en" aria-pressed="false">EN</button>
       </div>
+      <a class="btn btn-primary btn-admin-jump" href="#administrador">Administrador</a>
     </div>
   </header>
 
-  <nav class="breadcrumbs" data-i18n-aria="nav.nav" aria-label="Navegación">
-    <span class="current" data-i18n="nav.home">Inicio</span>
-  </nav>
-
-  <section class="home-hero">
+  <section class="home-hero home-hero--hub">
     <div class="home-hero-media hero-gauge-photo" aria-hidden="true">
       <img src="assets/img/velocimetro-2026.jpg" alt="" width="1200" height="654">
     </div>
     <div class="home-hero-content">
       <div class="maker-seal">
         <img src="assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="Velocímetros Digitales CDMX">
-        <span data-i18n="home.seal">Creado por Velocímetros Digitales CDMX</span>
+        <span>Creado por Velocímetros Digitales CDMX</span>
       </div>
       <h1 class="brand-mega">VELOCÍMETROS<br>CDMX</h1>
-      <p class="lead" data-i18n="home.lead">Referencia técnica para EEPROM, programadores UPA, conexiones y dashboards automotrices.</p>
+      <p class="lead">Tú creas y editas ayudas. Al guardar se abre la página del cliente (solo lectura, sin regresar).</p>
       <div class="cta-row">
-        <a class="btn btn-primary" href="autos/">AUTOS</a>
-        <a class="btn btn-ghost" href="motos/">MOTOS</a>
-        <a class="btn btn-ghost" href="portal/">CÓMO FUNCIONA HELP</a>
+        <a class="btn btn-primary" href="#administrador">Entrar a administrador</a>
+        <a class="btn btn-ghost" href="ayuda/?c=motos&amp;b=yamaha&amp;m=mt09&amp;v=base">Ver ejemplo cliente MT-09</a>
       </div>
     </div>
   </section>
 
-  <main class="home-sections">
-    <section class="section-block">
-      <h2 data-i18n="home.catalogTitle">CATÁLOGO RÁPIDO</h2>
-      <p data-i18n="home.catalogLead">Elige la categoría y entra a marcas, modelos y fichas técnicas con fotos de tablero, EEPROM y conexión.</p>
-      <div class="menu-grid">
-        <a class="menu-card" href="autos/">
-          <span class="label">AUTOS</span>
-          <span class="meta" data-i18n="home.carsMeta">Chevrolet y más</span>
-        </a>
-        <a class="menu-card" href="motos/">
-          <span class="label">MOTOS</span>
-          <span class="meta" data-i18n="home.bikesMeta">Yamaha MT-09 listo</span>
-        </a>
-        <a class="menu-card" href="motos/yamaha/mt09/">
-          <span class="label">MT-09</span>
-          <span class="meta" data-i18n="home.mt09Meta">Ficha completa</span>
-        </a>
+  <section id="administrador" class="admin-hub-section">
+    <div class="admin-hub-wrap">
+      <div id="loginGate" class="admin-gate admin-gate--inline">
+        <form id="loginForm" class="admin-card login-card">
+          <p class="admin-badge">SOLO ADMINISTRADOR / CREADOR</p>
+          <h1>ADMIN HELP ONLINE</h1>
+          <p class="hint">Desde aquí ves todo el sistema: subir autos/motos, 4 fotos, editar cualquier ficha y guardar en catálogo. El cliente solo recibe el link bloqueado.</p>
+          <label>Contraseña
+            <input type="password" id="loginPass" autocomplete="current-password" required>
+          </label>
+          <button type="submit" class="btn btn-primary">Entrar al sistema</button>
+          <p class="hint">Clave inicial: <code>adminupa2026</code></p>
+        </form>
       </div>
-    </section>
 
-    <section class="section-block">
-      <h2 data-i18n="home.helpTitle">HELP ONLINE SYSTEM</h2>
-      <p data-i18n="home.helpLead">Plataforma para talleres y técnicos: datos de chip, programador, tipo de memoria y notas de seguridad.</p>
-      <div class="info-strip">
-        <div class="info-item">
-          <strong>EEPROM</strong>
-          <span data-i18n="home.eepromDesc">Identificación de chips y organización</span>
-        </div>
-        <div class="info-item">
-          <strong>UPA / SERIAL</strong>
-          <span data-i18n="home.upaDesc">Programadores y flujos de lectura</span>
-        </div>
-        <div class="info-item">
-          <strong>DASHBOARD</strong>
-          <span data-i18n="home.dashDesc">Fotos de tablero y conexiones</span>
-        </div>
-        <div class="info-item">
-          <strong>SOPORTE</strong>
-          <span>+52 55 7891 4191</span>
-        </div>
+      <div id="adminApp" class="admin-app admin-app--home" hidden>
+        <header class="admin-top">
+          <div>
+            <p class="admin-badge">PANEL EN PÁGINA INICIAL</p>
+            <strong>Subida, catálogo y edición</strong>
+            <span>Al guardar → se crea la carpeta/ayuda y te lleva a la página del cliente (bloqueada)</span>
+          </div>
+          <div class="admin-top-actions">
+            <button type="button" id="btnNew" class="btn btn-primary">+ Nueva ayuda</button>
+            <button type="button" id="btnExport" class="btn btn-ghost">Exportar JSON</button>
+            <button type="button" id="btnLogout" class="btn btn-ghost">Salir</button>
+          </div>
+        </header>
+
+        <main class="admin-grid">
+          <section class="admin-card" id="formCard">
+            <h2 id="formTitle">Nueva ayuda</h2>
+            <p class="muted tiny">Autos/motos nuevos crean carpeta sola. Completa datos + 4 fotos y pulsa <strong>Guardar en catálogo</strong>.</p>
+            <form id="entryForm" class="admin-form">
+              <div class="form-row">
+                <label>Categoría
+                  <select id="fCategory" required>
+                    <option value="autos">AUTOS</option>
+                    <option value="motos">MOTOS</option>
+                  </select>
+                </label>
+                <label>Marca
+                  <input id="fBrand" required placeholder="Kawasaki / Ford" autocomplete="off">
+                </label>
+              </div>
+              <div class="form-row">
+                <label>Modelo
+                  <input id="fModel" required placeholder="ZR / Fusion" autocomplete="off">
+                </label>
+                <label>Versión
+                  <input id="fVersion" required value="Base" placeholder="Base / 2022 / Otra" autocomplete="off">
+                </label>
+              </div>
+
+              <h3 class="admin-sub">Datos técnicos (editables)</h3>
+              <div class="form-row">
+                <label>Memoria / EEPROM
+                  <input id="fEeprom" placeholder="93C56 / 93C86 × 16" autocomplete="off">
+                </label>
+                <label>Programador
+                  <input id="fProgrammer" value="UPA USB" placeholder="UPA USB" autocomplete="off">
+                </label>
+              </div>
+              <label>Tipo
+                <input id="fType" value="SERIAL EEPROM" placeholder="SERIAL EEPROM" autocomplete="off">
+              </label>
+              <label>Notas (una por línea)
+                <textarea id="fNotes" rows="3" placeholder="Nota 1"></textarea>
+              </label>
+
+              <h3 class="admin-sub">Fotos en orden (cámara o galería)</h3>
+              <p class="muted tiny">FOTO 1 principal → 2 dashboard → 3 conexiones → 4 pin-out</p>
+
+              <label class="multi-drop">
+                <span>O suelta / elige 4 fotos juntas (orden 1→2→3→4)</span>
+                <input type="file" id="pMulti" accept="image/*" multiple>
+              </label>
+
+              <div class="photo-grid photo-grid-4">
+                <div class="photo-slot" data-slot="1" data-key="main">
+                  <span class="photo-num">FOTO 1</span>
+                  <strong>Principal</strong>
+                  <small>Auto o moto</small>
+                  <img id="prevMain" class="preview" alt="">
+                  <div class="photo-actions">
+                    <button type="button" class="btn-photo" data-target="pMainGallery">Galería</button>
+                    <button type="button" class="btn-photo" data-target="pMainCamera">Cámara</button>
+                  </div>
+                  <input type="file" id="pMainGallery" class="file-hidden" accept="image/*">
+                  <input type="file" id="pMainCamera" class="file-hidden" accept="image/*" capture="environment">
+                  <span class="photo-status" id="stMain">Pendiente</span>
+                </div>
+                <div class="photo-slot" data-slot="2" data-key="dashboard">
+                  <span class="photo-num">FOTO 2</span>
+                  <strong>Dashboard</strong>
+                  <small>Tablero</small>
+                  <img id="prevDashboard" class="preview" alt="">
+                  <div class="photo-actions">
+                    <button type="button" class="btn-photo" data-target="pDashGallery">Galería</button>
+                    <button type="button" class="btn-photo" data-target="pDashCamera">Cámara</button>
+                  </div>
+                  <input type="file" id="pDashGallery" class="file-hidden" accept="image/*">
+                  <input type="file" id="pDashCamera" class="file-hidden" accept="image/*" capture="environment">
+                  <span class="photo-status" id="stDashboard">Pendiente</span>
+                </div>
+                <div class="photo-slot" data-slot="3" data-key="connection">
+                  <span class="photo-num">FOTO 3</span>
+                  <strong>Conexiones</strong>
+                  <small>Cableado / pin</small>
+                  <img id="prevConnection" class="preview" alt="">
+                  <div class="photo-actions">
+                    <button type="button" class="btn-photo" data-target="pConnGallery">Galería</button>
+                    <button type="button" class="btn-photo" data-target="pConnCamera">Cámara</button>
+                  </div>
+                  <input type="file" id="pConnGallery" class="file-hidden" accept="image/*">
+                  <input type="file" id="pConnCamera" class="file-hidden" accept="image/*" capture="environment">
+                  <span class="photo-status" id="stConnection">Pendiente</span>
+                </div>
+                <div class="photo-slot" data-slot="4" data-key="ignition">
+                  <span class="photo-num">FOTO 4</span>
+                  <strong>Pin-out</strong>
+                  <small>Encendido / EEPROM</small>
+                  <img id="prevIgnition" class="preview" alt="">
+                  <div class="photo-actions">
+                    <button type="button" class="btn-photo" data-target="pIgnGallery">Galería</button>
+                    <button type="button" class="btn-photo" data-target="pIgnCamera">Cámara</button>
+                  </div>
+                  <input type="file" id="pIgnGallery" class="file-hidden" accept="image/*">
+                  <input type="file" id="pIgnCamera" class="file-hidden" accept="image/*" capture="environment">
+                  <span class="photo-status" id="stIgnition">Pendiente</span>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="btnPublish">Guardar en catálogo</button>
+                <button type="button" id="btnClear" class="btn btn-ghost">Limpiar</button>
+              </div>
+              <p id="formMsg" class="form-msg" hidden></p>
+            </form>
+          </section>
+
+          <section class="admin-card inventory-card">
+            <h2>Lista de ayudas (carpetas)</h2>
+            <p class="muted">Crece sola. Edita cualquier auto/moto. El cliente solo ve su link.</p>
+            <p class="folder-count" id="folderCount">Carpetas: 0</p>
+            <div class="inv-filters">
+              <button type="button" class="inv-filter is-active" data-filter="all">Todas</button>
+              <button type="button" class="inv-filter" data-filter="autos">Autos</button>
+              <button type="button" class="inv-filter" data-filter="motos">Motos</button>
+            </div>
+            <div id="catalogTree" class="catalog-tree"></div>
+            <p id="invEmpty" class="muted" hidden>Aún no hay ayudas.</p>
+            <hr>
+            <h3>Cambiar contraseña</h3>
+            <form id="passForm" class="admin-form compact">
+              <label>Nueva contraseña
+                <input type="password" id="newPass" minlength="6" required>
+              </label>
+              <button type="submit" class="btn btn-ghost">Actualizar clave</button>
+            </form>
+          </section>
+        </main>
       </div>
-    </section>
-
-    <section class="section-block maker-spotlight">
-      <h2 data-i18n="home.whoTitle">¿QUIÉN HACE ESTE SISTEMA?</h2>
-      <p data-i18n="home.whoLeadHtml" data-i18n-html="true">HELP ONLINE es un desarrollo de <strong>Velocímetros Digitales CDMX</strong>: soporte técnico automotriz con identidad propia.</p>
-      <div class="maker-credit maker-credit--hero">
-        <img class="maker-logo" src="assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="Velocímetros Digitales CDMX">
-        <div class="maker-copy">
-          <p class="maker-eyebrow" data-i18n="home.officialBrand">Marca oficial</p>
-          <p class="maker-name">VELOCÍMETROS DIGITALES CDMX</p>
-          <p class="maker-note" data-i18n="home.makerServices">EEPROM · UPA · Dashboards · Conexiones · Soporte técnico CDMX</p>
-        </div>
-      </div>
-    </section>
-
-  </main>
+    </div>
+  </section>
 
   <footer class="site-footer">
     <div class="maker-credit">
       <img class="maker-logo" src="assets/img/logo-velocimetros-digitales-cdmx.jpg" alt="Velocímetros Digitales CDMX">
       <div class="maker-copy">
-        <p class="maker-eyebrow" data-i18n="footer.developedBy">Sistema desarrollado por</p>
+        <p class="maker-eyebrow">Sistema desarrollado por</p>
         <p class="maker-name">VELOCÍMETROS DIGITALES CDMX</p>
-        <p class="maker-note" data-i18n="footer.note">HELP ONLINE © VELOCÍMETROS CDMX — Uso técnico responsable</p>
+        <p class="maker-note">HELP ONLINE © VELOCÍMETROS CDMX — Creador edita · Cliente solo ve</p>
       </div>
     </div>
-    <p class="admin-entry"><a href="admin/">Admin</a> · <a href="portal/">Cómo funciona Help</a> · <a href="ayuda/?c=motos&amp;b=yamaha&amp;m=mt09&amp;v=base">Ejemplo ayuda MT-09</a></p>
   </footer>
 
+  <script>
+    window.VCDMX_ADMIN = { root: "", ayudaBase: "ayuda/", assetPrefix: "" };
+  </script>
+  <script src="assets/js/catalog.js"></script>
+  <script src="assets/js/admin.js"></script>
   <script src="assets/js/site.js"></script>
 </body>
 </html>

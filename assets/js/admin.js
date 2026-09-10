@@ -2,6 +2,12 @@
   "use strict";
 
   var C = window.VCDMXCatalog;
+  var CFG = window.VCDMX_ADMIN || {
+    root: "../",
+    ayudaBase: "../ayuda/",
+    assetPrefix: "../"
+  };
+  var FOLDERS_KEY = "vcdmx-folders-v1";
   var catalog = null;
   var pending = { main: "", dashboard: "", connection: "", ignition: "" };
   var editing = null;
@@ -14,10 +20,10 @@
     ignition: { img: "prevIgnition", st: "stIgnition", slot: 4 }
   };
   var CHAIN = {
-    main: { nextKey: "dashboard", nextSlot: 2, nextGallery: "pDashGallery" },
-    dashboard: { nextKey: "connection", nextSlot: 3, nextGallery: "pConnGallery" },
-    connection: { nextKey: "ignition", nextSlot: 4, nextGallery: "pIgnGallery" },
-    ignition: { nextKey: null, nextSlot: 0, nextGallery: null }
+    main: { nextSlot: 2, nextGallery: "pDashGallery" },
+    dashboard: { nextSlot: 3, nextGallery: "pConnGallery" },
+    connection: { nextSlot: 4, nextGallery: "pIgnGallery" },
+    ignition: { nextSlot: 0, nextGallery: null }
   };
 
   function $(id) {
@@ -25,15 +31,78 @@
   }
 
   function showApp(on) {
-    $("loginGate").hidden = on;
-    $("adminApp").hidden = !on;
+    var gate = $("loginGate");
+    var app = $("adminApp");
+    if (gate) gate.hidden = on;
+    if (app) app.hidden = !on;
   }
 
   function resolvePreview(path) {
     if (!path) return "";
     if (path.indexOf("data:") === 0 || path.indexOf("http") === 0 || path.indexOf("blob:") === 0) return path;
-    if (path.indexOf("../") === 0 || path.indexOf("/") === 0) return path;
-    return "../" + path;
+    if (path.indexOf("../") === 0 || path.indexOf("/") === 0 || path.indexOf("./") === 0) return path;
+    return (CFG.assetPrefix || "") + path;
+  }
+
+  function helpHref(cat, brandId, modelId, versionId) {
+    return (
+      (CFG.ayudaBase || "ayuda/") +
+      "?c=" +
+      encodeURIComponent(cat) +
+      "&b=" +
+      encodeURIComponent(brandId) +
+      "&m=" +
+      encodeURIComponent(modelId) +
+      "&v=" +
+      encodeURIComponent(versionId || "base")
+    );
+  }
+
+  function folderPath(cat, brandId, modelId) {
+    return [cat, brandId, modelId].join("/");
+  }
+
+  function readFolders() {
+    try {
+      return JSON.parse(localStorage.getItem(FOLDERS_KEY) || "[]");
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function registerFolder(entry) {
+    var list = readFolders();
+    var key = folderPath(entry.c, entry.b, entry.m) + "/" + (entry.v || "base");
+    var found = -1;
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].key === key) {
+        found = i;
+        break;
+      }
+    }
+    var row = {
+      key: key,
+      c: entry.c,
+      b: entry.b,
+      m: entry.m,
+      v: entry.v || "base",
+      label: entry.label,
+      path: folderPath(entry.c, entry.b, entry.m),
+      updatedAt: new Date().toISOString()
+    };
+    if (found >= 0) list[found] = row;
+    else list.push(row);
+    list.sort(function (a, b) {
+      return (b.updatedAt || "").localeCompare(a.updatedAt || "");
+    });
+    localStorage.setItem(FOLDERS_KEY, JSON.stringify(list));
+    return list;
+  }
+
+  function updateFolderCount() {
+    var el = $("folderCount");
+    if (!el) return;
+    el.textContent = "Carpetas: " + readFolders().length;
   }
 
   function setPhoto(key, url) {
@@ -43,6 +112,7 @@
     var img = $(meta.img);
     var st = $(meta.st);
     var slot = document.querySelector('.photo-slot[data-slot="' + meta.slot + '"]');
+    if (!img || !st) return;
     var preview = resolvePreview(url);
     if (preview) {
       img.src = preview;
@@ -60,11 +130,11 @@
 
   function updatePublishPulse() {
     var btn = $("btnPublish");
+    if (!btn) return;
     var ready = PHOTO_KEYS.every(function (k) {
       return !!pending[k];
     });
-    if (ready) btn.classList.add("is-pulse");
-    else btn.classList.remove("is-pulse");
+    btn.classList.toggle("is-pulse", ready);
   }
 
   function markActiveSlot(n) {
@@ -80,7 +150,7 @@
       try {
         el.click();
       } catch (e) {}
-    }, 120);
+    }, 80);
   }
 
   function onPhotoChosen(key, file, chain) {
@@ -94,7 +164,7 @@
         openPicker(next.nextGallery);
       } else {
         markActiveSlot(0);
-        $("btnPublish").focus();
+        if ($("btnPublish")) $("btnPublish").focus();
       }
     });
   }
@@ -111,12 +181,13 @@
 
   function applyFilesInOrder(fileList) {
     var files = Array.prototype.slice.call(fileList || [], 0, 4);
-    var jobs = files.map(function (file, i) {
-      return C.fileToDataUrl(file).then(function (url) {
-        setPhoto(PHOTO_KEYS[i], url);
-      });
-    });
-    return Promise.all(jobs);
+    return Promise.all(
+      files.map(function (file, i) {
+        return C.fileToDataUrl(file).then(function (url) {
+          setPhoto(PHOTO_KEYS[i], url);
+        });
+      })
+    );
   }
 
   function thumbHtml(photos) {
@@ -128,10 +199,11 @@
 
   function countItems() {
     var n = 0;
+    if (!catalog) return 0;
     ["autos", "motos"].forEach(function (cat) {
       C.listBrands(catalog, cat).forEach(function (b) {
         Object.keys(b.models || {}).forEach(function (mid) {
-          n += ((b.models[mid].versions || []).length);
+          n += (b.models[mid].versions || []).length;
         });
       });
     });
@@ -141,6 +213,7 @@
   function renderTree() {
     var box = $("catalogTree");
     var empty = $("invEmpty");
+    if (!box) return;
     var html = "";
     var shown = 0;
     var cats = listFilter === "all" ? ["autos", "motos"] : [listFilter];
@@ -158,16 +231,9 @@
           var m = b.models[mid];
           (m.versions || []).forEach(function (v) {
             shown += 1;
-            var helpHref =
-              "../ayuda/?c=" +
-              encodeURIComponent(cat) +
-              "&b=" +
-              encodeURIComponent(b.id) +
-              "&m=" +
-              encodeURIComponent(mid) +
-              "&v=" +
-              encodeURIComponent(v.id);
-            var absHelp = new URL(helpHref, location.href).href;
+            var href = helpHref(cat, b.id, mid, v.id);
+            var absHelp = new URL(href, location.href).href;
+            var folder = folderPath(cat, b.id, mid);
             html +=
               '<article class="inv-item">' +
               thumbHtml(v.photos) +
@@ -182,6 +248,9 @@
               " · EEPROM " +
               (v.eeprom || "—") +
               "</span>" +
+              '<span class="inv-folder">📁 ' +
+              folder +
+              "</span>" +
               '<div class="tree-actions">' +
               "<button type='button' class='edit-help' data-c='" +
               cat +
@@ -193,8 +262,8 @@
               v.id +
               "'>Editar</button>" +
               "<a href='" +
-              helpHref +
-              "' target='_blank' rel='noopener'>Ver ayuda</a>" +
+              href +
+              "' target='_blank' rel='noopener'>Ver ayuda cliente</a>" +
               "<button type='button' class='copy-help' data-help-url='" +
               absHelp.replace(/'/g, "&#39;") +
               "'>Copiar link</button>" +
@@ -206,15 +275,18 @@
     });
 
     box.innerHTML = html || "";
-    if (countItems() === 0) {
-      empty.hidden = false;
-      empty.textContent = "Aún no hay ayudas. Usa el formulario para añadir la primera.";
-    } else if (shown === 0) {
-      empty.hidden = false;
-      empty.textContent = "No hay ayudas en este filtro.";
-    } else {
-      empty.hidden = true;
+    if (empty) {
+      if (countItems() === 0) {
+        empty.hidden = false;
+        empty.textContent = "Aún no hay ayudas. Guarda la primera en catálogo.";
+      } else if (shown === 0) {
+        empty.hidden = false;
+        empty.textContent = "No hay ayudas en este filtro.";
+      } else {
+        empty.hidden = true;
+      }
     }
+    updateFolderCount();
 
     box.querySelectorAll(".copy-help").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -227,7 +299,7 @@
             }, 1200);
           });
         } else {
-          prompt("Copia este link de ayuda:", url);
+          prompt("Link cliente:", url);
         }
       });
     });
@@ -269,109 +341,132 @@
     setPhoto("ignition", photos.ignition || photos.eeprom || "");
 
     $("formCard").scrollIntoView({ behavior: "smooth", block: "start" });
-    $("formMsg").hidden = true;
+    if ($("formMsg")) $("formMsg").hidden = true;
   }
 
   function clearForm() {
     editing = null;
-    $("formTitle").textContent = "Nueva ayuda";
-    $("entryForm").reset();
-    $("fProgrammer").value = "UPA USB";
-    $("fType").value = "SERIAL EEPROM";
-    $("fVersion").value = "Base";
-    $("pMulti").value = "";
+    if ($("formTitle")) $("formTitle").textContent = "Nueva ayuda";
+    if ($("entryForm")) $("entryForm").reset();
+    if ($("fProgrammer")) $("fProgrammer").value = "UPA USB";
+    if ($("fType")) $("fType").value = "SERIAL EEPROM";
+    if ($("fVersion")) $("fVersion").value = "Base";
+    if ($("pMulti")) $("pMulti").value = "";
     PHOTO_KEYS.forEach(function (k) {
       setPhoto(k, "");
     });
     markActiveSlot(1);
-    $("formMsg").hidden = true;
+    if ($("formMsg")) $("formMsg").hidden = true;
+  }
+
+  function downloadText(filename, text, mime) {
+    try {
+      var blob = new Blob([text], { type: mime || "application/json" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      setTimeout(function () {
+        URL.revokeObjectURL(a.href);
+      }, 1500);
+    } catch (e) {}
   }
 
   function publish() {
-    if (!catalog) catalog = C.emptyCatalog();
-
-    var category = $("fCategory").value;
-    var brandName = $("fBrand").value.trim();
-    var modelName = $("fModel").value.trim();
-    var versionName = $("fVersion").value.trim() || "Base";
-    if (!brandName || !modelName) return;
-
-    var brandId = C.ensureBrand(catalog, category, brandName);
-    var modelId = C.ensureModel(catalog, category, brandId, modelName);
-    var versionId = C.slugify(versionName);
-    var existing = C.getVersion(catalog, category, brandId, modelId, versionId);
-    var prev = (existing && existing.photos) || {};
-    var photos = {
-      main: pending.main || prev.main || "",
-      dashboard: pending.dashboard || prev.dashboard || "",
-      connection: pending.connection || prev.connection || "",
-      ignition: pending.ignition || prev.ignition || prev.eeprom || ""
-    };
-
-    C.upsertVersion(catalog, category, brandId, modelId, {
-      id: versionId,
-      name: versionName,
-      eeprom: $("fEeprom").value.trim(),
-      programmer: $("fProgrammer").value.trim(),
-      type: $("fType").value.trim(),
-      notes: $("fNotes")
-        .value.split("\n")
-        .map(function (n) {
-          return n.trim();
-        })
-        .filter(Boolean),
-      photos: photos
-    });
-
-    C.saveCatalog(catalog);
-    var helpUnit = C.buildHelpUnit(catalog, category, brandId, modelId, versionId);
-    C.saveHelpUnit(helpUnit);
-    C.exportHelpUnit(helpUnit);
-    renderTree();
-
-    var helpUrl =
-      new URL(
-        "../ayuda/?c=" +
-          encodeURIComponent(category) +
-          "&b=" +
-          encodeURIComponent(brandId) +
-          "&m=" +
-          encodeURIComponent(modelId) +
-          "&v=" +
-          encodeURIComponent(versionId),
-        location.href
-      ).href;
-
     var msg = $("formMsg");
-    msg.hidden = false;
-    msg.innerHTML =
-      "✓ Guardado: <strong>" +
-      brandName.toUpperCase() +
-      " / " +
-      modelName.toUpperCase() +
-      " / " +
-      versionName +
-      "</strong><br>JSON descargado → <code>data/help/" +
-      category +
-      "/" +
-      brandId +
-      "/" +
-      modelId +
-      "/" +
-      versionId +
-      ".json</code><br>Link cliente: <code style='word-break:break-all'>" +
-      helpUrl +
-      "</code>";
+    try {
+      if (!catalog) catalog = C.emptyCatalog();
 
-    // Mantener datos en formulario si era edición; si era alta, limpiar para la siguiente
-    if (!editing) clearForm();
-    else {
-      editing = { cat: category, brandId: brandId, modelId: modelId, versionId: versionId };
-      $("formTitle").textContent = "Editando · " + brandName.toUpperCase() + " " + modelName.toUpperCase();
+      var category = $("fCategory").value;
+      var brandName = ($("fBrand").value || "").trim();
+      var modelName = ($("fModel").value || "").trim();
+      var versionName = ($("fVersion").value || "").trim() || "Base";
+
+      if (!brandName || !modelName) {
+        if (msg) {
+          msg.hidden = false;
+          msg.textContent = "Completa marca y modelo.";
+        }
+        return;
+      }
+
+      var brandId = C.ensureBrand(catalog, category, brandName);
+      var modelId = C.ensureModel(catalog, category, brandId, modelName);
+      var versionId = C.slugify(versionName);
+      var existing = C.getVersion(catalog, category, brandId, modelId, versionId);
+      var prev = (existing && existing.photos) || {};
+      var photos = {
+        main: pending.main || prev.main || "",
+        dashboard: pending.dashboard || prev.dashboard || "",
+        connection: pending.connection || prev.connection || "",
+        ignition: pending.ignition || prev.ignition || prev.eeprom || ""
+      };
+
+      C.upsertVersion(catalog, category, brandId, modelId, {
+        id: versionId,
+        name: versionName,
+        eeprom: ($("fEeprom").value || "").trim(),
+        programmer: ($("fProgrammer").value || "").trim(),
+        type: ($("fType").value || "").trim(),
+        notes: ($("fNotes").value || "")
+          .split("\n")
+          .map(function (n) {
+            return n.trim();
+          })
+          .filter(Boolean),
+        photos: photos
+      });
+
+      C.saveCatalog(catalog);
+      var helpUnit = C.buildHelpUnit(catalog, category, brandId, modelId, versionId);
+      C.saveHelpUnit(helpUnit);
+
+      var folder = folderPath(category, brandId, modelId);
+      registerFolder({
+        c: category,
+        b: brandId,
+        m: modelId,
+        v: versionId,
+        label: brandName.toUpperCase() + " " + modelName.toUpperCase()
+      });
+
+      // Descarga JSON de la carpeta (para respaldo / hosting)
+      downloadText(
+        [category, brandId, modelId, versionId].join("-") + ".json",
+        JSON.stringify(helpUnit, null, 2),
+        "application/json"
+      );
+
+      var href = helpHref(category, brandId, modelId, versionId);
+      var abs = new URL(href, location.href).href;
+
+      if (msg) {
+        msg.hidden = false;
+        msg.innerHTML =
+          "✓ Guardado en catálogo · carpeta <code>" +
+          folder +
+          "</code><br>Abriendo ayuda cliente…<br><code style='word-break:break-all'>" +
+          abs +
+          "</code>";
+      }
+
+      // Ir a la página bloqueada del cliente (sin regreso a catálogo)
+      setTimeout(function () {
+        location.assign(href);
+      }, 450);
+    } catch (err) {
+      console.error(err);
+      if (msg) {
+        msg.hidden = false;
+        msg.textContent = "Error al guardar: " + (err && err.message ? err.message : String(err));
+      }
+      alert("No se pudo guardar. Revisa marca, modelo y vuelve a intentar.");
     }
   }
 
   function boot() {
+    if (!$("loginForm") || !$("entryForm")) return;
+
     if (C.isAdminSession()) {
       showApp(true);
       C.loadCatalog().then(function (cat) {
@@ -393,23 +488,31 @@
           catalog = cat;
           renderTree();
         });
+        var hub = document.getElementById("administrador");
+        if (hub) hub.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     });
 
-    $("btnLogout").addEventListener("click", function () {
-      C.endAdminSession();
-      location.reload();
-    });
+    if ($("btnLogout")) {
+      $("btnLogout").addEventListener("click", function () {
+        C.endAdminSession();
+        location.reload();
+      });
+    }
 
-    $("btnExport").addEventListener("click", function () {
-      if (catalog) C.exportCatalog(catalog);
-    });
+    if ($("btnExport")) {
+      $("btnExport").addEventListener("click", function () {
+        if (catalog) C.exportCatalog(catalog);
+      });
+    }
 
-    $("btnClear").addEventListener("click", clearForm);
-    $("btnNew").addEventListener("click", function () {
-      clearForm();
-      $("formCard").scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    if ($("btnClear")) $("btnClear").addEventListener("click", clearForm);
+    if ($("btnNew")) {
+      $("btnNew").addEventListener("click", function () {
+        clearForm();
+        $("formCard").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
 
     document.querySelectorAll(".inv-filter").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -430,7 +533,6 @@
       });
     });
 
-    // Galería + cámara por cada foto (cadena solo desde galería/cámara de cada slot)
     bindPhotoInput("pMainGallery", "main", true);
     bindPhotoInput("pMainCamera", "main", true);
     bindPhotoInput("pDashGallery", "dashboard", true);
@@ -440,12 +542,14 @@
     bindPhotoInput("pIgnGallery", "ignition", true);
     bindPhotoInput("pIgnCamera", "ignition", true);
 
-    $("pMulti").addEventListener("change", function () {
-      applyFilesInOrder(this.files).then(function () {
-        markActiveSlot(0);
-        $("btnPublish").focus();
+    if ($("pMulti")) {
+      $("pMulti").addEventListener("change", function () {
+        applyFilesInOrder(this.files).then(function () {
+          markActiveSlot(0);
+          if ($("btnPublish")) $("btnPublish").focus();
+        });
       });
-    });
+    }
 
     markActiveSlot(1);
 
@@ -454,13 +558,22 @@
       publish();
     });
 
-    $("passForm").addEventListener("submit", function (e) {
-      e.preventDefault();
-      C.setPassword($("newPass").value).then(function () {
-        $("newPass").value = "";
-        alert("Contraseña actualizada");
+    if ($("passForm")) {
+      $("passForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        C.setPassword($("newPass").value).then(function () {
+          $("newPass").value = "";
+          alert("Contraseña actualizada");
+        });
       });
-    });
+    }
+
+    if (location.hash === "#administrador") {
+      var hub = document.getElementById("administrador");
+      if (hub) setTimeout(function () {
+        hub.scrollIntoView({ behavior: "smooth" });
+      }, 200);
+    }
   }
 
   document.addEventListener("DOMContentLoaded", boot);
