@@ -70,39 +70,39 @@
     }
   }
 
-  function registerFolder(entry) {
-    var list = readFolders();
-    var key = folderPath(entry.c, entry.b, entry.m) + "/" + (entry.v || "base");
-    var found = -1;
-    for (var i = 0; i < list.length; i++) {
-      if (list[i].key === key) {
-        found = i;
-        break;
-      }
-    }
-    var row = {
-      key: key,
-      c: entry.c,
-      b: entry.b,
-      m: entry.m,
-      v: entry.v || "base",
-      label: entry.label,
-      path: folderPath(entry.c, entry.b, entry.m),
-      updatedAt: new Date().toISOString()
-    };
-    if (found >= 0) list[found] = row;
-    else list.push(row);
-    list.sort(function (a, b) {
-      return (b.updatedAt || "").localeCompare(a.updatedAt || "");
+  function syncFoldersFromCatalog() {
+    var list = [];
+    if (!catalog) return list;
+    ["autos", "motos"].forEach(function (cat) {
+      C.listBrands(catalog, cat).forEach(function (b) {
+        Object.keys(b.models || {}).forEach(function (mid) {
+          var model = b.models[mid];
+          (model.versions || []).forEach(function (v) {
+            list.push({
+              key: folderPath(cat, b.id, mid) + "/" + (v.id || "base"),
+              c: cat,
+              b: b.id,
+              m: mid,
+              v: v.id || "base",
+              label: b.name + " " + model.name,
+              path: folderPath(cat, b.id, mid),
+              updatedAt: new Date().toISOString()
+            });
+          });
+        });
+      });
     });
-    localStorage.setItem(FOLDERS_KEY, JSON.stringify(list));
+    try {
+      localStorage.setItem(FOLDERS_KEY, JSON.stringify(list));
+    } catch (e) {}
     return list;
   }
 
   function updateFolderCount() {
     var el = $("folderCount");
     if (!el) return;
-    el.textContent = "Carpetas: " + readFolders().length;
+    var n = countItems();
+    el.textContent = "Carpetas: " + n + (n === 1 ? " ayuda" : " ayudas");
   }
 
   function setPhoto(key, url) {
@@ -287,6 +287,7 @@
       }
     }
     updateFolderCount();
+    syncFoldersFromCatalog();
 
     box.querySelectorAll(".copy-help").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -439,19 +440,20 @@
           return C.saveCatalog(catalog).then(function () {
             var helpUnit = C.buildHelpUnit(catalog, category, brandId, modelId, versionId);
             return C.saveHelpUnit(helpUnit).then(function () {
-              return helpUnit;
+              // Confirmar que quedó en IndexedDB antes de redirigir
+              return C.loadHelpUnit(category, brandId, modelId, versionId).then(function (verify) {
+                if (!verify || !verify.version) {
+                  throw new Error("No se pudo confirmar el guardado en el navegador. Intenta de nuevo.");
+                }
+                return helpUnit;
+              });
             });
           });
         })
         .then(function (helpUnit) {
           var folder = folderPath(category, brandId, modelId);
-          registerFolder({
-            c: category,
-            b: brandId,
-            m: modelId,
-            v: versionId,
-            label: brandName.toUpperCase() + " " + modelName.toUpperCase()
-          });
+          renderTree();
+          syncFoldersFromCatalog();
 
           try {
             C.exportHelpUnit(helpUnit);
@@ -463,16 +465,20 @@
           if (msg) {
             msg.hidden = false;
             msg.innerHTML =
-              "✓ Guardado (IndexedDB) · carpeta <code>" +
+              "✓ Guardado y confirmado · <strong>" +
+              brandName.toUpperCase() +
+              " " +
+              modelName.toUpperCase() +
+              "</strong><br>Carpeta <code>" +
               folder +
-              "</code><br>Abriendo ayuda cliente…<br><code style='word-break:break-all'>" +
+              "</code> · ya está en la lista<br>Abriendo ayuda cliente…<br><code style='word-break:break-all'>" +
               abs +
               "</code>";
           }
 
           setTimeout(function () {
             location.assign(href);
-          }, 400);
+          }, 700);
         })
         .catch(function (err) {
           console.error(err);
@@ -515,7 +521,6 @@
 
     if (C.isAdminSession()) {
       showApp(true);
-      if (C.clearBloatedLocalStorage) C.clearBloatedLocalStorage();
       C.loadCatalog().then(function (cat) {
         catalog = cat;
         renderTree();
