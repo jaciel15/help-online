@@ -17,6 +17,10 @@
         if(l==='es'||l==='en'){document.documentElement.setAttribute('lang',l);document.documentElement.setAttribute('data-lang',l);}
       }catch(e){}
       try{
+        // Canonical client URL is /ayuda/?c=… — keep this page as redirect for old bookmarks
+        location.replace('../../../ayuda/?c=motos&b=yamaha&m=mt09&v=base');
+      }catch(e){}
+      try{
         history.replaceState({helpLocked:1},'',location.href);
         history.pushState({helpLocked:1},'',location.href);
         window.addEventListener('popstate',function(){

@@ -31,6 +31,34 @@
     return document.getElementById(id);
   }
 
+  function tt(key, fallback) {
+    try {
+      if (window.VCDMX && typeof window.VCDMX.t === "function") {
+        return window.VCDMX.t(key, window.VCDMX.getPreferredLang());
+      }
+    } catch (e) {}
+    return fallback || key;
+  }
+
+  function setFormTitle(text, locked) {
+    var el = $("formTitle");
+    if (!el) return;
+    el.textContent = text;
+    if (locked) el.setAttribute("data-i18n-lock", "1");
+    else el.removeAttribute("data-i18n-lock");
+  }
+
+  function restorePublishButton(btn) {
+    if (!btn) return;
+    btn.disabled = false;
+    btn.textContent = tt("hub.save", "Guardar en catálogo");
+    try {
+      if (window.VCDMX && typeof window.VCDMX.applyLang === "function") {
+        window.VCDMX.applyLang(window.VCDMX.getPreferredLang());
+      }
+    } catch (e) {}
+  }
+
   function showApp(on) {
     var gate = $("loginGate");
     var app = $("adminApp");
@@ -263,14 +291,6 @@
     document.querySelectorAll(".photo-slot").forEach(function (el) {
       el.classList.toggle("is-active", el.getAttribute("data-slot") === String(n));
     });
-  }
-
-  function openPicker(inputId) {
-    var el = $(inputId);
-    if (!el) return;
-    try {
-      el.click();
-    } catch (e) {}
   }
 
   function onPhotoChosen(key, file, chain) {
@@ -518,7 +538,7 @@
         var b = btn.getAttribute("data-b");
         var m = btn.getAttribute("data-m");
         var v = btn.getAttribute("data-v");
-        var original = btn.textContent || "Copiar link";
+        var original = btn.textContent || tt("hub.copyLink", "Copiar link");
 
         function done(ok, label) {
           btn.textContent = label || (ok ? "¡Copiado!" : "Error");
@@ -665,7 +685,9 @@
           "/" +
           b.id +
           "</span>" +
-          "<em>Abrir carpeta →</em>" +
+          "<em>" +
+          tt("hub.openFolder", "Abrir carpeta") +
+          " →</em>" +
           "</div></button>";
       });
       html += "</div>";
@@ -676,7 +698,9 @@
   function renderBrandHelps(cat, brandId, brandName) {
     var html =
       '<div class="inv-brand-head">' +
-      '<button type="button" class="btn btn-ghost" id="btnBackBrands">← Todas las marcas</button>' +
+      '<button type="button" class="btn btn-ghost" id="btnBackBrands">' +
+      tt("hub.backBrands", "← Todas las marcas") +
+      "</button>" +
       "<div><strong>📁 " +
       brandName +
       "</strong><span class='muted tiny'> " +
@@ -717,10 +741,14 @@
           mid +
           "' data-v='" +
           v.id +
-          "'>Editar</button>" +
+          "'>" +
+          tt("hub.edit", "Editar") +
+          "</button>" +
           "<a href='" +
           href +
-          "' target='_blank' rel='noopener'>Ver ayuda cliente</a>" +
+          "' target='_blank' rel='noopener'>" +
+          tt("hub.viewClient", "Ver ayuda cliente") +
+          "</a>" +
           "<button type='button' class='copy-help' data-help-url='" +
           absHelp.replace(/'/g, "&#39;") +
           "' data-c='" +
@@ -731,7 +759,9 @@
           mid +
           "' data-v='" +
           v.id +
-          "'>Copiar link</button>" +
+          "'>" +
+          tt("hub.copyLink", "Copiar link") +
+          "</button>" +
           "<button type='button' class='delete-help' data-c='" +
           cat +
           "' data-b='" +
@@ -742,7 +772,9 @@
           v.id +
           "' data-label='" +
           label.replace(/'/g, "&#39;") +
-          "'>Borrar</button>" +
+          "'>" +
+          tt("hub.delete", "Borrar") +
+          "</button>" +
           "</div></div></article>";
       });
     });
@@ -798,7 +830,7 @@
 
   function applyVersionToForm(cat, brandId, modelId, brand, model, version) {
     editing = { cat: cat, brandId: brandId, modelId: modelId, versionId: version.id };
-    $("formTitle").textContent = "Editando · " + brand.name + " " + model.name;
+    setFormTitle(tt("hub.editing", "Editando") + " · " + brand.name + " " + model.name, true);
     $("fCategory").value = cat;
     $("fBrand").value = brand.name;
     $("fModel").value = model.name;
@@ -873,7 +905,7 @@
 
   function clearForm() {
     editing = null;
-    if ($("formTitle")) $("formTitle").textContent = "Nueva ayuda";
+    setFormTitle(tt("hub.formTitle", "Nueva ayuda"), false);
     if ($("entryForm")) $("entryForm").reset();
     if ($("fProgrammer")) $("fProgrammer").value = "UPA USB";
     if ($("fType")) $("fType").value = "SERIAL EEPROM";
@@ -884,6 +916,7 @@
     });
     markActiveSlot(1);
     if ($("formMsg")) $("formMsg").hidden = true;
+    hideLinkSharePanel();
   }
 
   function downloadText(filename, text, mime) {
@@ -932,7 +965,7 @@
 
       if (btn) {
         btn.disabled = true;
-        btn.textContent = "Guardando…";
+        btn.textContent = tt("hub.saving", "Guardando…");
       }
       hideLinkSharePanel();
 
@@ -1128,22 +1161,11 @@
           } catch (e) {}
         })
         .then(function () {
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = "Guardar en catálogo";
-            try {
-              if (window.VCDMX && typeof window.VCDMX.applyLang === "function") {
-                window.VCDMX.applyLang(window.VCDMX.getPreferredLang());
-              }
-            } catch (e) {}
-          }
+          restorePublishButton(btn);
         });
     } catch (err) {
       console.error(err);
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = "Guardar en catálogo";
-      }
+      restorePublishButton(btn);
       if (msg) {
         msg.hidden = false;
         msg.textContent = "Error al guardar: " + (err && err.message ? err.message : String(err));
