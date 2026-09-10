@@ -1254,3 +1254,62 @@ a {
     transition: none !important;
   }
 }
+
+
+/* Aggressive dual gauges hero */
+.home-hero-media.gauges-bg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  place-items: center;
+  gap: 4vw;
+  padding: 4vh 6vw;
+  background:
+    radial-gradient(circle at 20% 40%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 45%),
+    radial-gradient(circle at 80% 35%, color-mix(in srgb, var(--accent-2) 16%, transparent), transparent 42%),
+    linear-gradient(160deg, var(--bg-deep), var(--bg));
+}
+.home-hero-media.gauges-bg img { display: none; }
+.gauge { width: min(42vw, 340px); animation: gaugePulse 4.5s ease-in-out infinite alternate; }
+.gauge-right { animation-delay: 0.8s; }
+.gauge-ring { fill: none; stroke: color-mix(in srgb, var(--accent) 35%, transparent); stroke-width: 6; }
+.gauge-face { fill: color-mix(in srgb, var(--bg-elevated) 90%, #000); stroke: var(--line); stroke-width: 2; }
+.gauge-arc { stroke: var(--accent); stroke-width: 10; stroke-linecap: round; filter: drop-shadow(0 0 10px var(--accent-glow)); }
+.gauge-arc.hot { stroke: var(--accent-2); filter: drop-shadow(0 0 12px color-mix(in srgb, var(--accent-2) 55%, transparent)); }
+.gauge-needle { stroke: var(--accent); stroke-width: 5; stroke-linecap: round; transform-origin: 100px 100px; }
+.gauge-needle.hot { stroke: #ff6b4a; }
+.gauge-hub { fill: var(--text); }
+.gauge-label { fill: var(--text-muted); font-size: 14px; font-family: Orbitron, sans-serif; letter-spacing: 2px; }
+@keyframes gaugePulse {
+  from { transform: translateY(0) scale(1); filter: saturate(1); }
+  to { transform: translateY(-8px) scale(1.03); filter: saturate(1.15); }
+}
+.version-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; justify-content: center; }
+.version-chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+}
+.version-chip.is-active, .version-chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.admin-entry { margin-top: 14px; text-align: center; font-size: 0.78rem; color: var(--text-dim); }
+.admin-entry a { color: var(--text-dim); }
+body.is-portal .brand-lockup .brand-name,
+body.is-portal .brand-lockup .brand-tag,
+body.is-portal .maker-credit,
+body.is-portal .maker-seal { display: none !important; }
+body.is-portal .brand-lockup::after { content: "UPA HELP"; font-family: var(--font-display); letter-spacing: 0.12em; }
+@media (max-width: 700px) {
+  .home-hero-media.gauges-bg { grid-template-columns: 1fr 1fr; gap: 2vw; padding-top: 10vh; }
+  .gauge { width: min(44vw, 200px); }
+}
+
+.home-hero-media.gauges-bg::after {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--bg-deep) 78%, transparent) 0%, transparent 40%, transparent 60%, color-mix(in srgb, var(--bg-deep) 70%, transparent) 100%),
+    linear-gradient(180deg, transparent 35%, var(--bg-deep) 100%);
+}
+.gauge-arc.hot { stroke: var(--accent-2); filter: drop-shadow(0 0 12px color-mix(in srgb, var(--accent-2) 55%, transparent)); }
+.gauge-needle.hot { stroke: #ff6b4a; }

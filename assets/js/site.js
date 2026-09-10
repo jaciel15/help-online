@@ -290,7 +290,6 @@
 
     var current = 0;
     var total = slides.length;
-    var timer = null;
     var lang = getPreferredLang();
 
     function go(index) {
@@ -304,13 +303,7 @@
       }
     }
 
-    function restart() {
-      if (timer) clearInterval(timer);
-      timer = setInterval(function () {
-        go(current + 1);
-      }, 7000);
-    }
-
+    // Solo cambia con click/flecha — sin autoplay
     if (dotsWrap && !dotsWrap.children.length) {
       for (var i = 0; i < total; i++) {
         var b = document.createElement("button");
@@ -320,7 +313,6 @@
         (function (idx) {
           b.addEventListener("click", function () {
             go(idx);
-            restart();
           });
         })(i);
         dotsWrap.appendChild(b);
@@ -329,7 +321,6 @@
       dotsWrap.querySelectorAll("button").forEach(function (dot, i) {
         dot.addEventListener("click", function () {
           go(i);
-          restart();
         });
       });
     }
@@ -337,13 +328,11 @@
     if (prev) {
       prev.addEventListener("click", function () {
         go(current - 1);
-        restart();
       });
     }
     if (next) {
       next.addEventListener("click", function () {
         go(current + 1);
-        restart();
       });
     }
 
@@ -361,7 +350,6 @@
         var dx = e.changedTouches[0].screenX - startX;
         if (Math.abs(dx) < 40) return;
         go(current + (dx < 0 ? 1 : -1));
-        restart();
       },
       { passive: true }
     );
@@ -369,15 +357,12 @@
     document.addEventListener("keydown", function (e) {
       if (e.key === "ArrowLeft") {
         go(current - 1);
-        restart();
       } else if (e.key === "ArrowRight") {
         go(current + 1);
-        restart();
       }
     });
 
     go(0);
-    restart();
   }
 
   function initModal() {
@@ -420,14 +405,26 @@
     });
   }
 
+  function initDynamic() {
+    initSlider();
+    initModal();
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     initThemeControls();
     initLangControls();
     applyTheme(getPreferredTheme());
     applyLang(getPreferredLang());
     initSearch();
-    initSlider();
-    initModal();
+    initDynamic();
     staggerCards();
   });
+
+  document.addEventListener("VCDMX_DYNAMIC", initDynamic);
+
+  window.VCDMX = {
+    initDynamic: initDynamic,
+    applyLang: applyLang,
+    applyTheme: applyTheme
+  };
 })();

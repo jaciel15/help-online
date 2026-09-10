@@ -1,27 +1,25 @@
-# VELOCÍMETROS CDMX — HELP ONLINE
+# HELP ONLINE — VELOCÍMETROS CDMX
 
-Plataforma técnica estática para consultas de EEPROM, programadores UPA, dashboards y conexiones.
+Plataforma técnica estática para consultas de EEPROM / UPA (autos y motos).
 
-## Temas
+## Accesos
 
-- **Oscuro** — cian técnico (por defecto)
-- **Cálido** — ámbar / taller
+- Sitio principal: `/`
+- Portal seguro (sin marca/nombre): `/portal/`
+- Admin (solo tú): `/admin/` — clave inicial `adminupa2026`
+- Fichas dinámicas: `/ficha/?c=motos&b=yamaha&m=mt09&v=base`
 
-El tema se guarda en el navegador (`localStorage`).
+## Admin
 
-## Navegación
+1. Entra a `/admin/` con la clave.
+2. Elige Autos/Motos → marca → modelo → versión.
+3. Sube 3 fotos (tablero, conexión, conexión encendido) + EEPROM/notas.
+4. Guarda: se publica en el catálogo (el usuario solo puede ver).
+5. Si el modelo ya existe, se agrega otra versión automáticamente.
+6. Usa **Exportar JSON** y sustituye `data/catalog.json` en el hosting para respaldo permanente.
 
-Inicio → Autos / Motos → Marca → Modelo. Cada carpeta incluye migas de pan y botón de regreso.
+## Notas
 
-## Estructura
-
-```
-/
-  index.html
-  assets/css/site.css
-  assets/js/site.js
-  autos/
-  motos/yamaha/mt09/
-```
-
-Abre `index.html` en el navegador o sirve la carpeta con cualquier servidor estático.
+- El slider de fotos **no** avanza solo: solo con flechas/dots.
+- El logo aparece como logotipo de marca, no encima de las fotos técnicas.
+- El portal seguro oculta la identidad de la marca para compartir ayuda con menos exposición.
