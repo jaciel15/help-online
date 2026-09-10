@@ -54,12 +54,14 @@
     var version = unit.version;
     var photos = version.photos || {};
     var slides = [];
-    if (photos.main) slides.push({ src: asset(photos.main), alt: modelName || "Principal" });
-    if (photos.dashboard) slides.push({ src: asset(photos.dashboard), alt: "Dashboard" });
-    if (photos.connection) slides.push({ src: asset(photos.connection), alt: "Conexiones" });
-    if (photos.ignition || photos.eeprom) {
-      slides.push({ src: asset(photos.ignition || photos.eeprom), alt: "Pin-out encendido" });
+    function pushPhoto(src, alt) {
+      if (!src || src === "[published]" || src === "[indexed]") return;
+      slides.push({ src: asset(src), alt: alt });
     }
+    pushPhoto(photos.main, modelName || "Principal");
+    pushPhoto(photos.dashboard, "Dashboard");
+    pushPhoto(photos.connection, "Conexiones");
+    pushPhoto(photos.ignition || photos.eeprom, "Pin-out encendido");
 
     var notes = (version.notes || [])
       .map(function (n) {

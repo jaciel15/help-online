@@ -146,7 +146,55 @@
       if (src.label) out.categories[cat].label = src.label;
       if (!src.brands) return;
       Object.keys(src.brands).forEach(function (brandId) {
-        out.categories[cat].brands[brandId] = src.brands[brandId];
+        var incoming = src.brands[brandId];
+        var existing = out.categories[cat].brands[brandId];
+        // Prefer incoming models, but keep real photo paths from file when IDB has placeholders
+        out.categories[cat].brands[brandId] = mergeBrandPreferRealPhotos(existing, incoming);
+      });
+    });
+    return out;
+  }
+
+  function isPhotoPlaceholder(val) {
+    return !val || val === "[published]" || val === "[indexed]" || String(val).indexOf("data:") === 0;
+  }
+
+  function mergeBrandPreferRealPhotos(fileBrand, idbBrand) {
+    if (!fileBrand) return JSON.parse(JSON.stringify(idbBrand));
+    if (!idbBrand) return fileBrand;
+    var out = JSON.parse(JSON.stringify(idbBrand));
+    if (fileBrand.name && !out.name) out.name = fileBrand.name;
+    var fileModels = fileBrand.models || {};
+    var outModels = out.models || (out.models = {});
+    Object.keys(fileModels).forEach(function (mid) {
+      if (!outModels[mid]) {
+        outModels[mid] = JSON.parse(JSON.stringify(fileModels[mid]));
+        return;
+      }
+      var fVers = fileModels[mid].versions || [];
+      var oVers = outModels[mid].versions || (outModels[mid].versions = []);
+      fVers.forEach(function (fv) {
+        var idx = -1;
+        for (var i = 0; i < oVers.length; i++) {
+          if (oVers[i].id === fv.id) {
+            idx = i;
+            break;
+          }
+        }
+        if (idx < 0) {
+          oVers.push(JSON.parse(JSON.stringify(fv)));
+          return;
+        }
+        var ov = oVers[idx];
+        var fp = fv.photos || {};
+        var op = ov.photos || (ov.photos = {});
+        Object.keys(fp).forEach(function (pk) {
+          if (fp[pk] && (!op[pk] || isPhotoPlaceholder(op[pk]))) {
+            op[pk] = fp[pk];
+          }
+        });
+        if (!ov.eeprom && fv.eeprom) ov.eeprom = fv.eeprom;
+        if (!ov.notes && fv.notes) ov.notes = fv.notes;
       });
     });
     return out;

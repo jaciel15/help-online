@@ -15,10 +15,10 @@
       "demo publica"
     ],
     "photos": {
-      "main": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
-      "dashboard": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
-      "connection": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
-      "ignition": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+      "main": "data/help/autos/nissan/altima/main.gif",
+      "dashboard": "data/help/autos/nissan/altima/dashboard.gif",
+      "connection": "data/help/autos/nissan/altima/connection.gif",
+      "ignition": "data/help/autos/nissan/altima/ignition.gif"
     }
   }
 }

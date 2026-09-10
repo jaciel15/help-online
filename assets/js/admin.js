@@ -38,11 +38,30 @@
     if (app) app.hidden = !on;
   }
 
+  function isPlaceholderPhoto(path) {
+    return !path || path === "[published]" || path === "[indexed]";
+  }
+
   function resolvePreview(path) {
-    if (!path) return "";
+    if (isPlaceholderPhoto(path)) return "";
     if (path.indexOf("data:") === 0 || path.indexOf("http") === 0 || path.indexOf("blob:") === 0) return path;
     if (path.indexOf("../") === 0 || path.indexOf("/") === 0 || path.indexOf("./") === 0) return path;
     return (CFG.assetPrefix || "") + path;
+  }
+
+  function guessPublishedPhoto(c, b, m, v, key) {
+    var base =
+      (CFG.root || "") +
+      "data/help/" +
+      encodeURIComponent(c) +
+      "/" +
+      encodeURIComponent(b) +
+      "/" +
+      encodeURIComponent(m) +
+      "/";
+    var vid = v || "base";
+    if (vid !== "base") return base + encodeURIComponent(vid + "-" + key + ".jpg");
+    return base + encodeURIComponent(key + ".jpg");
   }
 
   function helpHref(cat, brandId, modelId, versionId) {
@@ -191,11 +210,23 @@
     );
   }
 
-  function thumbHtml(photos) {
-    var src =
-      (photos && (photos.main || photos.dashboard || photos.connection || photos.ignition || photos.eeprom)) || "";
-    if (!src) return '<div class="inv-thumb inv-thumb--empty">Sin foto</div>';
-    return '<div class="inv-thumb"><img src="' + resolvePreview(src) + '" alt=""></div>';
+  function firstRealPhoto(photos, meta) {
+    var keys = ["main", "dashboard", "connection", "ignition", "eeprom"];
+    for (var i = 0; i < keys.length; i++) {
+      var src = photos && photos[keys[i]];
+      if (!isPlaceholderPhoto(src)) return src;
+    }
+    if (meta && meta.c && meta.b && meta.m) {
+      return guessPublishedPhoto(meta.c, meta.b, meta.m, meta.v, "main");
+    }
+    return "";
+  }
+
+  function thumbHtml(photos, meta) {
+    var src = firstRealPhoto(photos, meta);
+    var preview = resolvePreview(src);
+    if (!preview) return '<div class="inv-thumb inv-thumb--empty">Sin foto</div>';
+    return '<div class="inv-thumb"><img src="' + preview + '" alt="" loading="lazy"></div>';
   }
 
   function countItems() {
@@ -229,9 +260,10 @@
       for (var i = 0; i < mids.length; i++) {
         var versions = models[mids[i]].versions || [];
         for (var j = 0; j < versions.length; j++) {
-          var photos = versions[j].photos || {};
-          var src = photos.main || photos.dashboard || photos.connection || photos.ignition;
-          if (src && src !== "[indexed]") return thumbHtml(photos);
+          var v = versions[j];
+          var photos = v.photos || {};
+          var meta = { c: cat, b: brandId, m: mids[i], v: v.id || "base" };
+          if (firstRealPhoto(photos, meta)) return thumbHtml(photos, meta);
         }
       }
     } catch (e) {}
@@ -426,7 +458,7 @@
         var label = brandName + " " + m.name + " · " + (v.name || v.id);
         html +=
           '<article class="inv-item">' +
-          thumbHtml(v.photos) +
+          thumbHtml(v.photos, { c: cat, b: brandId, m: mid, v: v.id }) +
           '<div class="inv-body">' +
           "<strong>" +
           m.name +
@@ -527,13 +559,7 @@
     bindInventoryActions(box);
   }
 
-  function loadIntoForm(cat, brandId, modelId, versionId) {
-    if (!catalog) return;
-    var brand = (((catalog.categories[cat] || {}).brands || {})[brandId]) || null;
-    var model = brand && brand.models ? brand.models[modelId] : null;
-    var version = C.getVersion(catalog, cat, brandId, modelId, versionId);
-    if (!brand || !model || !version) return;
-
+  function applyVersionToForm(cat, brandId, modelId, brand, model, version) {
     editing = { cat: cat, brandId: brandId, modelId: modelId, versionId: version.id };
     $("formTitle").textContent = "Editando · " + brand.name + " " + model.name;
     $("fCategory").value = cat;
@@ -546,13 +572,62 @@
     $("fNotes").value = (version.notes || []).join("\n");
 
     var photos = version.photos || {};
-    setPhoto("main", photos.main || "");
-    setPhoto("dashboard", photos.dashboard || "");
-    setPhoto("connection", photos.connection || "");
-    setPhoto("ignition", photos.ignition || photos.eeprom || "");
+    PHOTO_KEYS.forEach(function (key) {
+      var src = photos[key] || (key === "ignition" ? photos.eeprom : "") || "";
+      if (isPlaceholderPhoto(src)) {
+        src = guessPublishedPhoto(cat, brandId, modelId, version.id, key);
+      }
+      setPhoto(key, src);
+    });
 
     $("formCard").scrollIntoView({ behavior: "smooth", block: "start" });
     if ($("formMsg")) $("formMsg").hidden = true;
+  }
+
+  function loadIntoForm(cat, brandId, modelId, versionId) {
+    if (!catalog) return;
+    var brand = (((catalog.categories[cat] || {}).brands || {})[brandId]) || null;
+    var model = brand && brand.models ? brand.models[modelId] : null;
+    var version = C.getVersion(catalog, cat, brandId, modelId, versionId);
+    if (!brand || !model || !version) return;
+
+    // Carga la ficha completa (fotos reales) desde IndexedDB o data/help
+    C.loadHelpUnit(cat, brandId, modelId, versionId || version.id)
+      .then(function (unit) {
+        var full = (unit && unit.version) || version;
+        applyVersionToForm(cat, brandId, modelId, brand, model, full);
+      })
+      .catch(function () {
+        applyVersionToForm(cat, brandId, modelId, brand, model, version);
+      });
+  }
+
+  function resolvePhotosForSave(category, brandId, modelId, versionId, prev) {
+    var photos = {
+      main: pending.main || "",
+      dashboard: pending.dashboard || "",
+      connection: pending.connection || "",
+      ignition: pending.ignition || ""
+    };
+
+    return C.loadHelpUnit(category, brandId, modelId, versionId)
+      .catch(function () {
+        return null;
+      })
+      .then(function (unit) {
+        var fromUnit = (unit && unit.version && unit.version.photos) || {};
+        PHOTO_KEYS.forEach(function (k) {
+          var cur = photos[k];
+          if (!isPlaceholderPhoto(cur)) return;
+          var fallback = fromUnit[k] || (prev && prev[k]) || "";
+          if (k === "ignition" && isPlaceholderPhoto(fallback)) {
+            fallback = fromUnit.eeprom || (prev && prev.eeprom) || "";
+          }
+          if (!isPlaceholderPhoto(fallback)) photos[k] = fallback;
+          else photos[k] = "";
+        });
+        return photos;
+      });
   }
 
   function clearForm() {
@@ -612,26 +687,25 @@
       var versionId = C.slugify(versionName);
       var existing = C.getVersion(catalog, category, brandId, modelId, versionId);
       var prev = (existing && existing.photos) || {};
-      var photos = {
-        main: pending.main || prev.main || "",
-        dashboard: pending.dashboard || prev.dashboard || "",
-        connection: pending.connection || prev.connection || "",
-        ignition: pending.ignition || prev.ignition || prev.eeprom || ""
-      };
 
-      // Comprime cualquier dataURL que aún sea grande
-      var compressJobs = PHOTO_KEYS.map(function (k) {
-        var val = photos[k];
-        if (val && String(val).indexOf("data:") === 0) {
-          return C.compressDataUrl(val).then(function (out) {
-            photos[k] = out;
+      resolvePhotosForSave(category, brandId, modelId, versionId, prev)
+        .then(function (photos) {
+          // Comprime cualquier dataURL que aún sea grande
+          var compressJobs = PHOTO_KEYS.map(function (k) {
+            var val = photos[k];
+            if (val && String(val).indexOf("data:") === 0) {
+              return C.compressDataUrl(val).then(function (out) {
+                photos[k] = out;
+              });
+            }
+            return Promise.resolve();
           });
-        }
-        return Promise.resolve();
-      });
 
-      Promise.all(compressJobs)
-        .then(function () {
+          return Promise.all(compressJobs).then(function () {
+            return photos;
+          });
+        })
+        .then(function (photos) {
           C.upsertVersion(catalog, category, brandId, modelId, {
             id: versionId,
             name: versionName,
@@ -652,11 +726,23 @@
             return C.saveHelpUnit(helpUnit).then(function () {
               return C.publishToServer(helpUnit)
                 .catch(function (err) {
-                  // Si no hay API (hosting estático puro), sigue con IndexedDB local
                   console.warn("publish API", err);
                   return { ok: false, offline: true, error: err && err.message };
                 })
                 .then(function (pub) {
+                  // Tras publicar, usa rutas de archivo (catálogo liviano + miniaturas)
+                  if (pub && pub.ok && pub.photos) {
+                    var ver = C.getVersion(catalog, category, brandId, modelId, versionId);
+                    if (ver) ver.photos = pub.photos;
+                    if (helpUnit && helpUnit.version) helpUnit.version.photos = pub.photos;
+                    return C.saveCatalog(catalog)
+                      .then(function () {
+                        return C.saveHelpUnit(helpUnit);
+                      })
+                      .then(function () {
+                        return { helpUnit: helpUnit, pub: pub };
+                      });
+                  }
                   return C.loadHelpUnit(category, brandId, modelId, versionId).then(function (verify) {
                     if (!verify || !verify.version) {
                       throw new Error("No se pudo confirmar el guardado. Intenta de nuevo.");

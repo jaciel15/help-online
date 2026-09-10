@@ -1,0 +1,22 @@
+{
+  "c": "motos",
+  "b": "vespa",
+  "m": "zardt",
+  "v": "v1",
+  "brandName": "VESPA",
+  "modelName": "ZARDT",
+  "version": {
+    "id": "v1",
+    "name": "V1",
+    "eeprom": "",
+    "programmer": "UPA USB",
+    "type": "SERIAL EEPROM",
+    "notes": [],
+    "photos": {
+      "main": "data/help/motos/vespa/zardt/v1-main.jpg",
+      "dashboard": "",
+      "connection": "",
+      "ignition": ""
+    }
+  }
+}
