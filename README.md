@@ -32,6 +32,12 @@ Abre `/` (o `/#administrador`):
 
 El cliente solo ve su link, p. ej. `/ayuda/?c=motos&b=kawasaki&m=zr&v=base` — sin regresar ni editar.
 
+### Almacenamiento (muchas ayudas)
+- Las fotos se **comprimen** (JPEG ~1280px) al subir.
+- Catálogo y fichas van a **IndexedDB** (no a localStorage de 5 MB).
+- Así puedes crecer con muchas ayudas en el mismo teléfono/PC.
+- Para publicar en internet: exporta JSON / sube `data/help/...` al hosting.
+
 `/admin/` redirige a la página inicial.
 
 ## Notas

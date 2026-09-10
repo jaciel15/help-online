@@ -5,6 +5,104 @@
   var HELP_UNIT_PREFIX = "vcdmx-help-unit:";
   var PASS_KEY = "vcdmx-admin-pass";
   var SESSION_KEY = "vcdmx-admin-session";
+  var DB_NAME = "vcdmx-help-db";
+  var DB_VER = 1;
+  var IDB_CATALOG = "catalog";
+  var IDB_HELP_PREFIX = "help:";
+  var MAX_PHOTO_EDGE = 1280;
+  var JPEG_QUALITY = 0.72;
+
+  function openDb() {
+    return new Promise(function (resolve, reject) {
+      if (!global.indexedDB) {
+        reject(new Error("IndexedDB no disponible"));
+        return;
+      }
+      var req = indexedDB.open(DB_NAME, DB_VER);
+      req.onupgradeneeded = function () {
+        var db = req.result;
+        if (!db.objectStoreNames.contains("kv")) db.createObjectStore("kv");
+      };
+      req.onsuccess = function () {
+        resolve(req.result);
+      };
+      req.onerror = function () {
+        reject(req.error || new Error("No se pudo abrir IndexedDB"));
+      };
+    });
+  }
+
+  function idbSet(key, value) {
+    return openDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction("kv", "readwrite");
+        tx.objectStore("kv").put(value, key);
+        tx.oncomplete = function () {
+          resolve(value);
+        };
+        tx.onerror = function () {
+          reject(tx.error || new Error("Error al escribir en IndexedDB"));
+        };
+      });
+    });
+  }
+
+  function idbGet(key) {
+    return openDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction("kv", "readonly");
+        var req = tx.objectStore("kv").get(key);
+        req.onsuccess = function () {
+          resolve(req.result);
+        };
+        req.onerror = function () {
+          reject(req.error || new Error("Error al leer IndexedDB"));
+        };
+      });
+    });
+  }
+
+  function clearBloatedLocalStorage() {
+    try {
+      var keys = [];
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k === STORAGE_KEY || (k && k.indexOf(HELP_UNIT_PREFIX) === 0)) keys.push(k);
+      }
+      keys.forEach(function (k) {
+        localStorage.removeItem(k);
+      });
+    } catch (e) {}
+  }
+
+  function migrateLocalToIdb() {
+    var local = readLocal();
+    var jobs = [];
+    if (local) {
+      jobs.push(idbSet(IDB_CATALOG, local));
+    }
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf(HELP_UNIT_PREFIX) === 0) {
+          try {
+            var unit = JSON.parse(localStorage.getItem(k));
+            if (unit && unit.c) {
+              jobs.push(
+                idbSet(IDB_HELP_PREFIX + [unit.c, unit.b, unit.m, unit.v || "base"].join(":"), unit)
+              );
+            }
+          } catch (e) {}
+        }
+      }
+    } catch (e) {}
+    return Promise.all(jobs).then(function () {
+      clearBloatedLocalStorage();
+      return local;
+    }).catch(function () {
+      return local;
+    });
+  }
 
   // Real SHA-256 of "adminupa2026" computed at runtime on first load if needed
   async function sha256(text) {
@@ -65,9 +163,35 @@
   }
 
   function writeLocal(catalog) {
+    // Solo metadata liviana en localStorage (sin fotos dataURL) como respaldo mínimo
     catalog.updatedAt = new Date().toISOString();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(catalog));
     return catalog;
+  }
+
+  function stripHeavyPhotos(catalog) {
+    try {
+      var copy = JSON.parse(JSON.stringify(catalog));
+      ["autos", "motos"].forEach(function (cat) {
+        var brands = (((copy.categories || {})[cat] || {}).brands) || {};
+        Object.keys(brands).forEach(function (bid) {
+          var models = brands[bid].models || {};
+          Object.keys(models).forEach(function (mid) {
+            (models[mid].versions || []).forEach(function (v) {
+              if (!v.photos) return;
+              Object.keys(v.photos).forEach(function (pk) {
+                var val = v.photos[pk];
+                if (val && String(val).indexOf("data:") === 0) {
+                  v.photos[pk] = "[indexed]";
+                }
+              });
+            });
+          });
+        });
+      });
+      return copy;
+    } catch (e) {
+      return catalog;
+    }
   }
 
   function resolveCatalogPath() {
@@ -78,34 +202,57 @@
         return src.replace(/assets\/js\/catalog\.js.*/, "data/catalog.json");
       }
     }
-    var depth = (location.pathname.match(/\//g) || []).length - 1;
-    var prefix = "";
-    // rough fallback from path segments after root
     var parts = location.pathname.split("/").filter(Boolean);
     if (parts[parts.length - 1] && parts[parts.length - 1].indexOf(".html") !== -1) parts.pop();
+    var prefix = "";
     for (var j = 0; j < parts.length; j++) prefix += "../";
     return prefix + "data/catalog.json";
   }
 
   function loadCatalog() {
-    var local = readLocal();
     var path = resolveCatalogPath();
-    return fetch(path, { cache: "no-store" })
-      .then(function (r) {
-        if (!r.ok) throw new Error("no catalog");
-        return r.json();
-      })
-      .then(function (fileCat) {
-        // Local admin overrides win for brands/models they added
-        return local ? deepMerge(fileCat, local) : fileCat;
+    return migrateLocalToIdb()
+      .then(function () {
+        return idbGet(IDB_CATALOG);
       })
       .catch(function () {
-        return local || emptyCatalog();
+        return null;
+      })
+      .then(function (idbCat) {
+        return fetch(path, { cache: "no-store" })
+          .then(function (r) {
+            if (!r.ok) throw new Error("no catalog");
+            return r.json();
+          })
+          .then(function (fileCat) {
+            return idbCat ? deepMerge(fileCat, idbCat) : fileCat;
+          })
+          .catch(function () {
+            return idbCat || readLocal() || emptyCatalog();
+          });
       });
   }
 
   function saveCatalog(catalog) {
-    return writeLocal(catalog);
+    catalog.updatedAt = new Date().toISOString();
+    // IndexedDB aguanta muchas ayudas con fotos comprimidas
+    return idbSet(IDB_CATALOG, catalog)
+      .then(function () {
+        try {
+          // respaldo liviano opcional (sin dataURLs) — ignora si no cabe
+          localStorage.setItem(STORAGE_KEY + "-meta", JSON.stringify(stripHeavyPhotos(catalog)));
+        } catch (e) {}
+        return catalog;
+      })
+      .catch(function (err) {
+        var msg = (err && err.message) || String(err);
+        if (/quota|QuotaExceeded/i.test(msg) || (err && err.name === "QuotaExceededError")) {
+          throw new Error(
+            "Almacenamiento lleno. Las fotos se comprimen y guardan en IndexedDB; recarga e intenta de nuevo. Si persiste, exporta JSON y limpia datos viejos del navegador."
+          );
+        }
+        throw err;
+      });
   }
 
   function exportCatalog(catalog) {
@@ -142,11 +289,17 @@
   }
 
   function saveHelpUnit(unit) {
-    if (!unit || !unit.c || !unit.b || !unit.m || !unit.v) return null;
-    try {
-      localStorage.setItem(helpUnitKey(unit.c, unit.b, unit.m, unit.v), JSON.stringify(unit));
-    } catch (e) {}
-    return unit;
+    if (!unit || !unit.c || !unit.b || !unit.m || !unit.v) {
+      return Promise.resolve(null);
+    }
+    var key = IDB_HELP_PREFIX + [unit.c, unit.b, unit.m, unit.v].join(":");
+    return idbSet(key, unit).then(function () {
+      // ya no usamos localStorage para fichas con fotos
+      try {
+        localStorage.removeItem(helpUnitKey(unit.c, unit.b, unit.m, unit.v));
+      } catch (e) {}
+      return unit;
+    });
   }
 
   function exportHelpUnit(unit) {
@@ -190,28 +343,44 @@
     );
   }
 
-  /** Solo una ficha: no descarga el catálogo completo (vista cliente). */
+  /** Solo una ficha: IndexedDB (creador) o archivo data/help (hosting). */
   function loadHelpUnit(c, b, m, v) {
     var versionId = v || "base";
-    try {
-      var raw = localStorage.getItem(helpUnitKey(c, b, m, versionId));
-      if (raw) {
-        return Promise.resolve(JSON.parse(raw));
-      }
-    } catch (e) {}
+    var key = IDB_HELP_PREFIX + [c, b, m, versionId].join(":");
 
-    var path = resolveHelpUnitPath(c, b, m, versionId);
-    return fetch(path, { cache: "no-store" })
-      .then(function (r) {
-        if (!r.ok) throw new Error("help unit missing");
-        return r.json();
-      })
+    return idbGet(key)
       .catch(function () {
-        // Fallback solo si el admin tiene sesión (mismo navegador) y hay catálogo local
-        if (!isAdminSession()) return null;
-        return loadCatalog().then(function (catalog) {
-          return buildHelpUnit(catalog, c, b, m, versionId);
-        });
+        return null;
+      })
+      .then(function (fromIdb) {
+        if (fromIdb) return fromIdb;
+
+        // migración: localStorage viejo
+        try {
+          var raw = localStorage.getItem(helpUnitKey(c, b, m, versionId));
+          if (raw) {
+            var parsed = JSON.parse(raw);
+            return idbSet(key, parsed).then(function () {
+              try {
+                localStorage.removeItem(helpUnitKey(c, b, m, versionId));
+              } catch (e) {}
+              return parsed;
+            });
+          }
+        } catch (e) {}
+
+        var path = resolveHelpUnitPath(c, b, m, versionId);
+        return fetch(path, { cache: "no-store" })
+          .then(function (r) {
+            if (!r.ok) throw new Error("help unit missing");
+            return r.json();
+          })
+          .catch(function () {
+            if (!isAdminSession()) return null;
+            return loadCatalog().then(function (catalog) {
+              return buildHelpUnit(catalog, c, b, m, versionId);
+            });
+          });
       });
   }
 
@@ -291,6 +460,66 @@
     });
   }
 
+  /** Comprime a JPEG para poder guardar muchas ayudas sin llenar el disco del navegador. */
+  function compressDataUrl(dataUrl, maxEdge, quality) {
+    maxEdge = maxEdge || MAX_PHOTO_EDGE;
+    quality = quality == null ? JPEG_QUALITY : quality;
+    return new Promise(function (resolve) {
+      if (!dataUrl) return resolve("");
+      if (dataUrl.indexOf("data:image") !== 0) return resolve(dataUrl);
+      var img = new Image();
+      img.onload = function () {
+        var w = img.naturalWidth || img.width;
+        var h = img.naturalHeight || img.height;
+        if (!w || !h) return resolve(dataUrl);
+        var scale = Math.min(1, maxEdge / Math.max(w, h));
+        var cw = Math.max(1, Math.round(w * scale));
+        var ch = Math.max(1, Math.round(h * scale));
+        var canvas = document.createElement("canvas");
+        canvas.width = cw;
+        canvas.height = ch;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, cw, ch);
+        try {
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        } catch (e) {
+          resolve(dataUrl);
+        }
+      };
+      img.onerror = function () {
+        resolve(dataUrl);
+      };
+      img.src = dataUrl;
+    });
+  }
+
+  function fileToCompressedDataUrl(file) {
+    if (!file) return Promise.resolve("");
+    if (typeof file === "string") return compressDataUrl(file);
+    return fileToDataUrl(file).then(function (url) {
+      return compressDataUrl(url);
+    });
+  }
+
+  function getStorageInfo() {
+    return idbGet(IDB_CATALOG).then(function (cat) {
+      var count = 0;
+      try {
+        ["autos", "motos"].forEach(function (c) {
+          var brands = (((cat || {}).categories || {})[c] || {}).brands || {};
+          Object.keys(brands).forEach(function (bid) {
+            Object.keys(brands[bid].models || {}).forEach(function (mid) {
+              count += (brands[bid].models[mid].versions || []).length;
+            });
+          });
+        });
+      } catch (e) {}
+      return { helpCount: count, engine: "IndexedDB" };
+    }).catch(function () {
+      return { helpCount: 0, engine: "IndexedDB" };
+    });
+  }
+
   async function ensureDefaultPass() {
     var existing = localStorage.getItem(PASS_KEY);
     if (existing) return existing;
@@ -350,6 +579,10 @@
     listBrands: listBrands,
     listModels: listModels,
     fileToDataUrl: fileToDataUrl,
+    fileToCompressedDataUrl: fileToCompressedDataUrl,
+    compressDataUrl: compressDataUrl,
+    getStorageInfo: getStorageInfo,
+    clearBloatedLocalStorage: clearBloatedLocalStorage,
     verifyPassword: verifyPassword,
     setPassword: setPassword,
     isAdminSession: isAdminSession,

@@ -155,7 +155,7 @@
 
   function onPhotoChosen(key, file, chain) {
     if (!file) return;
-    C.fileToDataUrl(file).then(function (url) {
+    C.fileToCompressedDataUrl(file).then(function (url) {
       setPhoto(key, url);
       if (!chain) return;
       var next = CHAIN[key];
@@ -183,7 +183,7 @@
     var files = Array.prototype.slice.call(fileList || [], 0, 4);
     return Promise.all(
       files.map(function (file, i) {
-        return C.fileToDataUrl(file).then(function (url) {
+        return C.fileToCompressedDataUrl(file).then(function (url) {
           setPhoto(PHOTO_KEYS[i], url);
         });
       })
@@ -374,6 +374,7 @@
 
   function publish() {
     var msg = $("formMsg");
+    var btn = $("btnPublish");
     try {
       if (!catalog) catalog = C.emptyCatalog();
 
@@ -390,6 +391,11 @@
         return;
       }
 
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Guardando…";
+      }
+
       var brandId = C.ensureBrand(catalog, category, brandName);
       var modelId = C.ensureModel(catalog, category, brandId, modelName);
       var versionId = C.slugify(versionName);
@@ -402,60 +408,100 @@
         ignition: pending.ignition || prev.ignition || prev.eeprom || ""
       };
 
-      C.upsertVersion(catalog, category, brandId, modelId, {
-        id: versionId,
-        name: versionName,
-        eeprom: ($("fEeprom").value || "").trim(),
-        programmer: ($("fProgrammer").value || "").trim(),
-        type: ($("fType").value || "").trim(),
-        notes: ($("fNotes").value || "")
-          .split("\n")
-          .map(function (n) {
-            return n.trim();
-          })
-          .filter(Boolean),
-        photos: photos
+      // Comprime cualquier dataURL que aún sea grande
+      var compressJobs = PHOTO_KEYS.map(function (k) {
+        var val = photos[k];
+        if (val && String(val).indexOf("data:") === 0) {
+          return C.compressDataUrl(val).then(function (out) {
+            photos[k] = out;
+          });
+        }
+        return Promise.resolve();
       });
 
-      C.saveCatalog(catalog);
-      var helpUnit = C.buildHelpUnit(catalog, category, brandId, modelId, versionId);
-      C.saveHelpUnit(helpUnit);
+      Promise.all(compressJobs)
+        .then(function () {
+          C.upsertVersion(catalog, category, brandId, modelId, {
+            id: versionId,
+            name: versionName,
+            eeprom: ($("fEeprom").value || "").trim(),
+            programmer: ($("fProgrammer").value || "").trim(),
+            type: ($("fType").value || "").trim(),
+            notes: ($("fNotes").value || "")
+              .split("\n")
+              .map(function (n) {
+                return n.trim();
+              })
+              .filter(Boolean),
+            photos: photos
+          });
 
-      var folder = folderPath(category, brandId, modelId);
-      registerFolder({
-        c: category,
-        b: brandId,
-        m: modelId,
-        v: versionId,
-        label: brandName.toUpperCase() + " " + modelName.toUpperCase()
-      });
+          return C.saveCatalog(catalog).then(function () {
+            var helpUnit = C.buildHelpUnit(catalog, category, brandId, modelId, versionId);
+            return C.saveHelpUnit(helpUnit).then(function () {
+              return helpUnit;
+            });
+          });
+        })
+        .then(function (helpUnit) {
+          var folder = folderPath(category, brandId, modelId);
+          registerFolder({
+            c: category,
+            b: brandId,
+            m: modelId,
+            v: versionId,
+            label: brandName.toUpperCase() + " " + modelName.toUpperCase()
+          });
 
-      // Descarga JSON de la carpeta (para respaldo / hosting)
-      downloadText(
-        [category, brandId, modelId, versionId].join("-") + ".json",
-        JSON.stringify(helpUnit, null, 2),
-        "application/json"
-      );
+          try {
+            C.exportHelpUnit(helpUnit);
+          } catch (e) {}
 
-      var href = helpHref(category, brandId, modelId, versionId);
-      var abs = new URL(href, location.href).href;
+          var href = helpHref(category, brandId, modelId, versionId);
+          var abs = new URL(href, location.href).href;
 
-      if (msg) {
-        msg.hidden = false;
-        msg.innerHTML =
-          "✓ Guardado en catálogo · carpeta <code>" +
-          folder +
-          "</code><br>Abriendo ayuda cliente…<br><code style='word-break:break-all'>" +
-          abs +
-          "</code>";
-      }
+          if (msg) {
+            msg.hidden = false;
+            msg.innerHTML =
+              "✓ Guardado (IndexedDB) · carpeta <code>" +
+              folder +
+              "</code><br>Abriendo ayuda cliente…<br><code style='word-break:break-all'>" +
+              abs +
+              "</code>";
+          }
 
-      // Ir a la página bloqueada del cliente (sin regreso a catálogo)
-      setTimeout(function () {
-        location.assign(href);
-      }, 450);
+          setTimeout(function () {
+            location.assign(href);
+          }, 400);
+        })
+        .catch(function (err) {
+          console.error(err);
+          var text = (err && err.message) || String(err);
+          if (/quota|QuotaExceeded/i.test(text)) {
+            text =
+              "Espacio del navegador lleno. Ya usamos IndexedDB + fotos comprimidas. Recarga la página, vuelve a entrar y guarda de nuevo. Si sigue, en el navegador borra datos del sitio o exporta y limpia ayudas viejas.";
+            try {
+              C.clearBloatedLocalStorage();
+            } catch (e) {}
+          }
+          if (msg) {
+            msg.hidden = false;
+            msg.textContent = "Error al guardar: " + text;
+          }
+          alert(text);
+        })
+        .then(function () {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = "Guardar en catálogo";
+          }
+        });
     } catch (err) {
       console.error(err);
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Guardar en catálogo";
+      }
       if (msg) {
         msg.hidden = false;
         msg.textContent = "Error al guardar: " + (err && err.message ? err.message : String(err));
@@ -469,6 +515,7 @@
 
     if (C.isAdminSession()) {
       showApp(true);
+      if (C.clearBloatedLocalStorage) C.clearBloatedLocalStorage();
       C.loadCatalog().then(function (cat) {
         catalog = cat;
         renderTree();
