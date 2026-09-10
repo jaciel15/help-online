@@ -947,6 +947,8 @@ a {
 
 .slider-shell {
   position: relative;
+  z-index: 1;
+  isolation: isolate;
   border-radius: 22px;
   border: 1px solid var(--line);
   background: var(--bg-elevated);

@@ -57,7 +57,7 @@
         <span data-i18n="hub.seal">Creado por Velocímetros Digitales CDMX</span>
       </div>
       <h1 class="brand-mega">VELOCÍMETROS<br>CDMX</h1>
-      <p class="lead" data-i18n="hub.lead">Tú creas y editas ayudas. Al guardar se abre la página del cliente (solo lectura, sin regresar).</p>
+      <p class="lead" data-i18n="hub.lead">Tú creas y editas ayudas. Al guardar aparece el link para copiar o abrir la página del cliente.</p>
       <div class="cta-row">
         <a class="btn btn-primary" href="#administrador" data-i18n="hub.enterAdmin">Entrar a administrador</a>
         <a class="btn btn-ghost" href="ayuda/?c=motos&amp;b=yamaha&amp;m=mt09&amp;v=base" data-i18n="hub.example">Ver ejemplo cliente MT-09</a>
@@ -85,7 +85,7 @@
           <div>
             <p class="admin-badge" data-i18n="hub.panelBadge">PANEL EN PÁGINA INICIAL</p>
             <strong data-i18n="hub.panelTitle">Subida, catálogo y edición</strong>
-            <span data-i18n="hub.panelLead">Al guardar → se crea la carpeta/ayuda y te lleva a la página del cliente (bloqueada)</span>
+            <span data-i18n="hub.panelLead">Al guardar → se crea la carpeta y aparece el link del cliente para copiar o abrir</span>
           </div>
           <div class="admin-top-actions">
             <button type="button" id="btnNew" class="btn btn-primary" data-i18n="hub.newHelp">+ Nueva ayuda</button>
@@ -150,8 +150,8 @@
                   <small>Auto o moto</small>
                   <img id="prevMain" class="preview" alt="">
                   <div class="photo-actions">
-                    <label class="btn-photo" for="pMainGallery">Galería</label>
-                    <label class="btn-photo" for="pMainCamera">Cámara</label>
+                    <label class="btn-photo" for="pMainGallery" data-i18n="hub.gallery">Galería</label>
+                    <label class="btn-photo" for="pMainCamera" data-i18n="hub.camera">Cámara</label>
                   </div>
                   <input type="file" id="pMainGallery" class="file-hidden" accept="image/jpeg,image/png,image/webp,image/*">
                   <input type="file" id="pMainCamera" class="file-hidden" accept="image/*" capture="environment">
@@ -163,8 +163,8 @@
                   <small>Tablero</small>
                   <img id="prevDashboard" class="preview" alt="">
                   <div class="photo-actions">
-                    <label class="btn-photo" for="pDashGallery">Galería</label>
-                    <label class="btn-photo" for="pDashCamera">Cámara</label>
+                    <label class="btn-photo" for="pDashGallery" data-i18n="hub.gallery">Galería</label>
+                    <label class="btn-photo" for="pDashCamera" data-i18n="hub.camera">Cámara</label>
                   </div>
                   <input type="file" id="pDashGallery" class="file-hidden" accept="image/jpeg,image/png,image/webp,image/*">
                   <input type="file" id="pDashCamera" class="file-hidden" accept="image/*" capture="environment">
@@ -176,8 +176,8 @@
                   <small>Cableado / pin</small>
                   <img id="prevConnection" class="preview" alt="">
                   <div class="photo-actions">
-                    <label class="btn-photo" for="pConnGallery">Galería</label>
-                    <label class="btn-photo" for="pConnCamera">Cámara</label>
+                    <label class="btn-photo" for="pConnGallery" data-i18n="hub.gallery">Galería</label>
+                    <label class="btn-photo" for="pConnCamera" data-i18n="hub.camera">Cámara</label>
                   </div>
                   <input type="file" id="pConnGallery" class="file-hidden" accept="image/jpeg,image/png,image/webp,image/*">
                   <input type="file" id="pConnCamera" class="file-hidden" accept="image/*" capture="environment">
@@ -189,8 +189,8 @@
                   <small>Encendido / EEPROM</small>
                   <img id="prevIgnition" class="preview" alt="">
                   <div class="photo-actions">
-                    <label class="btn-photo" for="pIgnGallery">Galería</label>
-                    <label class="btn-photo" for="pIgnCamera">Cámara</label>
+                    <label class="btn-photo" for="pIgnGallery" data-i18n="hub.gallery">Galería</label>
+                    <label class="btn-photo" for="pIgnCamera" data-i18n="hub.camera">Cámara</label>
                   </div>
                   <input type="file" id="pIgnGallery" class="file-hidden" accept="image/jpeg,image/png,image/webp,image/*">
                   <input type="file" id="pIgnCamera" class="file-hidden" accept="image/*" capture="environment">
@@ -211,7 +211,7 @@
             <p class="muted" data-i18n="hub.foldersLead">Nissan, Yamaha, Toyota… Cada marca es una carpeta. Entra para ver, editar o borrar sus ayudas.</p>
             <p class="muted tiny">Al guardar ya <strong>no</strong> se descarga JSON automáticamente (evita el popup del teléfono). Usa Exportar JSON solo cuando quieras respaldo.</p>
             <p class="folder-count" id="folderCount">Carpetas: 0</p>
-            <p class="muted tiny" id="storageStatus" data-i18n="hub.storage">Espacio servidor</p>
+            <p class="muted tiny" id="storageStatus" data-i18n="hub.storage" data-i18n-lock="1">Espacio servidor</p>
             <div class="inv-filters">
               <button type="button" class="inv-filter is-active" data-filter="all" data-i18n="hub.filterAll">Todas</button>
               <button type="button" class="inv-filter" data-filter="autos" data-i18n="hub.filterCars">Autos</button>
@@ -227,7 +227,7 @@
               <div class="link-share-actions">
                 <button type="button" class="btn btn-primary" id="linkShareCopy" data-i18n="hub.shareCopy">Copiar link</button>
                 <button type="button" class="btn btn-ghost" id="linkShareShare" data-i18n="hub.shareShare">Compartir</button>
-                <a class="btn btn-ghost" id="linkShareOpen" href="#" target="_blank" rel="noopener">Abrir ayuda</a>
+                <a class="btn btn-primary" id="linkShareOpen" href="#" target="_blank" rel="noopener" data-i18n="hub.shareOpen">Abrir ayuda</a>
                 <button type="button" class="btn btn-ghost" id="linkShareClose" data-i18n="hub.shareClose">Cerrar</button>
               </div>
             </div>
@@ -237,7 +237,7 @@
               <label>Nueva contraseña
                 <input type="password" id="newPass" minlength="6" required>
               </label>
-              <button type="submit" class="btn btn-ghost">Actualizar clave</button>
+              <button type="submit" class="btn btn-ghost" data-i18n="hub.passUpdate">Actualizar clave</button>
             </form>
           </section>
         </main>

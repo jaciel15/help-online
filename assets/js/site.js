@@ -83,7 +83,7 @@
       "hub.tag": "HELP ONLINE · Sistema completo",
       "hub.admin": "Administrador",
       "hub.seal": "Creado por Velocímetros Digitales CDMX",
-      "hub.lead": "Tú creas y editas ayudas. Al guardar se abre la página del cliente (solo lectura, sin regresar).",
+      "hub.lead": "Tú creas y editas ayudas. Al guardar aparece el link para copiar o abrir la página del cliente.",
       "hub.enterAdmin": "Entrar a administrador",
       "hub.example": "Ver ejemplo cliente MT-09",
       "hub.loginBadge": "SOLO ADMINISTRADOR / CREADOR",
@@ -94,7 +94,7 @@
       "hub.passHint": "Clave inicial:",
       "hub.panelBadge": "PANEL EN PÁGINA INICIAL",
       "hub.panelTitle": "Subida, catálogo y edición",
-      "hub.panelLead": "Al guardar → se crea la carpeta/ayuda y te lleva a la página del cliente (bloqueada)",
+      "hub.panelLead": "Al guardar → se crea la carpeta y aparece el link del cliente para copiar o abrir",
       "hub.newHelp": "+ Nueva ayuda",
       "hub.export": "Exportar JSON",
       "hub.logout": "Salir",
@@ -105,13 +105,25 @@
       "hub.filterAll": "Todas",
       "hub.filterCars": "Autos",
       "hub.filterBikes": "Motos",
+      "hub.gallery": "Galería",
+      "hub.camera": "Cámara",
+      "hub.saving": "Guardando…",
       "hub.save": "Guardar en catálogo",
       "hub.clear": "Limpiar",
       "hub.shareTitle": "Link para el cliente",
-      "hub.shareCopy": "Copiar otra vez",
+      "hub.shareCopy": "Copiar link",
       "hub.shareShare": "Compartir",
+      "hub.shareOpen": "Abrir ayuda",
       "hub.shareClose": "Cerrar",
       "hub.storage": "Espacio servidor",
+      "hub.passUpdate": "Actualizar clave",
+      "hub.edit": "Editar",
+      "hub.copyLink": "Copiar link",
+      "hub.delete": "Borrar",
+      "hub.viewClient": "Ver ayuda cliente",
+      "hub.openFolder": "Abrir carpeta",
+      "hub.backBrands": "← Todas las marcas",
+      "hub.editing": "Editando",
       "ayuda.sub": "Soporte técnico · Solo esta ficha",
       "ayuda.lock": "Vista de ayuda bloqueada · No hay acceso al catálogo ni a otras fichas",
       "ayuda.loading": "Cargando ayuda…",
@@ -213,7 +225,7 @@
       "hub.tag": "HELP ONLINE · Full system",
       "hub.admin": "Administrator",
       "hub.seal": "Created by Velocímetros Digitales CDMX",
-      "hub.lead": "You create and edit helps. On save, the client page opens (read-only, no going back).",
+      "hub.lead": "You create and edit helps. On save, the client link appears so you can copy or open it.",
       "hub.enterAdmin": "Enter administrator",
       "hub.example": "View MT-09 client example",
       "hub.loginBadge": "ADMIN / CREATOR ONLY",
@@ -224,7 +236,7 @@
       "hub.passHint": "Initial password:",
       "hub.panelBadge": "HOME PAGE PANEL",
       "hub.panelTitle": "Upload, catalog and edit",
-      "hub.panelLead": "On save → folder/help is created and you go to the locked client page",
+      "hub.panelLead": "On save → folder is created and the client link appears to copy or open",
       "hub.newHelp": "+ New help",
       "hub.export": "Export JSON",
       "hub.logout": "Log out",
@@ -235,13 +247,25 @@
       "hub.filterAll": "All",
       "hub.filterCars": "Cars",
       "hub.filterBikes": "Bikes",
+      "hub.gallery": "Gallery",
+      "hub.camera": "Camera",
+      "hub.saving": "Saving…",
       "hub.save": "Save to catalog",
       "hub.clear": "Clear",
       "hub.shareTitle": "Client link",
-      "hub.shareCopy": "Copy again",
+      "hub.shareCopy": "Copy link",
       "hub.shareShare": "Share",
+      "hub.shareOpen": "Open help",
       "hub.shareClose": "Close",
       "hub.storage": "Server storage",
+      "hub.passUpdate": "Update password",
+      "hub.edit": "Edit",
+      "hub.copyLink": "Copy link",
+      "hub.delete": "Delete",
+      "hub.viewClient": "View client help",
+      "hub.openFolder": "Open folder",
+      "hub.backBrands": "← All brands",
+      "hub.editing": "Editing",
       "ayuda.sub": "Technical support · This sheet only",
       "ayuda.lock": "Locked help view · No catalog or other sheets",
       "ayuda.loading": "Loading help…",
@@ -315,6 +339,7 @@
     });
 
     document.querySelectorAll("[data-i18n]").forEach(function (el) {
+      if (el.hasAttribute("data-i18n-lock")) return;
       var key = el.getAttribute("data-i18n");
       if (!key) return;
       if (el.getAttribute("data-i18n-html") === "true") {
@@ -388,6 +413,8 @@
   function initSlider() {
     var shell = document.querySelector("[data-slider]");
     if (!shell) return;
+    if (shell.dataset.sliderReady === "1") return;
+    shell.dataset.sliderReady = "1";
 
     var track = shell.querySelector(".slider-track");
     var slides = shell.querySelectorAll(".slide");
