@@ -219,6 +219,16 @@
             <div id="invBreadcrumb" class="inv-breadcrumb" hidden></div>
             <div id="catalogTree" class="catalog-tree"></div>
             <p id="invEmpty" class="muted" hidden>Aún no hay ayudas.</p>
+            <div id="linkSharePanel" class="link-share-panel" hidden>
+              <strong>Link para el cliente</strong>
+              <p class="muted tiny" id="linkShareHint">Selecciona el texto, cópialo o usa Compartir.</p>
+              <input type="text" id="linkShareInput" readonly aria-label="Link cliente">
+              <div class="link-share-actions">
+                <button type="button" class="btn btn-primary" id="linkShareCopy">Copiar otra vez</button>
+                <button type="button" class="btn btn-ghost" id="linkShareShare">Compartir</button>
+                <button type="button" class="btn btn-ghost" id="linkShareClose">Cerrar</button>
+              </div>
+            </div>
             <hr>
             <h3>Cambiar contraseña</h3>
             <form id="passForm" class="admin-form compact">

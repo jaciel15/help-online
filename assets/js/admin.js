@@ -270,6 +270,105 @@
     return '<div class="inv-thumb inv-thumb--empty">📁</div>';
   }
 
+  function copyTextNow(text) {
+    return new Promise(function (resolve) {
+      var ok = false;
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.setAttribute("aria-hidden", "true");
+        ta.style.cssText = "position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;border:0;padding:0;margin:0;";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        ta.setSelectionRange(0, String(text).length);
+        ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+      } catch (e) {
+        ok = false;
+      }
+      if (ok) {
+        resolve(true);
+        return;
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard
+          .writeText(text)
+          .then(function () {
+            resolve(true);
+          })
+          .catch(function () {
+            resolve(false);
+          });
+        return;
+      }
+      resolve(false);
+    });
+  }
+
+  function showLinkSharePanel(url, note) {
+    var panel = $("linkSharePanel");
+    var input = $("linkShareInput");
+    var hint = $("linkShareHint");
+    if (!panel || !input) return;
+    panel.hidden = false;
+    input.value = url || "";
+    if (hint) {
+      hint.textContent =
+        note ||
+        "Si el teléfono no pegó solo, toca el cuadro, selecciona todo y copia. O usa Compartir.";
+    }
+    try {
+      input.focus();
+      input.select();
+      input.setSelectionRange(0, input.value.length);
+    } catch (e) {}
+    panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function hideLinkSharePanel() {
+    var panel = $("linkSharePanel");
+    if (panel) panel.hidden = true;
+  }
+
+  function bindLinkSharePanel() {
+    if ($("linkShareCopy")) {
+      $("linkShareCopy").addEventListener("click", function () {
+        var input = $("linkShareInput");
+        var text = (input && input.value) || "";
+        if (!text) return;
+        copyTextNow(text).then(function (ok) {
+          showLinkSharePanel(
+            text,
+            ok
+              ? "Listo: link copiado. Pégalo en WhatsApp o notas."
+              : "No se pudo copiar automático. Selecciona el texto del cuadro y cópialo manualmente."
+          );
+        });
+      });
+    }
+    if ($("linkShareShare")) {
+      $("linkShareShare").addEventListener("click", function () {
+        var input = $("linkShareInput");
+        var text = (input && input.value) || "";
+        if (!text) return;
+        if (navigator.share) {
+          navigator
+            .share({ title: "HELP ONLINE", text: "Tu ayuda técnica", url: text })
+            .catch(function () {
+              showLinkSharePanel(text, "Usa el cuadro para copiar el link.");
+            });
+        } else {
+          showLinkSharePanel(text, "Tu navegador no tiene Compartir. Copia el texto del cuadro.");
+        }
+      });
+    }
+    if ($("linkShareClose")) {
+      $("linkShareClose").addEventListener("click", hideLinkSharePanel);
+    }
+  }
+
   function bindInventoryActions(box) {
     box.querySelectorAll(".open-brand").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -297,65 +396,68 @@
         var b = btn.getAttribute("data-b");
         var m = btn.getAttribute("data-m");
         var v = btn.getAttribute("data-v");
-        var original = btn.textContent;
+        var original = btn.textContent || "Copiar link";
 
-        function done(ok) {
-          btn.textContent = ok ? "¡Copiado!" : "Error";
+        function done(ok, label) {
+          btn.textContent = label || (ok ? "¡Copiado!" : "Error");
           setTimeout(function () {
             btn.textContent = original;
-          }, 1400);
+          }, 1800);
         }
 
-        // Verifica que el archivo público exista (para que el cliente sí abra la ayuda)
-        var checkUrl =
-          (CFG.root || "") +
-          "data/help/" +
-          encodeURIComponent(c) +
-          "/" +
-          encodeURIComponent(b) +
-          "/" +
-          encodeURIComponent(m) +
-          "/" +
-          encodeURIComponent(v || "base") +
-          ".json";
+        if (!url) {
+          done(false);
+          alert("No hay link para esta ayuda.");
+          return;
+        }
 
-        fetch(checkUrl, { cache: "no-store" })
-          .then(function (r) {
-            if (!r.ok) throw new Error("missing");
-            return true;
-          })
-          .catch(function () {
-            return false;
-          })
-          .then(function (publicOk) {
-            if (!publicOk) {
-              alert(
-                "Esta ayuda aún no está publicada en el servidor, por eso el link falla en otro teléfono. Vuelve a pulsar Guardar en catálogo y luego Copiar link."
+        // IMPORTANTE: copiar YA (en el mismo toque). Si hacemos fetch antes,
+        // iPhone/Android pierden el permiso de portapapeles y "Copiar" falla.
+        copyTextNow(url).then(function (copied) {
+          showLinkSharePanel(
+            url,
+            copied
+              ? "Link copiado. Si no pega, selecciona el cuadro o toca Compartir."
+              : "Copia manual: toca el cuadro, selecciona todo y copia. O toca Compartir."
+          );
+          done(true, copied ? "¡Copiado!" : "Ver link ↓");
+
+          if (navigator.share && !copied) {
+            // En móvil, Compartir suele ser más fiable que el portapapeles
+            try {
+              navigator.share({ title: "HELP ONLINE", text: "Tu ayuda técnica", url: url });
+            } catch (e) {}
+          }
+
+          var checkUrl =
+            (CFG.root || "") +
+            "data/help/" +
+            encodeURIComponent(c) +
+            "/" +
+            encodeURIComponent(b) +
+            "/" +
+            encodeURIComponent(m) +
+            "/" +
+            encodeURIComponent(v || "base") +
+            ".json";
+
+          fetch(checkUrl, { cache: "no-store" })
+            .then(function (r) {
+              if (!r.ok) throw new Error("missing");
+              return true;
+            })
+            .catch(function () {
+              return false;
+            })
+            .then(function (publicOk) {
+              if (publicOk) return;
+              showLinkSharePanel(
+                url,
+                "⚠ Esta ayuda aún no está publicada en el servidor. Vuelve a Guardar en catálogo y luego copia de nuevo."
               );
-              done(false);
-              return;
-            }
-            var urlText = url;
-            function fallbackCopy() {
-              try {
-                prompt("Link cliente (cópialo):", urlText);
-                done(true);
-              } catch (e) {
-                done(false);
-              }
-            }
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-              return navigator.clipboard
-                .writeText(urlText)
-                .then(function () {
-                  done(true);
-                })
-                .catch(function () {
-                  fallbackCopy();
-                });
-            }
-            fallbackCopy();
-          });
+              done(false, "Sin publicar");
+            });
+        });
       });
     });
 
@@ -841,6 +943,8 @@
 
   function boot() {
     if (!$("loginForm") || !$("entryForm")) return;
+
+    bindLinkSharePanel();
 
     if (C.isAdminSession()) {
       showApp(true);

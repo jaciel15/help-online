@@ -138,9 +138,13 @@ async function main() {
   // Copy link verifies public file
   await context.grantPermissions(["clipboard-read", "clipboard-write"]).catch(() => {});
   await page.locator(".copy-help").first().click();
-  await page.waitForTimeout(900);
+  await page.waitForSelector("#linkSharePanel:not([hidden])", { timeout: 5000 });
+  const shareVal = await page.inputValue("#linkShareInput");
+  if (!/ayuda\/\?/.test(shareVal || "")) throw new Error("share panel missing link: " + shareVal);
+  ok("Copiar link panel", shareVal.slice(0, 80));
+  await page.waitForTimeout(500);
   const copyText = await page.locator(".copy-help").first().textContent();
-  if (/Error/i.test(copyText || "")) throw new Error("copy link failed verification");
+  if (/Error|Sin publicar/i.test(copyText || "")) throw new Error("copy link failed verification: " + copyText);
   ok("Copiar link (public check)", copyText);
 
   await page.click("#btnBackBrands");
