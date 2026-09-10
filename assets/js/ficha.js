@@ -55,10 +55,12 @@
 
     var photos = version.photos || {};
     var slides = [];
-    if (photos.dashboard) slides.push({ src: asset(photos.dashboard), alt: "Tablero" });
-    if (photos.connection) slides.push({ src: asset(photos.connection), alt: "Conexión" });
-    if (photos.ignition || photos.eeprom) slides.push({ src: asset(photos.ignition || photos.eeprom), alt: "Conexión encendido / EEPROM" });
-    if (photos.main && slides.length < 3) slides.unshift({ src: asset(photos.main), alt: model.name });
+    if (photos.main) slides.push({ src: asset(photos.main), alt: model.name });
+    if (photos.dashboard) slides.push({ src: asset(photos.dashboard), alt: "Dashboard" });
+    if (photos.connection) slides.push({ src: asset(photos.connection), alt: "Conexiones" });
+    if (photos.ignition || photos.eeprom) {
+      slides.push({ src: asset(photos.ignition || photos.eeprom), alt: "Pin-out encendido" });
+    }
 
     var notes = (version.notes || [])
       .map(function (n) {

@@ -26,9 +26,13 @@ También sirve el link de carpeta fija, p. ej. `/motos/yamaha/mt09/` (ya bloquea
 1. Entra a `/admin/` (solo administrador).
 2. Completa Autos/Motos → marca → modelo → versión.
 3. Edita EEPROM / programador / tipo / notas.
-4. Sube fotos en orden: **FOTO 1 dashboard** → **FOTO 2 conexiones** → **FOTO 3 pin-out encendido** (al elegir la 1 se abre sola la 2, luego la 3; o suelta las 3 juntas).
-5. Pulsa **Publicar ayuda automáticamente**.
-6. Copia el **link cliente** y/o edita fichas desde el catálogo.
+4. Sube **4 fotos** en orden (Galería o Cámara):
+   1. Principal (auto/moto)
+   2. Dashboard
+   3. Conexiones
+   4. Pin-out encendido
+5. Pulsa **Publicar / guardar automáticamente**.
+6. En la **lista** de la derecha ves todo lo publicado; filtra Autos/Motos y pulsa **Editar**.
 7. Sube el JSON descargado a `data/help/{cat}/{marca}/{modelo}/{version}.json`.
 
 ## Notas

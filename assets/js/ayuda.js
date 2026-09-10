@@ -53,13 +53,11 @@
     var version = unit.version;
     var photos = version.photos || {};
     var slides = [];
-    if (photos.dashboard) slides.push({ src: asset(photos.dashboard), alt: "Tablero" });
-    if (photos.connection) slides.push({ src: asset(photos.connection), alt: "Conexión" });
+    if (photos.main) slides.push({ src: asset(photos.main), alt: modelName || "Principal" });
+    if (photos.dashboard) slides.push({ src: asset(photos.dashboard), alt: "Dashboard" });
+    if (photos.connection) slides.push({ src: asset(photos.connection), alt: "Conexiones" });
     if (photos.ignition || photos.eeprom) {
-      slides.push({ src: asset(photos.ignition || photos.eeprom), alt: "Conexión encendido" });
-    }
-    if (photos.main && slides.length < 1) {
-      slides.push({ src: asset(photos.main), alt: modelName });
+      slides.push({ src: asset(photos.ignition || photos.eeprom), alt: "Pin-out encendido" });
     }
 
     var notes = (version.notes || [])

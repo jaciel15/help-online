@@ -3,9 +3,22 @@
 
   var C = window.VCDMXCatalog;
   var catalog = null;
-  var pending = { dashboard: "", connection: "", ignition: "" };
+  var pending = { main: "", dashboard: "", connection: "", ignition: "" };
   var editing = null;
-  var chainBusy = false;
+  var listFilter = "all";
+  var PHOTO_KEYS = ["main", "dashboard", "connection", "ignition"];
+  var PHOTO_META = {
+    main: { img: "prevMain", st: "stMain", slot: 1 },
+    dashboard: { img: "prevDashboard", st: "stDashboard", slot: 2 },
+    connection: { img: "prevConnection", st: "stConnection", slot: 3 },
+    ignition: { img: "prevIgnition", st: "stIgnition", slot: 4 }
+  };
+  var CHAIN = {
+    main: { nextKey: "dashboard", nextSlot: 2, nextGallery: "pDashGallery" },
+    dashboard: { nextKey: "connection", nextSlot: 3, nextGallery: "pConnGallery" },
+    connection: { nextKey: "ignition", nextSlot: 4, nextGallery: "pIgnGallery" },
+    ignition: { nextKey: null, nextSlot: 0, nextGallery: null }
+  };
 
   function $(id) {
     return document.getElementById(id);
@@ -25,12 +38,7 @@
 
   function setPhoto(key, url) {
     pending[key] = url || "";
-    var map = {
-      dashboard: { img: "prevDashboard", st: "stDashboard", slot: 1 },
-      connection: { img: "prevConnection", st: "stConnection", slot: 2 },
-      ignition: { img: "prevIgnition", st: "stIgnition", slot: 3 }
-    };
-    var meta = map[key];
+    var meta = PHOTO_META[key];
     if (!meta) return;
     var img = $(meta.img);
     var st = $(meta.st);
@@ -52,7 +60,9 @@
 
   function updatePublishPulse() {
     var btn = $("btnPublish");
-    var ready = pending.dashboard && pending.connection && pending.ignition;
+    var ready = PHOTO_KEYS.every(function (k) {
+      return !!pending[k];
+    });
     if (ready) btn.classList.add("is-pulse");
     else btn.classList.remove("is-pulse");
   }
@@ -63,62 +73,91 @@
     });
   }
 
-  function openNext(inputId) {
+  function openPicker(inputId) {
     var el = $(inputId);
     if (!el) return;
-    chainBusy = true;
     setTimeout(function () {
       try {
         el.click();
       } catch (e) {}
-      chainBusy = false;
-    }, 180);
+    }, 120);
   }
 
-  function bindSequential(inputId, key, nextInputId, nextSlot) {
-    $(inputId).addEventListener("change", function () {
+  function onPhotoChosen(key, file, chain) {
+    if (!file) return;
+    C.fileToDataUrl(file).then(function (url) {
+      setPhoto(key, url);
+      if (!chain) return;
+      var next = CHAIN[key];
+      if (next && next.nextGallery) {
+        markActiveSlot(next.nextSlot);
+        openPicker(next.nextGallery);
+      } else {
+        markActiveSlot(0);
+        $("btnPublish").focus();
+      }
+    });
+  }
+
+  function bindPhotoInput(inputId, key, chain) {
+    var el = $(inputId);
+    if (!el) return;
+    el.addEventListener("change", function () {
       var file = this.files && this.files[0];
-      if (!file) return;
-      C.fileToDataUrl(file).then(function (url) {
-        setPhoto(key, url);
-        if (nextInputId) {
-          markActiveSlot(nextSlot);
-          openNext(nextInputId);
-        } else {
-          markActiveSlot(0);
-          $("btnPublish").focus();
-        }
-      });
+      onPhotoChosen(key, file, chain);
+      this.value = "";
     });
   }
 
   function applyFilesInOrder(fileList) {
-    var files = Array.prototype.slice.call(fileList || [], 0, 3);
-    var keys = ["dashboard", "connection", "ignition"];
+    var files = Array.prototype.slice.call(fileList || [], 0, 4);
     var jobs = files.map(function (file, i) {
       return C.fileToDataUrl(file).then(function (url) {
-        setPhoto(keys[i], url);
+        setPhoto(PHOTO_KEYS[i], url);
       });
     });
     return Promise.all(jobs);
   }
 
+  function thumbHtml(photos) {
+    var src =
+      (photos && (photos.main || photos.dashboard || photos.connection || photos.ignition || photos.eeprom)) || "";
+    if (!src) return '<div class="inv-thumb inv-thumb--empty">Sin foto</div>';
+    return '<div class="inv-thumb"><img src="' + resolvePreview(src) + '" alt=""></div>';
+  }
+
+  function countItems() {
+    var n = 0;
+    ["autos", "motos"].forEach(function (cat) {
+      C.listBrands(catalog, cat).forEach(function (b) {
+        Object.keys(b.models || {}).forEach(function (mid) {
+          n += ((b.models[mid].versions || []).length);
+        });
+      });
+    });
+    return n;
+  }
+
   function renderTree() {
     var box = $("catalogTree");
+    var empty = $("invEmpty");
     var html = "";
-    ["autos", "motos"].forEach(function (cat) {
-      html += "<h3>" + cat.toUpperCase() + "</h3>";
-      var brands = C.listBrands(catalog, cat);
-      if (!brands.length) {
-        html += "<p class='muted'>Sin fichas.</p>";
-        return;
-      }
+    var shown = 0;
+    var cats = listFilter === "all" ? ["autos", "motos"] : [listFilter];
+
+    cats.forEach(function (cat) {
+      var brands = C.listBrands(catalog, cat).filter(function (b) {
+        return Object.keys(b.models || {}).some(function (mid) {
+          return (b.models[mid].versions || []).length > 0;
+        });
+      });
+      if (!brands.length) return;
+      html += '<div class="inv-cat"><h3>' + cat.toUpperCase() + "</h3>";
       brands.forEach(function (b) {
-        html += "<div class='tree-brand'><strong>" + b.name + "</strong>";
         Object.keys(b.models || {}).forEach(function (mid) {
           var m = b.models[mid];
-          html += "<div class='tree-model'><div>" + m.name + "</div>";
           (m.versions || []).forEach(function (v) {
+            shown += 1;
             var helpHref =
               "../ayuda/?c=" +
               encodeURIComponent(cat) +
@@ -130,11 +169,20 @@
               encodeURIComponent(v.id);
             var absHelp = new URL(helpHref, location.href).href;
             html +=
-              "<div class='tree-version'><div>• " +
+              '<article class="inv-item">' +
+              thumbHtml(v.photos) +
+              '<div class="inv-body">' +
+              "<strong>" +
+              b.name +
+              " " +
+              m.name +
+              "</strong>" +
+              "<span>" +
               (v.name || v.id) +
               " · EEPROM " +
               (v.eeprom || "—") +
-              "</div><div class='tree-actions'>" +
+              "</span>" +
+              '<div class="tree-actions">' +
               "<button type='button' class='edit-help' data-c='" +
               cat +
               "' data-b='" +
@@ -146,17 +194,27 @@
               "'>Editar</button>" +
               "<a href='" +
               helpHref +
-              "' target='_blank' rel='noopener'>Abrir ayuda</a>" +
+              "' target='_blank' rel='noopener'>Ver ayuda</a>" +
               "<button type='button' class='copy-help' data-help-url='" +
               absHelp.replace(/'/g, "&#39;") +
-              "'>Copiar link cliente</button></div></div>";
+              "'>Copiar link</button>" +
+              "</div></div></article>";
           });
-          html += "</div>";
         });
-        html += "</div>";
       });
+      html += "</div>";
     });
-    box.innerHTML = html;
+
+    box.innerHTML = html || "";
+    if (countItems() === 0) {
+      empty.hidden = false;
+      empty.textContent = "Aún no hay ayudas. Usa el formulario para añadir la primera.";
+    } else if (shown === 0) {
+      empty.hidden = false;
+      empty.textContent = "No hay ayudas en este filtro.";
+    } else {
+      empty.hidden = true;
+    }
 
     box.querySelectorAll(".copy-help").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -165,11 +223,11 @@
           navigator.clipboard.writeText(url).then(function () {
             btn.textContent = "¡Copiado!";
             setTimeout(function () {
-              btn.textContent = "Copiar link cliente";
+              btn.textContent = "Copiar link";
             }, 1200);
           });
         } else {
-          prompt("Copia este link de ayuda (solo esa ficha):", url);
+          prompt("Copia este link de ayuda:", url);
         }
       });
     });
@@ -204,25 +262,29 @@
     $("fType").value = version.type || "SERIAL EEPROM";
     $("fNotes").value = (version.notes || []).join("\n");
 
-    setPhoto("dashboard", (version.photos && version.photos.dashboard) || "");
-    setPhoto("connection", (version.photos && version.photos.connection) || "");
-    setPhoto("ignition", (version.photos && (version.photos.ignition || version.photos.eeprom)) || "");
+    var photos = version.photos || {};
+    setPhoto("main", photos.main || "");
+    setPhoto("dashboard", photos.dashboard || "");
+    setPhoto("connection", photos.connection || "");
+    setPhoto("ignition", photos.ignition || photos.eeprom || "");
 
-    $("entryForm").scrollIntoView({ behavior: "smooth", block: "start" });
+    $("formCard").scrollIntoView({ behavior: "smooth", block: "start" });
+    $("formMsg").hidden = true;
   }
 
   function clearForm() {
     editing = null;
-    $("formTitle").textContent = "Nueva ayuda / editar";
+    $("formTitle").textContent = "Nueva ayuda";
     $("entryForm").reset();
     $("fProgrammer").value = "UPA USB";
     $("fType").value = "SERIAL EEPROM";
     $("fVersion").value = "Base";
     $("pMulti").value = "";
-    setPhoto("dashboard", "");
-    setPhoto("connection", "");
-    setPhoto("ignition", "");
+    PHOTO_KEYS.forEach(function (k) {
+      setPhoto(k, "");
+    });
     markActiveSlot(1);
+    $("formMsg").hidden = true;
   }
 
   function publish() {
@@ -238,10 +300,12 @@
     var modelId = C.ensureModel(catalog, category, brandId, modelName);
     var versionId = C.slugify(versionName);
     var existing = C.getVersion(catalog, category, brandId, modelId, versionId);
+    var prev = (existing && existing.photos) || {};
     var photos = {
-      dashboard: pending.dashboard || (existing && existing.photos && existing.photos.dashboard) || "",
-      connection: pending.connection || (existing && existing.photos && existing.photos.connection) || "",
-      ignition: pending.ignition || (existing && existing.photos && (existing.photos.ignition || existing.photos.eeprom)) || ""
+      main: pending.main || prev.main || "",
+      dashboard: pending.dashboard || prev.dashboard || "",
+      connection: pending.connection || prev.connection || "",
+      ignition: pending.ignition || prev.ignition || prev.eeprom || ""
     };
 
     C.upsertVersion(catalog, category, brandId, modelId, {
@@ -281,13 +345,13 @@
     var msg = $("formMsg");
     msg.hidden = false;
     msg.innerHTML =
-      "✓ Publicado automáticamente: <strong>" +
+      "✓ Guardado: <strong>" +
       brandName.toUpperCase() +
       " / " +
       modelName.toUpperCase() +
       " / " +
       versionName +
-      "</strong><br>JSON de ayuda descargado → súbelo a <code>data/help/" +
+      "</strong><br>JSON descargado → <code>data/help/" +
       category +
       "/" +
       brandId +
@@ -299,7 +363,12 @@
       helpUrl +
       "</code>";
 
-    clearForm();
+    // Mantener datos en formulario si era edición; si era alta, limpiar para la siguiente
+    if (!editing) clearForm();
+    else {
+      editing = { cat: category, brandId: brandId, modelId: modelId, versionId: versionId };
+      $("formTitle").textContent = "Editando · " + brandName.toUpperCase() + " " + modelName.toUpperCase();
+    }
   }
 
   function boot() {
@@ -337,10 +406,39 @@
     });
 
     $("btnClear").addEventListener("click", clearForm);
+    $("btnNew").addEventListener("click", function () {
+      clearForm();
+      $("formCard").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
 
-    bindSequential("pDashboard", "dashboard", "pConnection", 2);
-    bindSequential("pConnection", "connection", "pIgnition", 3);
-    bindSequential("pIgnition", "ignition", null, 0);
+    document.querySelectorAll(".inv-filter").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        listFilter = btn.getAttribute("data-filter") || "all";
+        document.querySelectorAll(".inv-filter").forEach(function (b) {
+          b.classList.toggle("is-active", b === btn);
+        });
+        renderTree();
+      });
+    });
+
+    document.querySelectorAll(".btn-photo").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var target = btn.getAttribute("data-target");
+        var slot = btn.closest(".photo-slot");
+        if (slot) markActiveSlot(slot.getAttribute("data-slot"));
+        openPicker(target);
+      });
+    });
+
+    // Galería + cámara por cada foto (cadena solo desde galería/cámara de cada slot)
+    bindPhotoInput("pMainGallery", "main", true);
+    bindPhotoInput("pMainCamera", "main", true);
+    bindPhotoInput("pDashGallery", "dashboard", true);
+    bindPhotoInput("pDashCamera", "dashboard", true);
+    bindPhotoInput("pConnGallery", "connection", true);
+    bindPhotoInput("pConnCamera", "connection", true);
+    bindPhotoInput("pIgnGallery", "ignition", true);
+    bindPhotoInput("pIgnCamera", "ignition", true);
 
     $("pMulti").addEventListener("change", function () {
       applyFilesInOrder(this.files).then(function () {

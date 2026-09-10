@@ -20,7 +20,7 @@
     <form id="loginForm" class="admin-card login-card">
       <p class="admin-badge">SOLO ADMINISTRADOR</p>
       <h1>ADMIN HELP ONLINE</h1>
-      <p class="hint">Solo tú subes y editas ayudas. Autos/motos nuevos se crean solos. El cliente recibe un link específico y solo ve esa ficha.</p>
+      <p class="hint">Solo tú subes y editas. Lista completa de autos/motos, 4 fotos (cámara o galería) y publicación automática.</p>
       <label>Contraseña
         <input type="password" id="loginPass" autocomplete="current-password" required>
       </label>
@@ -34,19 +34,20 @@
     <header class="admin-top">
       <div>
         <p class="admin-badge">PANEL ADMINISTRADOR</p>
-        <strong>Subida rápida de ayudas</strong>
-        <span>Autos/Motos → marca → modelo → versión · fotos en orden 1·2·3 · EEPROM editable</span>
+        <strong>Subida y edición de ayudas</strong>
+        <span>Lista de todo lo publicado · añadir · editar · 4 fotos en orden</span>
       </div>
       <div class="admin-top-actions">
+        <button type="button" id="btnNew" class="btn btn-primary">+ Nueva ayuda</button>
         <button type="button" id="btnExport" class="btn btn-ghost">Exportar JSON</button>
         <button type="button" id="btnLogout" class="btn btn-ghost">Salir</button>
       </div>
     </header>
 
     <main class="admin-grid">
-      <section class="admin-card">
-        <h2 id="formTitle">Nueva ayuda / editar</h2>
-        <p class="muted tiny">Marca o modelo nuevos se crean en automático. Si el modelo ya existe, se agrega otra versión.</p>
+      <section class="admin-card" id="formCard">
+        <h2 id="formTitle">Nueva ayuda</h2>
+        <p class="muted tiny">Marca/modelo nuevos se crean solos. Usa <strong>Editar</strong> en la lista para cambiar fotos o EEPROM de algo ya subido.</p>
         <form id="entryForm" class="admin-form">
           <div class="form-row">
             <label>Categoría
@@ -56,81 +57,118 @@
               </select>
             </label>
             <label>Marca
-              <input id="fBrand" required placeholder="Ford / Yamaha">
+              <input id="fBrand" required placeholder="Ford / Yamaha" autocomplete="off">
             </label>
           </div>
           <div class="form-row">
             <label>Modelo
-              <input id="fModel" required placeholder="Fusion / MT-09">
+              <input id="fModel" required placeholder="Fusion / MT-09" autocomplete="off">
             </label>
             <label>Versión
-              <input id="fVersion" required value="Base" placeholder="Base / 2022 / Otra">
+              <input id="fVersion" required value="Base" placeholder="Base / 2022 / Otra" autocomplete="off">
             </label>
           </div>
 
           <h3 class="admin-sub">Datos técnicos (editables)</h3>
           <div class="form-row">
             <label>Memoria / EEPROM
-              <input id="fEeprom" placeholder="93C56 / 93C86 × 16">
+              <input id="fEeprom" placeholder="93C56 / 93C86 × 16" autocomplete="off">
             </label>
             <label>Programador
-              <input id="fProgrammer" value="UPA USB" placeholder="UPA USB">
+              <input id="fProgrammer" value="UPA USB" placeholder="UPA USB" autocomplete="off">
             </label>
           </div>
           <label>Tipo
-            <input id="fType" value="SERIAL EEPROM" placeholder="SERIAL EEPROM">
+            <input id="fType" value="SERIAL EEPROM" placeholder="SERIAL EEPROM" autocomplete="off">
           </label>
           <label>Notas (una por línea)
             <textarea id="fNotes" rows="3" placeholder="Nota 1"></textarea>
           </label>
 
-          <h3 class="admin-sub">Fotos en orden (obligatorio para publicar rápido)</h3>
-          <p class="muted tiny">Al elegir FOTO 1 se abre sola la FOTO 2, luego la 3. O suelta las 3 juntas abajo.</p>
+          <h3 class="admin-sub">Fotos en orden (cámara o galería)</h3>
+          <p class="muted tiny">FOTO 1 principal del auto/moto → 2 dashboard → 3 conexiones → 4 pin-out. Cada ranura tiene <strong>Galería</strong> y <strong>Cámara</strong>.</p>
 
           <label class="multi-drop">
-            <span>Soltar 3 fotos juntas (orden: dashboard → conexiones → pin-out)</span>
+            <span>O suelta / elige 4 fotos juntas (orden 1→2→3→4)</span>
             <input type="file" id="pMulti" accept="image/*" multiple>
           </label>
 
-          <div class="photo-grid">
-            <label class="photo-slot" data-slot="1">
+          <div class="photo-grid photo-grid-4">
+            <div class="photo-slot" data-slot="1" data-key="main">
               <span class="photo-num">FOTO 1</span>
+              <strong>Principal</strong>
+              <small>Auto o moto</small>
+              <img id="prevMain" class="preview" alt="">
+              <div class="photo-actions">
+                <button type="button" class="btn-photo" data-pick="gallery" data-target="pMainGallery">Galería</button>
+                <button type="button" class="btn-photo" data-pick="camera" data-target="pMainCamera">Cámara</button>
+              </div>
+              <input type="file" id="pMainGallery" class="file-hidden" accept="image/*">
+              <input type="file" id="pMainCamera" class="file-hidden" accept="image/*" capture="environment">
+              <span class="photo-status" id="stMain">Pendiente</span>
+            </div>
+
+            <div class="photo-slot" data-slot="2" data-key="dashboard">
+              <span class="photo-num">FOTO 2</span>
               <strong>Dashboard</strong>
               <small>Tablero</small>
-              <input type="file" id="pDashboard" accept="image/*">
               <img id="prevDashboard" class="preview" alt="">
+              <div class="photo-actions">
+                <button type="button" class="btn-photo" data-pick="gallery" data-target="pDashGallery">Galería</button>
+                <button type="button" class="btn-photo" data-pick="camera" data-target="pDashCamera">Cámara</button>
+              </div>
+              <input type="file" id="pDashGallery" class="file-hidden" accept="image/*">
+              <input type="file" id="pDashCamera" class="file-hidden" accept="image/*" capture="environment">
               <span class="photo-status" id="stDashboard">Pendiente</span>
-            </label>
-            <label class="photo-slot" data-slot="2">
-              <span class="photo-num">FOTO 2</span>
+            </div>
+
+            <div class="photo-slot" data-slot="3" data-key="connection">
+              <span class="photo-num">FOTO 3</span>
               <strong>Conexiones</strong>
               <small>Cableado / pin</small>
-              <input type="file" id="pConnection" accept="image/*">
               <img id="prevConnection" class="preview" alt="">
+              <div class="photo-actions">
+                <button type="button" class="btn-photo" data-pick="gallery" data-target="pConnGallery">Galería</button>
+                <button type="button" class="btn-photo" data-pick="camera" data-target="pConnCamera">Cámara</button>
+              </div>
+              <input type="file" id="pConnGallery" class="file-hidden" accept="image/*">
+              <input type="file" id="pConnCamera" class="file-hidden" accept="image/*" capture="environment">
               <span class="photo-status" id="stConnection">Pendiente</span>
-            </label>
-            <label class="photo-slot" data-slot="3">
-              <span class="photo-num">FOTO 3</span>
-              <strong>Pin-out encendido</strong>
+            </div>
+
+            <div class="photo-slot" data-slot="4" data-key="ignition">
+              <span class="photo-num">FOTO 4</span>
+              <strong>Pin-out</strong>
               <small>Encendido / EEPROM</small>
-              <input type="file" id="pIgnition" accept="image/*">
               <img id="prevIgnition" class="preview" alt="">
+              <div class="photo-actions">
+                <button type="button" class="btn-photo" data-pick="gallery" data-target="pIgnGallery">Galería</button>
+                <button type="button" class="btn-photo" data-pick="camera" data-target="pIgnCamera">Cámara</button>
+              </div>
+              <input type="file" id="pIgnGallery" class="file-hidden" accept="image/*">
+              <input type="file" id="pIgnCamera" class="file-hidden" accept="image/*" capture="environment">
               <span class="photo-status" id="stIgnition">Pendiente</span>
-            </label>
+            </div>
           </div>
 
           <div class="form-actions">
-            <button type="submit" class="btn btn-primary" id="btnPublish">Publicar ayuda automáticamente</button>
+            <button type="submit" class="btn btn-primary" id="btnPublish">Publicar / guardar automáticamente</button>
             <button type="button" id="btnClear" class="btn btn-ghost">Limpiar</button>
           </div>
           <p id="formMsg" class="form-msg" hidden></p>
         </form>
       </section>
 
-      <section class="admin-card">
-        <h2>Catálogo publicado</h2>
-        <p class="muted">Edita cualquier ficha o copia el <strong>link cliente</strong> (solo esa unidad).</p>
+      <section class="admin-card inventory-card">
+        <h2>Lista de ayudas publicadas</h2>
+        <p class="muted">Todo lo que has añadido (autos y motos). Pulsa <strong>Editar</strong> para cambiar fotos o datos.</p>
+        <div class="inv-filters">
+          <button type="button" class="inv-filter is-active" data-filter="all">Todas</button>
+          <button type="button" class="inv-filter" data-filter="autos">Autos</button>
+          <button type="button" class="inv-filter" data-filter="motos">Motos</button>
+        </div>
         <div id="catalogTree" class="catalog-tree"></div>
+        <p id="invEmpty" class="muted" hidden>Aún no hay ayudas. Usa el formulario para añadir la primera.</p>
         <hr>
         <h3>Cambiar contraseña</h3>
         <form id="passForm" class="admin-form compact">
@@ -139,7 +177,7 @@
           </label>
           <button type="submit" class="btn btn-ghost">Actualizar clave</button>
         </form>
-        <p class="muted tiny">Al publicar se descarga el JSON de esa ayuda → súbelo a <code>data/help/...</code>. Exporta también <code>catalog.json</code> para respaldo.</p>
+        <p class="muted tiny">Al guardar se descarga el JSON de esa ayuda → súbelo a <code>data/help/...</code>. Exporta también <code>catalog.json</code>.</p>
       </section>
     </main>
   </div>
