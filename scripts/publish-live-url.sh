@@ -1,37 +1,54 @@
 #!/usr/bin/env bash
-# Actualiza live.json con túneles sanos y lo publica a GitHub Pages.
+# Actualiza live.json con túneles sanos (Cloudflare, lhr, bore) y deja listo el commit.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 URLS=()
 
 add_if_healthy() {
-  local u="$1"
+  local u="${1:-}"
   [ -n "$u" ] || return 0
-  if curl -sf --max-time 8 "$u/api/health" >/dev/null; then
+  u="${u%/}"
+  if curl -sf --max-time 10 "$u/api/health" >/dev/null; then
     URLS+=("$u")
+    echo "OK  $u"
+  else
+    echo "FAIL $u" >&2
   fi
 }
 
-# Prefer HTTPS tunnels for GitHub Pages redirector
-for log in /tmp/lhr-stable.log /tmp/lhr1.log /tmp/lhr-d.log /tmp/lhr-up.log /tmp/lhr-live2.log; do
+# Cloudflare quick tunnels
+for log in /tmp/cf-fresh.log /tmp/cf-now.log /tmp/cf-tunnel*.log /tmp/cloudflared*.log; do
   [ -f "$log" ] || continue
-  cand=$(tr -cd '\11\12\15\40-\176' < "$log" | grep -oE 'https://[a-z0-9]+\.lhr\.life' | tail -1 || true)
-  add_if_healthy "${cand:-}"
+  while IFS= read -r cand; do
+    add_if_healthy "$cand"
+  done < <(tr -cd '\11\12\15\40-\176' < "$log" | grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' | sort -u | tail -3 || true)
 done
 
-for log in /tmp/b1.log /tmp/bore-d.log /tmp/bore-up.log /tmp/bore-now2.log /tmp/bore-live.log; do
+# localhost.run / lhr.life
+for log in /tmp/lhr-fresh.log /tmp/lhr-stable.log /tmp/lhr*.log; do
   [ -f "$log" ] || continue
-  host=$(grep -oE 'bore\.pub:[0-9]+' "$log" | tail -1 || true)
-  add_if_healthy "http://${host:-}"
+  while IFS= read -r cand; do
+    add_if_healthy "$cand"
+  done < <(tr -cd '\11\12\15\40-\176' < "$log" | grep -oE 'https://[a-z0-9]+\.(lhr\.life|lhr\.li)' | sort -u | tail -3 || true)
 done
+
+# bore.pub
+for log in /tmp/bore-fresh.log /tmp/bore*.log /tmp/help-online-tunnels/bore.log; do
+  [ -f "$log" ] || continue
+  while IFS= read -r host; do
+    add_if_healthy "http://$host"
+  done < <(grep -oE 'bore\.pub:[0-9]+' "$log" | sort -u | tail -3 || true)
+done
+
+# localtunnel memorable
+add_if_healthy "https://helponline-cdmx.loca.lt"
 
 if [ ${#URLS[@]} -eq 0 ]; then
-  echo "No hay túneles sanos" >&2
+  echo "No hay túneles sanos. Levanta cloudflared/lhr/bore y reintenta." >&2
   exit 1
 fi
 
-# unique preserve order
 UNIQ=()
 for u in "${URLS[@]}"; do
   skip=0
@@ -41,10 +58,7 @@ for u in "${URLS[@]}"; do
   [ $skip -eq 1 ] || UNIQ+=("$u")
 done
 
-PRIMARY="${UNIQ[0]}"
-BACKUP="${UNIQ[$(( ${#UNIQ[@]} > 1 ? 1 : 0 ))]}"
-
-python3 - "$PRIMARY" "$BACKUP" "${UNIQ[@]}" <<'PY'
+python3 - "${UNIQ[@]}" <<'PY'
 import json, sys
 from datetime import datetime, timezone
 urls = []
@@ -59,12 +73,11 @@ data = {
     "canonical": "https://jaciel15.github.io/help-online/entrar.html",
 }
 open("live.json", "w", encoding="utf-8").write(json.dumps(data, indent=2) + "\n")
-print("OK", data["url"])
+print("live.json ->", data["url"])
 PY
 
 git add live.json
-if git diff --cached --quiet; then
-  echo "live.json sin cambios de stage (quizá igual)"; 
-fi
-git add entrar.html scripts/publish-live-url.sh index.html assets/js/site.js live.json
-git status -sb | head -20
+git status -sb | head -15
+echo
+echo "Siguiente: commit + push a main para que entrar.html en Pages use la URL nueva."
+echo "Permanente: sigue DEPLOY.md (Render/Fly) y pon esa URL en live.json."
