@@ -244,8 +244,14 @@ async function main() {
   if (!page.url().includes("/ayuda/")) throw new Error("portal redirect failed: " + page.url());
   ok("portal/?… → ayuda");
 
+  // Guest ficha redirect (clear admin session from earlier login)
+  await page.evaluate(() => {
+    try {
+      sessionStorage.removeItem("vcdmx-admin-session");
+    } catch (e) {}
+  });
   await page.goto(BASE + "/ficha/?c=motos&b=yamaha&m=mt09&v=base", { waitUntil: "networkidle" });
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(800);
   if (!page.url().includes("/ayuda/")) throw new Error("ficha guest redirect failed: " + page.url());
   ok("ficha/?… → ayuda");
 
