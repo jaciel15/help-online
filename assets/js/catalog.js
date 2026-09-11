@@ -737,6 +737,15 @@
     });
   }
 
+  var GH_PAT_KEY = "vcdmx-gh-pat";
+  var GH_REPO = (global.VCDMX_GH_REPO || "jaciel15/help-online") + "";
+  var GH_BRANCH = (global.VCDMX_GH_BRANCH || "main") + "";
+  var CLIENT_PAGES_BASE = (
+    (global.VCDMX_CLIENT_PAGES_BASE || "https://jaciel15.github.io/help-online") + ""
+  ).replace(/\/$/, "");
+  var PHOTO_KEYS_PUB = ["main", "dashboard", "connection", "ignition"];
+  var PLACEHOLDERS_PUB = { "[published]": 1, "[indexed]": 1, "": 1 };
+
   function apiBase() {
     var scripts = document.getElementsByTagName("script");
     for (var i = 0; i < scripts.length; i++) {
@@ -748,8 +757,444 @@
     return "/";
   }
 
-  /** Publica la ficha en el servidor (data/help/...) para que el link funcione a cualquiera. */
-  function publishToServer(unit) {
+  function getGitHubToken() {
+    try {
+      return (localStorage.getItem(GH_PAT_KEY) || "").trim();
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function setGitHubToken(token) {
+    token = String(token || "").trim();
+    try {
+      if (token) localStorage.setItem(GH_PAT_KEY, token);
+      else localStorage.removeItem(GH_PAT_KEY);
+    } catch (e) {}
+    return !!token;
+  }
+
+  function clearGitHubToken() {
+    return setGitHubToken("");
+  }
+
+  function hasGitHubToken() {
+    return !!getGitHubToken();
+  }
+
+  function clientHelpUrl(c, b, m, v) {
+    return (
+      CLIENT_PAGES_BASE +
+      "/ayuda/?c=" +
+      encodeURIComponent(c) +
+      "&b=" +
+      encodeURIComponent(b) +
+      "&m=" +
+      encodeURIComponent(m) +
+      "&v=" +
+      encodeURIComponent(v || "base")
+    );
+  }
+
+  function photoFilename(versionId, key, ext) {
+    if (versionId && versionId !== "base") return versionId + "-" + key + "." + ext;
+    return key + "." + ext;
+  }
+
+  function utf8ToBase64(text) {
+    var bytes = new TextEncoder().encode(text);
+    var bin = "";
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+
+  function dataUrlToPayload(dataUrl) {
+    var parts = String(dataUrl || "").split(",");
+    if (parts.length < 2) throw new Error("imagen inválida");
+    var header = parts[0].toLowerCase();
+    if (header.indexOf("heic") >= 0 || header.indexOf("heif") >= 0) {
+      throw new Error("HEIC no soportado");
+    }
+    var ext = "jpg";
+    if (header.indexOf("image/png") >= 0) ext = "png";
+    else if (header.indexOf("image/webp") >= 0) ext = "webp";
+    else if (header.indexOf("image/gif") >= 0) ext = "gif";
+    else if (header.indexOf("image/jpeg") >= 0 || header.indexOf("image/jpg") >= 0) ext = "jpg";
+    else if (header.indexOf("image/") < 0) throw new Error("no es imagen");
+    var b64 = parts.slice(1).join(",");
+    var rawLen = Math.floor((b64.replace(/=+$/, "").length * 3) / 4);
+    if (rawLen < 32) throw new Error("imagen vacía");
+    return { ext: ext, content: b64 };
+  }
+
+  function ghHeaders() {
+    var token = getGitHubToken();
+    if (!token) throw new Error("Falta el token de GitHub. Pégalo al entrar al admin.");
+    return {
+      Accept: "application/vnd.github+json",
+      Authorization: "Bearer " + token,
+      "Content-Type": "application/json",
+      "X-GitHub-Api-Version": "2022-11-28"
+    };
+  }
+
+  function ghRequest(path, options) {
+    options = options || {};
+    var url = "https://api.github.com/repos/" + GH_REPO + "/contents/" + path.replace(/^\/+/, "");
+    if ((options.method || "GET").toUpperCase() === "GET") {
+      url += (url.indexOf("?") >= 0 ? "&" : "?") + "ref=" + encodeURIComponent(GH_BRANCH);
+    }
+    return fetchWithTimeout(
+      url,
+      {
+        method: options.method || "GET",
+        headers: ghHeaders(),
+        body: options.body ? JSON.stringify(options.body) : undefined,
+        cache: "no-store"
+      },
+      options.timeout || 45000
+    ).then(function (r) {
+      return r.text().then(function (raw) {
+        var body = null;
+        try {
+          body = raw ? JSON.parse(raw) : null;
+        } catch (e) {
+          body = null;
+        }
+        return { ok: r.ok, status: r.status, body: body, raw: raw };
+      });
+    });
+  }
+
+  function ghGetFile(path) {
+    return ghRequest(path, { method: "GET", timeout: 20000 }).then(function (res) {
+      if (res.status === 404) return { exists: false, sha: "", content: "" };
+      if (!res.ok) {
+        throw new Error(
+          (res.body && res.body.message) || "GitHub no pudo leer " + path + " (" + res.status + ")"
+        );
+      }
+      var content = "";
+      if (res.body && res.body.encoding === "base64" && res.body.content) {
+        try {
+          var bin = atob(String(res.body.content).replace(/\n/g, ""));
+          var bytes = new Uint8Array(bin.length);
+          for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          content = new TextDecoder().decode(bytes);
+        } catch (e) {
+          content = "";
+        }
+      }
+      return { exists: true, sha: res.body.sha || "", content: content, raw: res.body };
+    });
+  }
+
+  function ghPutFile(path, contentBase64, message, sha) {
+    var body = {
+      message: message,
+      content: contentBase64,
+      branch: GH_BRANCH
+    };
+    if (sha) body.sha = sha;
+    return ghRequest(path, { method: "PUT", body: body, timeout: 60000 }).then(function (res) {
+      if (!res.ok) {
+        throw new Error(
+          (res.body && res.body.message) || "No se pudo guardar " + path + " (" + res.status + ")"
+        );
+      }
+      return res.body;
+    });
+  }
+
+  function ghDeleteFile(path, message, sha) {
+    if (!sha) return Promise.resolve(false);
+    return ghRequest(path, {
+      method: "DELETE",
+      body: { message: message, sha: sha, branch: GH_BRANCH },
+      timeout: 30000
+    }).then(function (res) {
+      if (res.status === 404) return false;
+      if (!res.ok) {
+        throw new Error(
+          (res.body && res.body.message) || "No se pudo borrar " + path + " (" + res.status + ")"
+        );
+      }
+      return true;
+    });
+  }
+
+  function catalogPhotosLite(photos) {
+    var out = {};
+    PHOTO_KEYS_PUB.forEach(function (key) {
+      var val = (photos || {})[key] || "";
+      if (!val || PLACEHOLDERS_PUB[val] || String(val).indexOf("data:") === 0) return;
+      out[key] = val;
+    });
+    return out;
+  }
+
+  function upsertUnitIntoCatalog(catalog, unit) {
+    var c = unit.c;
+    var b = unit.b;
+    var m = unit.m;
+    var version = Object.assign({}, unit.version || {});
+    var vid = version.id || unit.v || "base";
+    version.id = vid;
+    version.photos = catalogPhotosLite(version.photos);
+    catalog.categories = catalog.categories || {};
+    var cat = catalog.categories[c] || { label: String(c).toUpperCase(), brands: {} };
+    catalog.categories[c] = cat;
+    cat.brands = cat.brands || {};
+    var brand = cat.brands[b] || { name: unit.brandName || String(b).toUpperCase(), models: {} };
+    cat.brands[b] = brand;
+    if (unit.brandName) brand.name = unit.brandName;
+    brand.models = brand.models || {};
+    var model = brand.models[m] || { name: unit.modelName || String(m).toUpperCase(), versions: [] };
+    brand.models[m] = model;
+    if (unit.modelName) model.name = unit.modelName;
+    model.versions = model.versions || [];
+    var found = false;
+    for (var i = 0; i < model.versions.length; i++) {
+      if (model.versions[i].id === vid) {
+        model.versions[i] = version;
+        found = true;
+        break;
+      }
+    }
+    if (!found) model.versions.push(version);
+    catalog.updatedAt = new Date().toISOString();
+    return catalog;
+  }
+
+  function deleteUnitFromCatalog(catalog, c, b, m, v) {
+    try {
+      var brand = catalog.categories[c].brands[b];
+      var model = brand.models[m];
+      model.versions = (model.versions || []).filter(function (x) {
+        return x.id !== v;
+      });
+      if (!model.versions.length) delete brand.models[m];
+      if (!Object.keys(brand.models || {}).length) delete catalog.categories[c].brands[b];
+    } catch (e) {}
+    catalog.updatedAt = new Date().toISOString();
+    return catalog;
+  }
+
+  function extractAndPutPhotos(unit) {
+    var c = unit.c;
+    var b = unit.b;
+    var m = unit.m;
+    var version = Object.assign({}, unit.version || {});
+    var vid = version.id || unit.v || "base";
+    version.id = vid;
+    var photosIn = Object.assign({}, version.photos || {});
+    var photosOut = {};
+    var chain = Promise.resolve();
+
+    PHOTO_KEYS_PUB.forEach(function (key) {
+      chain = chain.then(function () {
+        var val = photosIn[key] || "";
+        if (key === "ignition" && !val) val = photosIn.eeprom || "";
+
+        if (typeof val === "string" && val.indexOf("data:") === 0) {
+          var payload = dataUrlToPayload(val);
+          var fname = photoFilename(vid, key, payload.ext);
+          var rel = "data/help/" + c + "/" + b + "/" + m + "/" + fname;
+          return ghGetFile(rel).then(function (existing) {
+            return ghPutFile(
+              rel,
+              payload.content,
+              "Publish photo " + c + "/" + b + "/" + m + "/" + fname,
+              existing.exists ? existing.sha : ""
+            ).then(function () {
+              photosOut[key] = rel;
+            });
+          });
+        }
+
+        if (typeof val === "string" && val && !PLACEHOLDERS_PUB[val]) {
+          if (val.indexOf("http://") === 0 || val.indexOf("https://") === 0) {
+            photosOut[key] = val;
+            return;
+          }
+          var relPath = val.replace(/\\/g, "/").replace(/^\.\//, "");
+          if (relPath.indexOf("../") === 0) relPath = relPath.slice(3);
+          photosOut[key] = relPath;
+          return;
+        }
+
+        photosOut[key] = "";
+      });
+    });
+
+    return chain.then(function () {
+      var missing = PHOTO_KEYS_PUB.filter(function (k) {
+        return !photosOut[k];
+      });
+      if (missing.length) {
+        throw new Error(
+          "Faltan fotos: " + missing.join(", ") + ". Sube las 4 (principal, dashboard, conexiones, pin-out)."
+        );
+      }
+      version.photos = photosOut;
+      unit.version = version;
+      unit.v = vid;
+      return unit;
+    });
+  }
+
+  function publishViaGitHub(unit) {
+    if (!hasGitHubToken()) {
+      return Promise.reject(
+        new Error(
+          "Para guardar en GitHub Pages pega tu token de GitHub al entrar (solo tú lo ves en este teléfono)."
+        )
+      );
+    }
+    var working = JSON.parse(JSON.stringify(unit));
+    return extractAndPutPhotos(working).then(function (ready) {
+      var c = ready.c;
+      var b = ready.b;
+      var m = ready.m;
+      var v = ready.v || "base";
+      var helpPath = "data/help/" + c + "/" + b + "/" + m + "/" + v + ".json";
+      var helpJson = JSON.stringify(ready, null, 2);
+      return ghGetFile(helpPath)
+        .then(function (existing) {
+          return ghPutFile(
+            helpPath,
+            utf8ToBase64(helpJson),
+            "Publish help: " + c + "/" + b + "/" + m + "/" + v,
+            existing.exists ? existing.sha : ""
+          );
+        })
+        .then(function () {
+          return ghGetFile("data/catalog.json").then(function (catFile) {
+            var catalog;
+            try {
+              catalog = catFile.content ? JSON.parse(catFile.content) : emptyCatalog();
+            } catch (e) {
+              catalog = emptyCatalog();
+            }
+            upsertUnitIntoCatalog(catalog, ready);
+            var catJson = JSON.stringify(catalog, null, 2);
+            return ghPutFile(
+              "data/catalog.json",
+              utf8ToBase64(catJson),
+              "Update catalog: " + c + "/" + b + "/" + m + "/" + v,
+              catFile.exists ? catFile.sha : ""
+            ).then(function () {
+              return {
+                ok: true,
+                path: helpPath,
+                helpUrl: "ayuda/?c=" + c + "&b=" + b + "&m=" + m + "&v=" + v,
+                clientUrl: clientHelpUrl(c, b, m, v),
+                photos: (ready.version && ready.version.photos) || {},
+                unit: ready,
+                via: "github-pages"
+              };
+            });
+          });
+        });
+    });
+  }
+
+  function deleteViaGitHub(c, b, m, v) {
+    if (!hasGitHubToken()) {
+      return Promise.reject(
+        new Error("Para borrar en GitHub Pages pega tu token de GitHub al entrar al admin.")
+      );
+    }
+    v = v || "base";
+    var helpPath = "data/help/" + c + "/" + b + "/" + m + "/" + v + ".json";
+    var photoNames = [];
+    PHOTO_KEYS_PUB.forEach(function (key) {
+      ["jpg", "jpeg", "png", "webp", "gif"].forEach(function (ext) {
+        photoNames.push(photoFilename(v, key, ext));
+        photoNames.push(key + "." + ext);
+        photoNames.push(v + "-" + key + "." + ext);
+      });
+    });
+    // unique
+    photoNames = photoNames.filter(function (n, i, a) {
+      return a.indexOf(n) === i;
+    });
+
+    return ghGetFile(helpPath)
+      .then(function (helpFile) {
+        return ghDeleteFile(helpPath, "Delete help: " + c + "/" + b + "/" + m + "/" + v, helpFile.sha);
+      })
+      .then(function () {
+        var chain = Promise.resolve();
+        photoNames.forEach(function (name) {
+          var rel = "data/help/" + c + "/" + b + "/" + m + "/" + name;
+          chain = chain.then(function () {
+            return ghGetFile(rel).then(function (f) {
+              if (!f.exists) return false;
+              return ghDeleteFile(rel, "Delete photo " + rel, f.sha).catch(function () {
+                return false;
+              });
+            });
+          });
+        });
+        return chain;
+      })
+      .then(function () {
+        return ghGetFile("data/catalog.json").then(function (catFile) {
+          if (!catFile.exists) return { ok: true, clientUrl: clientHelpUrl(c, b, m, v), via: "github-pages" };
+          var catalog;
+          try {
+            catalog = JSON.parse(catFile.content);
+          } catch (e) {
+            catalog = emptyCatalog();
+          }
+          deleteUnitFromCatalog(catalog, c, b, m, v);
+          return ghPutFile(
+            "data/catalog.json",
+            utf8ToBase64(JSON.stringify(catalog, null, 2)),
+            "Update catalog after delete: " + c + "/" + b + "/" + m + "/" + v,
+            catFile.sha
+          ).then(function () {
+            return { ok: true, clientUrl: clientHelpUrl(c, b, m, v), via: "github-pages" };
+          });
+        });
+      });
+  }
+
+  function pingLiveApi() {
+    if (isStaticHost()) return Promise.resolve(false);
+    return fetchWithTimeout(apiBase() + "api/health", { cache: "no-store" }, 4000)
+      .then(function (r) {
+        if (!r.ok) return false;
+        return r
+          .json()
+          .then(function (body) {
+            return !!(body && body.ok);
+          })
+          .catch(function () {
+            return false;
+          });
+      })
+      .catch(function () {
+        return false;
+      });
+  }
+
+  /** ¿Se puede Guardar/Borrar? Servidor vivo O token de GitHub (Pages). */
+  function canPublish() {
+    if (hasGitHubToken()) return Promise.resolve({ ok: true, via: "github" });
+    return pingLiveApi().then(function (up) {
+      return { ok: !!up, via: up ? "server" : "none" };
+    });
+  }
+
+  function pingApi() {
+    return canPublish().then(function (st) {
+      return !!st.ok;
+    });
+  }
+
+  function publishToLiveServer(unit) {
     return fetchWithTimeout(
       apiBase() + "api/publish",
       {
@@ -770,16 +1215,20 @@
           throw new Error(
             (body && body.error) ||
               (r.status === 404
-                ? "API no disponible. Abre http://bore.pub:7110/ (servidor), no GitHub Pages."
+                ? "API no disponible. En GitHub Pages usa tu token de GitHub para guardar."
                 : "No se pudo publicar en el servidor (" + r.status + ")")
           );
         }
+        if (!body.clientUrl) {
+          body.clientUrl = clientHelpUrl(unit.c, unit.b, unit.m, (unit.version && unit.version.id) || unit.v || "base");
+        }
+        body.via = body.via || "server";
         return body;
       });
     });
   }
 
-  function deleteFromServer(c, b, m, v) {
+  function deleteFromLiveServer(c, b, m, v) {
     return fetchWithTimeout(
       apiBase() + "api/delete",
       {
@@ -793,28 +1242,31 @@
         if (!r.ok || !body.ok) {
           throw new Error((body && body.error) || "No se pudo borrar en el servidor");
         }
+        body.via = body.via || "server";
         return body;
       });
     });
   }
 
-  function pingApi() {
-    if (isStaticHost()) return Promise.resolve(false);
-    return fetchWithTimeout(apiBase() + "api/health", { cache: "no-store" }, 4000)
-      .then(function (r) {
-        if (!r.ok) return false;
-        return r
-          .json()
-          .then(function (body) {
-            return !!(body && body.ok);
-          })
-          .catch(function () {
-            return false;
-          });
-      })
-      .catch(function () {
-        return false;
-      });
+  /** Publica la ficha: GitHub Pages (token) o servidor temporal si está vivo. */
+  function publishToServer(unit) {
+    if (hasGitHubToken()) return publishViaGitHub(unit);
+    return pingLiveApi().then(function (up) {
+      if (up) return publishToLiveServer(unit);
+      throw new Error(
+        "Para guardar sin que se apague: entra al admin en GitHub Pages y pega tu token de GitHub (Contents: Read and write)."
+      );
+    });
+  }
+
+  function deleteFromServer(c, b, m, v) {
+    if (hasGitHubToken()) return deleteViaGitHub(c, b, m, v);
+    return pingLiveApi().then(function (up) {
+      if (up) return deleteFromLiveServer(c, b, m, v);
+      throw new Error(
+        "Para borrar sin servidor temporal: entra en GitHub Pages y pega tu token de GitHub."
+      );
+    });
   }
 
   function getVersion(catalog, category, brandId, modelId, versionId) {
@@ -1016,6 +1468,12 @@
     deleteFromServer: deleteFromServer,
     isStaticHost: isStaticHost,
     pingApi: pingApi,
+    canPublish: canPublish,
+    getGitHubToken: getGitHubToken,
+    setGitHubToken: setGitHubToken,
+    clearGitHubToken: clearGitHubToken,
+    hasGitHubToken: hasGitHubToken,
+    clientHelpUrl: clientHelpUrl,
     getVersion: getVersion,
     listBrands: listBrands,
     listModels: listModels,

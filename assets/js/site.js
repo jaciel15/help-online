@@ -83,18 +83,18 @@
       "hub.tag": "HELP ONLINE · Sistema completo",
       "hub.admin": "Administrador",
       "hub.seal": "Creado por Velocímetros Digitales CDMX",
-      "hub.lead": "Para Guardar o Borrar usa el link del servidor (no GitHub Pages). Al guardar, el link del cliente es permanente en GitHub Pages.",
+      "hub.lead": "Todo vive en GitHub Pages: guarda y edita aquí. El link del cliente no se apaga.",
       "hub.enterAdmin": "Entrar a administrador",
       "hub.example": "Ver ejemplo cliente MT-09",
       "hub.loginBadge": "SOLO ADMINISTRADOR / CREADOR",
       "hub.loginTitle": "ADMIN HELP ONLINE",
-      "hub.loginHint": "Desde aquí ves todo el sistema: subir autos/motos, 4 fotos, editar cualquier ficha y guardar en catálogo. El cliente solo recibe el link bloqueado (permanente en GitHub Pages).",
+      "hub.loginHint": "Sube autos/motos, 4 fotos, edita y guarda. Queda en GitHub Pages (no se apaga). El cliente solo recibe su link bloqueado.",
       "hub.password": "Contraseña",
       "hub.loginBtn": "Entrar al sistema",
       "hub.passHint": "Clave inicial:",
       "hub.panelBadge": "PANEL EN PÁGINA INICIAL",
       "hub.panelTitle": "Subida, catálogo y edición",
-      "hub.panelLead": "Al guardar → link permanente del cliente (GitHub Pages). Ese link no se apaga aunque el admin sí.",
+      "hub.panelLead": "Al guardar → se publica en GitHub Pages. Link permanente para el cliente.",
       "hub.newHelp": "+ Nueva ayuda",
       "hub.export": "Exportar JSON",
       "hub.logout": "Salir",
@@ -225,18 +225,18 @@
       "hub.tag": "HELP ONLINE · Full system",
       "hub.admin": "Administrator",
       "hub.seal": "Created by Velocímetros Digitales CDMX",
-      "hub.lead": "To Save or Delete use the server link (not GitHub Pages). On save, the client link is permanent on GitHub Pages.",
+      "hub.lead": "Everything lives on GitHub Pages: save and edit here. Client links never go offline.",
       "hub.enterAdmin": "Enter administrator",
       "hub.example": "View MT-09 client example",
       "hub.loginBadge": "ADMIN / CREATOR ONLY",
       "hub.loginTitle": "ADMIN HELP ONLINE",
-      "hub.loginHint": "From here you manage the whole system: upload cars/bikes, 4 photos, edit any sheet and save to catalog. The client only gets the locked link (permanent on GitHub Pages).",
+      "hub.loginHint": "Upload cars/bikes, 4 photos, edit and save. It stays on GitHub Pages (never offline). The client only gets the locked link.",
       "hub.password": "Password",
       "hub.loginBtn": "Sign in",
       "hub.passHint": "Initial password:",
       "hub.panelBadge": "HOME PAGE PANEL",
       "hub.panelTitle": "Upload, catalog and edit",
-      "hub.panelLead": "On save → permanent client link (GitHub Pages). That link stays up even if admin is offline.",
+      "hub.panelLead": "On save → published to GitHub Pages. Permanent client link.",
       "hub.newHelp": "+ New help",
       "hub.export": "Export JSON",
       "hub.logout": "Log out",
@@ -584,10 +584,7 @@
       if (location.hostname && location.hostname.indexOf("github.io") !== -1) {
         var banner = document.getElementById("staticHostBanner");
         if (banner) banner.hidden = false;
-        // Si alguien abre #administrador en Pages, manda al enlace fijo
-        if (location.hash && location.hash.indexOf("administrador") !== -1) {
-          location.replace("entrar.html#administrador");
-        }
+        // Admin se queda en Pages (ya no redirige a túneles).
       }
     } catch (e) {}
   });

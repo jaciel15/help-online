@@ -1,57 +1,51 @@
 # HELP ONLINE — VELOCÍMETROS CDMX
 
-Aplicación de **ayuda / soporte UPA** (autos y motos).
+Aplicación de **ayuda / soporte UPA** (autos y motos).  
+Todo corre en **GitHub Pages** (no se apaga).
+
+## Link fijo
+
+https://jaciel15.github.io/help-online/
 
 ## Cómo funciona la ayuda al cliente
 
-Cuando soporte da click en **Help** / **Copiar link** de una unidad, el cliente recibe un **link permanente en GitHub Pages** (no se apaga con el agente ni con los túneles):
+Cuando soporte pulsa **Copiar link**, el cliente recibe un link permanente:
 
 - Ejemplo MT-09: `https://jaciel15.github.io/help-online/ayuda/?c=motos&b=yamaha&m=mt09&v=base`
-- Ejemplo Ford Fusion: `https://jaciel15.github.io/help-online/ayuda/?c=autos&b=ford&m=fusion&v=base`
+- Ejemplo Ford Focus: `https://jaciel15.github.io/help-online/ayuda/?c=autos&b=ford&m=focus&v=base`
 
-También sirven rutas relativas en el mismo sitio, p. ej. `/ayuda/?c=motos&b=yamaha&m=mt09&v=base`.
-
-El cliente puede ver fotos (flechas) y datos EEPROM, pero **no puede regresar al catálogo** ni ver otras ayudas.
-
-También sirve el link de carpeta fija, p. ej. `/motos/yamaha/mt09/` (ya bloqueada).
+El cliente ve fotos y datos EEPROM, pero **no** puede volver al catálogo ni ver otras fichas.
 
 ## Accesos
 
 | Quién | URL | Puede |
 |---|---|---|
-| Cliente | `https://jaciel15.github.io/help-online/ayuda/?c=...&b=...&m=...&v=...` | Solo ver esa ficha (permanente) |
-| Tú (admin) | `/admin/` clave `adminupa2026` o `entrar.html` → servidor vivo | Subir / editar / copiar links |
-| Tú (interno) | `/` `/autos/` `/motos/` `/ficha/` | Navegar catálogo completo |
+| Cliente | `/ayuda/?c=...&b=...&m=...&v=...` en GitHub Pages | Solo esa ficha |
+| Tú (admin) | `/#administrador` + clave + token GitHub | Subir / editar / borrar |
 
-## Página inicial = sistema completo (creador)
+## Admin (nunca se apaga)
 
-Abre `/` (o `/#administrador`):
+1. Abre https://jaciel15.github.io/help-online/#administrador
+2. Clave: `adminupa2026`
+3. Pega un **Personal Access Token** de GitHub con `Contents: Read and write` en este repo (solo la primera vez por teléfono).
+4. Sube auto/moto + 4 fotos → **Guardar en catálogo**.
+5. Copia el link permanente y envíaselo al cliente.
 
-1. Entra con clave `adminupa2026`.
-2. Añade auto/moto + datos + **4 fotos**.
-3. Pulsa **Guardar en catálogo** → se crea la carpeta en el catálogo y **te lleva a la página del cliente** (bloqueada).
-4. Si no te gusta, vuelve a `/#administrador`, pulsa **Editar** y vuelve a guardar.
+Detalle del token: ver `DEPLOY.md`.
 
-El cliente solo ve su link permanente, p. ej. `https://jaciel15.github.io/help-online/ayuda/?c=motos&b=kawasaki&m=zr&v=base` — sin regresar ni editar.
+### Almacenamiento
+- Fotos comprimidas (JPEG ~1024px) al subir.
+- Al Guardar se escriben `data/help/...` y `data/catalog.json` en el repo vía GitHub API.
+- GitHub Pages publica esos archivos; el link del cliente queda fijo.
 
-### Almacenamiento (muchas ayudas)
-- Las fotos se **comprimen** (JPEG ~1280px) al subir.
-- Catálogo local en **IndexedDB**.
-- Al **Guardar**, se publica en `data/help/...` por API (`python3 server.py`) y se sincroniza a **GitHub Pages** para que el **link copiado sea permanente** en cualquier teléfono.
-- Carpetas por marca: Nissan / Yamaha / Toyota… con editar y borrar.
-
-### Servidor local / túnel
+### Prueba local (opcional)
 ```bash
 python3 server.py
-# luego abre / o el túnel Cloudflare
+# abre http://127.0.0.1:8765/#administrador
 ```
-
-`/admin/` redirige a la página inicial.
 
 ## Notas
 
-- Slider de fotos: solo con flechas (sin autoplay).
-- Logo solo como logotipo, no encima de fotos técnicas.
+- Slider de fotos: solo flechas (sin autoplay).
 - Solo el administrador puede editar o subir ayudas.
-- La vista `/ayuda/` carga **solo** el JSON de esa unidad (`data/help/...`), no el catálogo completo.
 - `/ficha/` es interna: sin sesión admin redirige a `/ayuda/`.

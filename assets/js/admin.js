@@ -231,16 +231,22 @@
   function refreshStorageStatus() {
     var el = $("storageStatus");
     if (!el) return;
+    if (C.hasGitHubToken && C.hasGitHubToken()) {
+      el.textContent =
+        "✓ Guardado en GitHub Pages (no se apaga). Tras Guardar espera ~1 min para el link del cliente.";
+      el.style.color = "";
+      return;
+    }
     if (C.isStaticHost && C.isStaticHost()) {
       el.textContent =
-        "⚠ Estás en GitHub Pages: NO se puede Guardar ni Borrar aquí. Usa el link del servidor.";
+        "⚠ Estás en GitHub Pages: pega tu token de GitHub al entrar para Guardar/Borrar (nunca se apaga).";
       el.style.color = "#f5a623";
       return;
     }
     C.pingApi().then(function (up) {
       if (!up) {
         el.textContent =
-          "⚠ Servidor apagado: Guardar/Borrar no quedarán públicos. Abre el link del servidor.";
+          "⚠ Sin token ni servidor: pega tu token de GitHub o no podrás guardar en público.";
         el.style.color = "#f5a623";
         return;
       }
@@ -261,7 +267,7 @@
           el.style.color = ok ? "" : "#f5a623";
         })
         .catch(function () {
-          el.textContent = "✓ Servidor activo";
+          el.textContent = "✓ Listo para guardar";
           el.style.color = "";
         });
     });
@@ -717,7 +723,7 @@
           .then(function (apiUp) {
             if (!apiUp) {
               throw new Error(
-                "No se puede borrar aquí. Abre el link del servidor (http://bore.pub:7110/#administrador), no GitHub Pages."
+                "No se puede borrar aún. Entra al admin en GitHub Pages y pega tu token de GitHub."
               );
             }
             C.deleteVersion(catalog, c, b, m, v);
@@ -742,7 +748,7 @@
             renderTree();
             if ($("formMsg")) {
               $("formMsg").hidden = false;
-              $("formMsg").textContent = "Eliminado en servidor: " + label;
+              $("formMsg").textContent = "Eliminado: " + label + " (GitHub Pages / servidor)";
             }
           })
           .catch(function (err) {
@@ -1077,18 +1083,18 @@
         if (msg) {
           msg.hidden = false;
           msg.textContent =
-            "Tiempo agotado. Usa el servidor http://bore.pub:7110/ — GitHub Pages no guarda.";
+            "Tiempo agotado al guardar. Revisa tu token de GitHub o la conexión e intenta de nuevo.";
         }
         try {
-          alert("No se pudo guardar a tiempo. Abre http://bore.pub:7110/#administrador");
+          alert("No se pudo guardar a tiempo. Revisa el token de GitHub y vuelve a intentar.");
         } catch (e) {}
-      }, 50000);
+      }, 90000);
 
       C.pingApi()
         .then(function (apiUp) {
           if (!apiUp) {
             throw new Error(
-              "NO se puede guardar en GitHub Pages. Abre este link del servidor y guarda ahí:\nhttp://bore.pub:7110/#administrador"
+              "NO se puede guardar todavía. Entra en GitHub Pages, pega tu token de GitHub (Contents: Read and write) y vuelve a Guardar."
             );
           }
 
@@ -1283,13 +1289,25 @@
 
     $("loginForm").addEventListener("submit", function (e) {
       e.preventDefault();
+      var tokenInput = $("loginGhToken");
+      if (tokenInput && tokenInput.value && String(tokenInput.value).trim()) {
+        C.setGitHubToken(String(tokenInput.value).trim());
+        tokenInput.value = "";
+      }
       C.verifyPassword($("loginPass").value).then(function (ok) {
         if (!ok) {
           alert("Contraseña incorrecta");
           return;
         }
+        if (!C.hasGitHubToken()) {
+          var cont = confirm(
+            "Aún no hay token de GitHub en este teléfono.\n\nSin token no podrás Guardar/Borrar en Pages.\n\n¿Entrar de todos modos? (puedes pegar el token después recargando)"
+          );
+          if (!cont) return;
+        }
         C.startAdminSession();
         showApp(true);
+        refreshStorageStatus();
         C.loadCatalog().then(function (cat) {
           catalog = cat;
           renderTree();
@@ -1299,6 +1317,14 @@
       });
     });
 
+    if ($("btnClearGhToken")) {
+      $("btnClearGhToken").addEventListener("click", function () {
+        if (!confirm("¿Quitar el token de GitHub de este teléfono?")) return;
+        C.clearGitHubToken();
+        refreshStorageStatus();
+        alert("Token quitado. Para volver a guardar, pégalo al entrar.");
+      });
+    }
     if ($("btnLogout")) {
       $("btnLogout").addEventListener("click", function () {
         C.endAdminSession();

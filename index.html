@@ -43,7 +43,7 @@
         <button type="button" class="theme-btn" data-lang-set="es" aria-pressed="true">ES</button>
         <button type="button" class="theme-btn" data-lang-set="en" aria-pressed="false">EN</button>
       </div>
-      <a class="btn btn-primary btn-admin-jump" href="entrar.html#administrador" data-i18n="hub.admin">Administrador</a>
+      <a class="btn btn-primary btn-admin-jump" href="#administrador" data-i18n="hub.admin">Administrador</a>
     </div>
   </header>
 
@@ -57,14 +57,14 @@
         <span data-i18n="hub.seal">Creado por Velocímetros Digitales CDMX</span>
       </div>
       <h1 class="brand-mega">VELOCÍMETROS<br>CDMX</h1>
-      <p class="lead" data-i18n="hub.lead">Para Guardar o Borrar usa el link del servidor (no GitHub Pages). Al guardar aparece el link del cliente.</p>
+      <p class="lead" data-i18n="hub.lead">Todo vive en GitHub Pages: guarda y edita aquí. El link del cliente no se apaga.</p>
       <div class="cta-row">
-        <a class="btn btn-primary" href="entrar.html#administrador" data-i18n="hub.enterAdmin">Entrar a administrador</a>
+        <a class="btn btn-primary" href="#administrador" data-i18n="hub.enterAdmin">Entrar a administrador</a>
         <a class="btn btn-ghost" href="ayuda/?c=motos&amp;b=yamaha&amp;m=mt09&amp;v=base" data-i18n="hub.example">Ver ejemplo cliente MT-09</a>
       </div>
       <p id="staticHostBanner" class="help-lock-banner" hidden style="margin-top:16px">
-        ⚠ Para subir o editar ayudas usa siempre este enlace fijo:
-        <a href="entrar.html#administrador" style="color:inherit;font-weight:700">Entrar al administrador</a>
+        ✓ Estás en GitHub Pages (permanente). Entra al administrador, pega tu token de GitHub una vez y ya puedes Guardar/Editar sin servidor que se apague.
+        <a href="#administrador" style="color:inherit;font-weight:700">Ir al administrador</a>
       </p>
     </div>
   </section>
@@ -79,8 +79,13 @@
           <label><span data-i18n="hub.password">Contraseña</span>
             <input type="password" id="loginPass" autocomplete="current-password" required>
           </label>
+          <label><span>Token GitHub (para Guardar en Pages)</span>
+            <input type="password" id="loginGhToken" autocomplete="off" placeholder="ghp_… o github_pat_… (solo este teléfono)">
+          </label>
+          <p class="hint">Crea un token en GitHub → Settings → Developer settings → Personal access tokens, con permiso <code>Contents: Read and write</code> solo en este repo. Se guarda en tu teléfono, no en el código.</p>
           <button type="submit" class="btn btn-primary" data-i18n="hub.loginBtn">Entrar al sistema</button>
           <p class="hint"><span data-i18n="hub.passHint">Clave inicial:</span> <code>adminupa2026</code></p>
+          <button type="button" id="btnClearGhToken" class="btn btn-ghost" style="margin-top:8px">Quitar token de este teléfono</button>
         </form>
       </div>
 

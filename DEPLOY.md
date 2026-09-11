@@ -1,52 +1,25 @@
-# Servidor permanente (para que no salga “apagado”)
+# HELP ONLINE en GitHub Pages (no se apaga)
 
-**Links del cliente:** ya son permanentes en GitHub Pages  
-`https://jaciel15.github.io/help-online/ayuda/?c=...`  
-aunque el admin / túneles estén apagados.
+Todo el sistema (cliente + admin) corre en **GitHub Pages**.  
+No hace falta Render, Fly ni túneles para editar.
 
-El **panel administrador** (subir/editar) sí necesita un servidor vivo.  
-Los túneles gratis (`.lhr.life`, Cloudflare, loca.lt) **se caen**.  
-Para un admin que no cambie: despliega este repo en **Render** o **Fly**.
+## Link fijo
 
-## Opción A — Render (más fácil, gratis)
+- Sitio / admin: https://jaciel15.github.io/help-online/  
+- Admin directo: https://jaciel15.github.io/help-online/#administrador  
+- Ejemplo cliente: https://jaciel15.github.io/help-online/ayuda/?c=motos&b=yamaha&m=mt09&v=base  
 
-1. Crea cuenta en [render.com](https://render.com) e inicia sesión.
-2. **New → Blueprint** → conecta el repo `jaciel15/help-online`.
-3. Usa el `render.yaml` del repo (disco de 1 GB en `/app/data`).
-4. Cuando termine, copia la URL (ej. `https://help-online.onrender.com`).
-5. Actualiza `live.json`:
+## Cómo editar (una sola vez por teléfono)
 
-```json
-{
-  "url": "https://TU-APP.onrender.com",
-  "backup": "https://TU-APP.onrender.com",
-  "urls": ["https://TU-APP.onrender.com"],
-  "updatedAt": "2026-09-11T00:00:00Z",
-  "canonical": "https://jaciel15.github.io/help-online/entrar.html"
-}
-```
+1. En GitHub: **Settings → Developer settings → Personal access tokens**.
+2. Crea un token (fine-grained) solo para el repo `jaciel15/help-online`.
+3. Permiso: **Contents → Read and write**.
+4. Abre el admin, pon la clave `adminupa2026` y **pega el token**.
+5. El token se guarda en **tu teléfono** (localStorage), no en el código del repo.
+6. Ya puedes **Guardar / Editar / Borrar**. Tras guardar, espera ~1 minuto a que Pages actualice el link del cliente.
 
-6. Haz commit + push a `main`. GitHub Pages actualizará `entrar.html`.
-7. En el celular abre siempre:  
-   **https://jaciel15.github.io/help-online/entrar.html**
+## Notas
 
-## Opción B — Fly.io
-
-```bash
-fly auth login
-fly apps create help-online
-fly volumes create help_data --size 1 --region mia
-fly deploy
-```
-
-Luego pon `https://help-online.fly.dev` en `live.json` (igual que arriba) y push a `main`.
-
-## Mientras tanto (temporal)
-
-Si el agente/cloud está encendido, `entrar.html` usa los túneles de `live.json`.  
-Si ves “servidor apagado”, avisa para reactivar túneles **o** completa Render/Fly.
-
-## Respaldo
-
-Con el servidor vivo: `GET /api/backup` descarga un ZIP de `data/`.  
-También puedes usar **Exportar JSON** en el admin.
+- Si cambias de teléfono, vuelve a pegar el token.
+- `server.py` queda solo para pruebas locales opcionales.
+- Los túneles / `live.json` ya no son necesarios para el uso diario.
