@@ -19,6 +19,133 @@ SAFE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 PHOTO_KEYS = ("main", "dashboard", "connection", "ignition")
 PLACEHOLDERS = {"[published]", "[indexed]", ""}
 MIN_FREE_BYTES = 150 * 1024 * 1024  # 150 MB libres mínimos para publicar
+CLIENT_PAGES_BASE = os.environ.get(
+    "CLIENT_PAGES_BASE", "https://jaciel15.github.io/help-online"
+).rstrip("/")
+AUTO_GIT_SYNC = os.environ.get("HELP_AUTO_GIT_SYNC", "1").lower() in ("1", "true", "yes", "on")
+
+
+def client_help_url(c: str, b: str, m: str, v: str) -> str:
+    return f"{CLIENT_PAGES_BASE}/ayuda/?c={c}&b={b}&m={m}&v={v}"
+
+
+def sync_data_to_github(message: str) -> None:
+    """Best-effort: publica solo data/ en main para que GitHub Pages sirva el link del cliente."""
+    if not AUTO_GIT_SYNC:
+        return
+    if not (ROOT / ".git").exists():
+        return
+
+    def worker() -> None:
+        import subprocess
+        import tempfile
+
+        wt = None
+        try:
+            env = os.environ.copy()
+            fetch = subprocess.run(
+                ["git", "fetch", "origin", "main"],
+                cwd=str(ROOT),
+                check=False,
+                capture_output=True,
+                text=True,
+                env=env,
+                timeout=90,
+            )
+            if fetch.returncode != 0:
+                print(f"[git-sync] fetch falló: {(fetch.stderr or '')[:300]}", flush=True)
+                return
+
+            wt = tempfile.mkdtemp(prefix="help-pages-sync-")
+            add = subprocess.run(
+                ["git", "worktree", "add", "--detach", wt, "origin/main"],
+                cwd=str(ROOT),
+                check=False,
+                capture_output=True,
+                text=True,
+                env=env,
+                timeout=60,
+            )
+            if add.returncode != 0:
+                print(f"[git-sync] worktree falló: {(add.stderr or '')[:300]}", flush=True)
+                return
+
+            dest = Path(wt) / "data"
+            if dest.exists():
+                shutil.rmtree(dest)
+            shutil.copytree(ROOT / "data", dest)
+
+            subprocess.run(
+                ["git", "add", "--", "data/"],
+                cwd=wt,
+                check=False,
+                capture_output=True,
+                text=True,
+                env=env,
+                timeout=60,
+            )
+            status = subprocess.run(
+                ["git", "status", "--porcelain", "--", "data/"],
+                cwd=wt,
+                check=False,
+                capture_output=True,
+                text=True,
+                env=env,
+                timeout=30,
+            )
+            if not (status.stdout or "").strip():
+                print("[git-sync] data/ ya está al día en main", flush=True)
+                return
+
+            commit = subprocess.run(
+                ["git", "commit", "-m", message],
+                cwd=wt,
+                check=False,
+                capture_output=True,
+                text=True,
+                env=env,
+                timeout=60,
+            )
+            if commit.returncode != 0:
+                print(f"[git-sync] commit falló: {(commit.stderr or commit.stdout or '')[:300]}", flush=True)
+                return
+
+            push = subprocess.run(
+                ["git", "push", "origin", "HEAD:main"],
+                cwd=wt,
+                check=False,
+                capture_output=True,
+                text=True,
+                env=env,
+                timeout=120,
+            )
+            if push.returncode == 0:
+                print("[git-sync] data/ publicado en main (GitHub Pages)", flush=True)
+            else:
+                err = (push.stderr or push.stdout or "").strip()
+                print(f"[git-sync] push falló: {err[:400]}", flush=True)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[git-sync] error: {exc}", flush=True)
+        finally:
+            if wt:
+                try:
+                    subprocess.run(
+                        ["git", "worktree", "remove", "--force", wt],
+                        cwd=str(ROOT),
+                        check=False,
+                        capture_output=True,
+                        text=True,
+                        timeout=60,
+                    )
+                except Exception:
+                    try:
+                        shutil.rmtree(wt, ignore_errors=True)
+                    except Exception:
+                        pass
+
+    import threading
+
+    threading.Thread(target=worker, name="help-git-sync", daemon=True).start()
 
 
 def disk_status() -> dict:
@@ -379,12 +506,15 @@ class Handler(SimpleHTTPRequestHandler):
                 save_catalog(catalog)
 
                 rel = f"data/help/{c}/{b}/{m}/{v}.json"
+                client_url = client_help_url(c, b, m, v)
+                sync_data_to_github(f"Publish help: {c}/{b}/{m}/{v}")
                 return self._json(
                     200,
                     {
                         "ok": True,
                         "path": rel,
                         "helpUrl": f"ayuda/?c={c}&b={b}&m={m}&v={v}",
+                        "clientUrl": client_url,
                         "photos": unit["version"].get("photos") or {},
                         "unit": unit,
                         "disk": disk_status(),
@@ -403,7 +533,8 @@ class Handler(SimpleHTTPRequestHandler):
                 catalog = load_catalog()
                 delete_unit(catalog, c, b, m, v)
                 save_catalog(catalog)
-                return self._json(200, {"ok": True})
+                sync_data_to_github(f"Delete help: {c}/{b}/{m}/{v}")
+                return self._json(200, {"ok": True, "clientUrl": client_help_url(c, b, m, v)})
 
             return self._json(404, {"ok": False, "error": "not found"})
         except OSError as exc:  # noqa: BLE001

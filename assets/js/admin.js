@@ -7,6 +7,10 @@
     ayudaBase: "../ayuda/",
     assetPrefix: "../"
   };
+  /** Link fijo del cliente (GitHub Pages). No depende de túneles ni del agente. */
+  var CLIENT_PAGES_BASE = (
+    (CFG.clientPagesBase || window.VCDMX_CLIENT_PAGES_BASE || "https://jaciel15.github.io/help-online") + ""
+  ).replace(/\/$/, "");
   var FOLDERS_KEY = "vcdmx-folders-v1";
   var catalog = null;
   var pending = { main: "", dashboard: "", connection: "", ignition: "" };
@@ -151,6 +155,21 @@
     return (
       (CFG.ayudaBase || "ayuda/") +
       "?c=" +
+      encodeURIComponent(cat) +
+      "&b=" +
+      encodeURIComponent(brandId) +
+      "&m=" +
+      encodeURIComponent(modelId) +
+      "&v=" +
+      encodeURIComponent(versionId || "base")
+    );
+  }
+
+  /** URL absoluta permanente para el cliente (siempre GitHub Pages). */
+  function clientHelpAbsoluteUrl(cat, brandId, modelId, versionId) {
+    return (
+      CLIENT_PAGES_BASE +
+      "/ayuda/?c=" +
       encodeURIComponent(cat) +
       "&b=" +
       encodeURIComponent(brandId) +
@@ -610,7 +629,7 @@
             } catch (e) {}
           }
 
-          var checkUrl =
+          var checkLocal =
             (CFG.root || "") +
             "data/help/" +
             encodeURIComponent(c) +
@@ -621,23 +640,51 @@
             "/" +
             encodeURIComponent(v || "base") +
             ".json";
+          var checkPages =
+            CLIENT_PAGES_BASE +
+            "/data/help/" +
+            encodeURIComponent(c) +
+            "/" +
+            encodeURIComponent(b) +
+            "/" +
+            encodeURIComponent(m) +
+            "/" +
+            encodeURIComponent(v || "base") +
+            ".json";
 
-          fetch(checkUrl, { cache: "no-store" })
-            .then(function (r) {
-              if (!r.ok) throw new Error("missing");
-              return true;
-            })
-            .catch(function () {
-              return false;
-            })
-            .then(function (publicOk) {
-              if (publicOk) return;
+          function probeJson(u) {
+            return fetch(u, { cache: "no-store" })
+              .then(function (r) {
+                return !!r.ok;
+              })
+              .catch(function () {
+                return false;
+              });
+          }
+
+          Promise.all([probeJson(checkLocal), probeJson(checkPages)]).then(function (flags) {
+            var localOk = flags[0];
+            var pagesOk = flags[1];
+            if (pagesOk) {
               showLinkSharePanel(
                 url,
-                "⚠ Esta ayuda aún no está publicada en el servidor. Vuelve a Guardar en catálogo y luego copia de nuevo."
+                "Link permanente listo (GitHub Pages). El cliente puede abrirlo aunque el admin esté apagado."
               );
-              done(false, "Sin publicar");
-            });
+              return;
+            }
+            if (localOk) {
+              showLinkSharePanel(
+                url,
+                "Link permanente copiado. Si Pages aún no lo muestra, espera ~1 min tras Guardar (o avisa para sincronizar)."
+              );
+              return;
+            }
+            showLinkSharePanel(
+              url,
+              "⚠ Esta ayuda aún no está publicada. Vuelve a Guardar en catálogo y luego copia de nuevo."
+            );
+            done(false, "Sin publicar");
+          });
         });
       });
     });
@@ -770,7 +817,7 @@
       (m.versions || []).forEach(function (v) {
         shown += 1;
         var href = helpHref(cat, brandId, mid, v.id);
-        var absHelp = new URL(href, location.href).href;
+        var absHelp = clientHelpAbsoluteUrl(cat, brandId, mid, v.id);
         var label = brandName + " " + m.name + " · " + (v.name || v.id);
         html +=
           '<article class="inv-item">' +
@@ -1155,27 +1202,34 @@
           renderTree();
           syncFoldersFromCatalog();
 
-          var href = helpHref(category, brandId, modelId, versionId);
-          var abs = new URL(href, location.href).href;
+          var abs = clientHelpAbsoluteUrl(category, brandId, modelId, versionId);
+          var pub = result.pub || {};
+          if (pub.clientUrl) abs = String(pub.clientUrl);
 
           if (msg) {
             msg.hidden = false;
             msg.innerHTML =
-              "✓ Guardado público · <strong>" +
+              "✓ Guardado · <strong>" +
               brandName.toUpperCase() +
               " " +
               modelName.toUpperCase() +
               "</strong> · carpeta <code>" +
               folder +
-              "</code><br>Link listo abajo: cópialo y envíaselo al cliente.<br><code style='word-break:break-all'>" +
+              "</code><br>Link <strong>permanente</strong> para el cliente (GitHub Pages, no se apaga):<br><code style='word-break:break-all'>" +
               abs +
               "</code>";
           }
 
-          showLinkSharePanel(abs, "✓ Guardado. Copia este link o ábrelo para ver la ayuda del cliente.");
+          showLinkSharePanel(
+            abs,
+            "✓ Guardado. Este link es permanente (GitHub Pages): el cliente puede abrirlo aunque el admin esté apagado."
+          );
           copyTextNow(abs).then(function (ok) {
             if (ok) {
-              showLinkSharePanel(abs, "✓ Guardado y link copiado. Pégalo en WhatsApp o ábrelo abajo.");
+              showLinkSharePanel(
+                abs,
+                "✓ Guardado y link permanente copiado. Pégalo en WhatsApp; no depende del servidor temporal."
+              );
             }
           });
         })

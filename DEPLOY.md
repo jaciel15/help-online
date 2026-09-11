@@ -1,7 +1,12 @@
 # Servidor permanente (para que no salga “apagado”)
 
+**Links del cliente:** ya son permanentes en GitHub Pages  
+`https://jaciel15.github.io/help-online/ayuda/?c=...`  
+aunque el admin / túneles estén apagados.
+
+El **panel administrador** (subir/editar) sí necesita un servidor vivo.  
 Los túneles gratis (`.lhr.life`, Cloudflare, loca.lt) **se caen**.  
-Para un link que no cambie: despliega este repo en **Render** o **Fly**.
+Para un admin que no cambie: despliega este repo en **Render** o **Fly**.
 
 ## Opción A — Render (más fácil, gratis)
 

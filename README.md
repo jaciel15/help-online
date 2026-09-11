@@ -4,10 +4,12 @@ Aplicación de **ayuda / soporte UPA** (autos y motos).
 
 ## Cómo funciona la ayuda al cliente
 
-Cuando soporte da click en **Help** de una unidad, se abre **solo esa ficha**:
+Cuando soporte da click en **Help** / **Copiar link** de una unidad, el cliente recibe un **link permanente en GitHub Pages** (no se apaga con el agente ni con los túneles):
 
-- Ejemplo MT-09: `/ayuda/?c=motos&b=yamaha&m=mt09&v=base`
-- Ejemplo Ford Fusion: `/ayuda/?c=autos&b=ford&m=fusion&v=base`
+- Ejemplo MT-09: `https://jaciel15.github.io/help-online/ayuda/?c=motos&b=yamaha&m=mt09&v=base`
+- Ejemplo Ford Fusion: `https://jaciel15.github.io/help-online/ayuda/?c=autos&b=ford&m=fusion&v=base`
+
+También sirven rutas relativas en el mismo sitio, p. ej. `/ayuda/?c=motos&b=yamaha&m=mt09&v=base`.
 
 El cliente puede ver fotos (flechas) y datos EEPROM, pero **no puede regresar al catálogo** ni ver otras ayudas.
 
@@ -17,8 +19,8 @@ También sirve el link de carpeta fija, p. ej. `/motos/yamaha/mt09/` (ya bloquea
 
 | Quién | URL | Puede |
 |---|---|---|
-| Cliente | `/ayuda/?c=...&b=...&m=...&v=...` | Solo ver esa ficha |
-| Tú (admin) | `/admin/` clave `adminupa2026` | Subir / editar / copiar links |
+| Cliente | `https://jaciel15.github.io/help-online/ayuda/?c=...&b=...&m=...&v=...` | Solo ver esa ficha (permanente) |
+| Tú (admin) | `/admin/` clave `adminupa2026` o `entrar.html` → servidor vivo | Subir / editar / copiar links |
 | Tú (interno) | `/` `/autos/` `/motos/` `/ficha/` | Navegar catálogo completo |
 
 ## Página inicial = sistema completo (creador)
@@ -30,12 +32,12 @@ Abre `/` (o `/#administrador`):
 3. Pulsa **Guardar en catálogo** → se crea la carpeta en el catálogo y **te lleva a la página del cliente** (bloqueada).
 4. Si no te gusta, vuelve a `/#administrador`, pulsa **Editar** y vuelve a guardar.
 
-El cliente solo ve su link, p. ej. `/ayuda/?c=motos&b=kawasaki&m=zr&v=base` — sin regresar ni editar.
+El cliente solo ve su link permanente, p. ej. `https://jaciel15.github.io/help-online/ayuda/?c=motos&b=kawasaki&m=zr&v=base` — sin regresar ni editar.
 
 ### Almacenamiento (muchas ayudas)
 - Las fotos se **comprimen** (JPEG ~1280px) al subir.
 - Catálogo local en **IndexedDB**.
-- Al **Guardar**, se publica en `data/help/...` por API (`python3 server.py`) para que el **link copiado funcione en cualquier teléfono**.
+- Al **Guardar**, se publica en `data/help/...` por API (`python3 server.py`) y se sincroniza a **GitHub Pages** para que el **link copiado sea permanente** en cualquier teléfono.
 - Carpetas por marca: Nissan / Yamaha / Toyota… con editar y borrar.
 
 ### Servidor local / túnel
