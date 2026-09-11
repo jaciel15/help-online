@@ -212,6 +212,10 @@ def upsert_unit(catalog: dict, unit: dict) -> None:
     vid = version.get("id") or unit.get("v") or "base"
     version["id"] = vid
     version["photos"] = catalog_photos(version.get("photos"))
+    key = f"{c}/{b}/{m}/{vid}"
+    deleted = catalog.setdefault("deleted", [])
+    if key in deleted:
+        catalog["deleted"] = [k for k in deleted if k != key]
     cats = catalog.setdefault("categories", {})
     cat = cats.setdefault(c, {"label": c.upper(), "brands": {}})
     brands = cat.setdefault("brands", {})
@@ -232,6 +236,10 @@ def upsert_unit(catalog: dict, unit: dict) -> None:
 
 
 def delete_unit(catalog: dict, c: str, b: str, m: str, v: str) -> None:
+    key = f"{c}/{b}/{m}/{v}"
+    deleted = catalog.setdefault("deleted", [])
+    if key not in deleted:
+        deleted.append(key)
     try:
         brand = catalog["categories"][c]["brands"][b]
         model = brand["models"][m]

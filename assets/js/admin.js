@@ -670,20 +670,19 @@
           .then(function (apiUp) {
             if (!apiUp) {
               throw new Error(
-                "No se puede borrar aquí. Abre el link del servidor (http://bore.pub:7110/#administrador), no GitHub Pages."
+                "No se puede borrar aquí. Usa el enlace fijo: entrar.html (servidor), no GitHub Pages solo."
               );
             }
             C.deleteVersion(catalog, c, b, m, v);
-            return C.deleteFromServer(c, b, m, v);
+            return C.saveCatalog(catalog).then(function () {
+              return C.deleteFromServer(c, b, m, v);
+            });
           })
           .then(function () {
             return C.deleteHelpUnit(c, b, m, v).catch(function () {});
           })
           .then(function () {
-            return C.saveCatalog(catalog);
-          })
-          .then(function () {
-            // Recarga catálogo del servidor para que no “regrese” al refrescar
+            // Recarga SIEMPRE desde el servidor (fuente de verdad)
             return C.loadCatalog().then(function (cat) {
               catalog = cat;
             });
@@ -695,7 +694,7 @@
             renderTree();
             if ($("formMsg")) {
               $("formMsg").hidden = false;
-              $("formMsg").textContent = "Eliminado en servidor: " + label;
+              $("formMsg").textContent = "Eliminado: " + label + " (ya no debe volver al recargar)";
             }
           })
           .catch(function (err) {
