@@ -584,6 +584,10 @@
       if (location.hostname && location.hostname.indexOf("github.io") !== -1) {
         var banner = document.getElementById("staticHostBanner");
         if (banner) banner.hidden = false;
+        // Si alguien abre #administrador en Pages, manda al enlace fijo
+        if (location.hash && location.hash.indexOf("administrador") !== -1) {
+          location.replace("entrar.html#administrador");
+        }
       }
     } catch (e) {}
   });
