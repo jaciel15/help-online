@@ -839,7 +839,7 @@
           throw new Error(
             (body && body.error) ||
               (r.status === 404
-                ? "API no disponible. Abre http://bore.pub:7110/ (servidor), no GitHub Pages."
+                ? "API no disponible. Abre entrar.html (servidor), no GitHub Pages."
                 : "No se pudo publicar en el servidor (" + r.status + ")")
           );
         }

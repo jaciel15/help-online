@@ -1,13 +1,20 @@
-# Deploy permanente en Fly.io (URL fija tipo https://help-online.fly.dev)
-# Comandos:
-#   fly launch --no-deploy
-#   fly volumes create help_data --size 1
+# Deploy permanente en Fly.io → https://help-online.fly.dev
+# Una sola vez (con cuenta Fly):
+#   fly auth login
+#   fly apps create help-online
+#   fly volumes create help_data --size 1 --region mia
 #   fly deploy
+# Luego pon esa URL en live.json y haz push a main.
 
 app = "help-online"
 primary_region = "mia"
 
 [build]
+
+[env]
+  PORT = "8765"
+  DATA_DIR = "/app/data"
+  DATA_SEED = "/app/data-seed"
 
 [http_service]
   internal_port = 8765
@@ -25,3 +32,10 @@ primary_region = "mia"
 [mounts]
   source = "help_data"
   destination = "/app/data"
+
+[[http_service.checks]]
+  interval = "15s"
+  timeout = "5s"
+  grace_period = "20s"
+  method = "GET"
+  path = "/api/health"

@@ -30,6 +30,7 @@
     p { color: #9ec4d4; line-height: 1.45; margin: 0 0 14px; font-size: .95rem; }
     .status { font-size: .9rem; min-height: 1.4em; margin-bottom: 16px; color: #7fdfff; }
     .status.err { color: #ffb4a8; }
+    .meta { font-size: .75rem; color: #6a8a98; margin-top: 12px; min-height: 1em; }
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
       width: 100%; min-height: 48px; border-radius: 12px; border: 0;
@@ -55,6 +56,7 @@
       Si falla, pide el link actual del servidor.<br>
       <code id="lastUrl"></code>
     </p>
+    <div id="meta" class="meta"></div>
   </main>
   <script>
     (function () {
@@ -63,7 +65,10 @@
       var retryBtn = document.getElementById("retryBtn");
       var hint = document.getElementById("hint");
       var lastUrl = document.getElementById("lastUrl");
+      var meta = document.getElementById("meta");
       var hash = location.hash || "#administrador";
+      var autoTimer = null;
+      var running = false;
       if (hash.indexOf("administrador") === -1 && hash.indexOf("admin") === -1) {
         hash = "#administrador";
       }
@@ -73,6 +78,15 @@
         status.textContent = msg;
         retryBtn.hidden = false;
         hint.hidden = false;
+        scheduleAutoRetry();
+      }
+
+      function scheduleAutoRetry() {
+        if (autoTimer) clearTimeout(autoTimer);
+        autoTimer = setTimeout(function () {
+          meta.textContent = "Reintentando automáticamente…";
+          run();
+        }, 20000);
       }
 
       function probe(base) {
@@ -85,6 +99,7 @@
       }
 
       function go(base) {
+        if (autoTimer) clearTimeout(autoTimer);
         var url = String(base).replace(/\/$/, "") + "/" + hash;
         status.className = "status";
         status.textContent = "Servidor encontrado. Abriendo…";
@@ -95,6 +110,8 @@
       }
 
       function run() {
+        if (running) return;
+        running = true;
         status.className = "status";
         status.textContent = "Buscando servidor activo…";
         retryBtn.hidden = true;
@@ -105,11 +122,13 @@
             return r.json();
           })
           .then(function (cfg) {
+            if (cfg && cfg.updatedAt) {
+              meta.textContent = "Última actualización del enlace: " + cfg.updatedAt;
+            }
             var urls = [];
             if (cfg && cfg.url) urls.push(cfg.url);
             if (cfg && cfg.backup) urls.push(cfg.backup);
             if (cfg && Array.isArray(cfg.urls)) urls = urls.concat(cfg.urls);
-            // unique
             urls = urls.filter(function (u, i, a) { return u && a.indexOf(u) === i; });
             if (!urls.length) throw new Error("sin urls");
             lastUrl.textContent = urls[0];
@@ -117,24 +136,31 @@
             var i = 0;
             function next() {
               if (i >= urls.length) {
-                setErr("El servidor no está encendido ahora. Avisa para que lo activen y pulsa Reintentar.");
+                running = false;
+                setErr("El servidor no está encendido ahora. Avisa para que lo activen y pulsa Reintentar (o espera 20 s).");
                 return;
               }
               var u = urls[i++];
               status.textContent = "Probando " + u.replace(/^https?:\/\//, "") + "…";
               probe(u).then(function (ok) {
-                if (ok) go(u);
-                else next();
+                if (ok) {
+                  running = false;
+                  go(u);
+                } else next();
               });
             }
             next();
           })
           .catch(function () {
+            running = false;
             setErr("No se encontró el enlace del servidor. Avisa a soporte.");
           });
       }
 
-      retryBtn.addEventListener("click", run);
+      retryBtn.addEventListener("click", function () {
+        if (autoTimer) clearTimeout(autoTimer);
+        run();
+      });
       run();
     })();
   </script>

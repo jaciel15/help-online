@@ -94,6 +94,11 @@
           <div class="admin-top-actions">
             <button type="button" id="btnNew" class="btn btn-primary" data-i18n="hub.newHelp">+ Nueva ayuda</button>
             <button type="button" id="btnExport" class="btn btn-ghost" data-i18n="hub.export">Exportar JSON</button>
+            <button type="button" id="btnBackup" class="btn btn-ghost">Descargar respaldo ZIP</button>
+            <label class="btn btn-ghost" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+              Importar JSON
+              <input type="file" id="importJson" accept="application/json,.json" hidden />
+            </label>
             <button type="button" id="btnLogout" class="btn btn-ghost" data-i18n="hub.logout">Salir</button>
           </div>
         </header>

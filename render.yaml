@@ -1,7 +1,5 @@
-# Deploy permanente en Render.com
-# 1) Crea cuenta en https://render.com
-# 2) New → Blueprint → conecta este repo
-# 3) (Opcional) añade dominio propio: ayuda.tudominio.com
+# Deploy permanente en Render.com (URL fija, no se cae como los túneles)
+# Pasos: https://dashboard.render.com → New → Blueprint → este repo
 services:
   - type: web
     name: help-online
@@ -11,6 +9,10 @@ services:
     envVars:
       - key: PORT
         value: "8765"
+      - key: DATA_DIR
+        value: "/app/data"
+      - key: DATA_SEED
+        value: "/app/data-seed"
     disk:
       name: help-data
       mountPath: /app/data

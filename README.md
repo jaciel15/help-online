@@ -45,6 +45,9 @@ python3 server.py
 ```
 
 ### URL fija (permanente) — recomendado
+
+Guía paso a paso: ver **[DEPLOY.md](DEPLOY.md)** (Render o Fly + `live.json`).
+
 Los túneles gratis no sirven para producción. Para un link que **no cambie**:
 
 1. **Render** (fácil): conecta el repo → usa `render.yaml` → te dan algo como `https://help-online.onrender.com`

@@ -214,17 +214,20 @@
     if (!el) return;
     if (C.isStaticHost && C.isStaticHost()) {
       el.textContent =
-        "⚠ Estás en GitHub Pages: NO se puede Guardar ni Borrar aquí. Usa el link del servidor.";
+        "⚠ Estás en GitHub Pages: NO se puede Guardar ni Borrar aquí. Usa entrar.html";
       el.style.color = "#f5a623";
+      setWriteLocked(true, "Abre entrar.html para guardar o borrar");
       return;
     }
     C.pingApi().then(function (up) {
       if (!up) {
         el.textContent =
-          "⚠ Servidor apagado: Guardar/Borrar no quedarán públicos. Abre el link del servidor.";
+          "⚠ Servidor apagado: Guardar/Borrar no quedarán públicos. Abre entrar.html";
         el.style.color = "#f5a623";
+        setWriteLocked(true, "Servidor apagado — usa entrar.html");
         return;
       }
+      setWriteLocked(false);
       fetchWithTimeoutAdmin((CFG.root || "") + "api/storage", 5000)
         .then(function (r) {
           return r.json();
@@ -246,6 +249,22 @@
           el.style.color = "";
         });
     });
+  }
+
+  function setWriteLocked(locked, reason) {
+    var publish = $("btnPublish");
+    if (publish) {
+      publish.disabled = !!locked;
+      if (locked && reason) publish.title = reason;
+      else publish.removeAttribute("title");
+    }
+    document.querySelectorAll(".delete-help").forEach(function (btn) {
+      btn.disabled = !!locked;
+      if (locked && reason) btn.title = reason;
+      else btn.removeAttribute("title");
+    });
+    var backup = $("btnBackup");
+    if (backup) backup.disabled = !!locked;
   }
 
   function fetchWithTimeoutAdmin(url, ms) {
@@ -673,9 +692,10 @@
                 "No se puede borrar aquí. Usa el enlace fijo: entrar.html (servidor), no GitHub Pages solo."
               );
             }
-            C.deleteVersion(catalog, c, b, m, v);
-            return C.saveCatalog(catalog).then(function () {
-              return C.deleteFromServer(c, b, m, v);
+            // Primero servidor (fuente de verdad), luego teléfono
+            return C.deleteFromServer(c, b, m, v).then(function () {
+              C.deleteVersion(catalog, c, b, m, v);
+              return C.saveCatalog(catalog);
             });
           })
           .then(function () {
@@ -1029,10 +1049,10 @@
         if (msg) {
           msg.hidden = false;
           msg.textContent =
-            "Tiempo agotado. Usa el servidor http://bore.pub:7110/ — GitHub Pages no guarda.";
+            "Tiempo agotado. Usa entrar.html (servidor activo). GitHub Pages no guarda.";
         }
         try {
-          alert("No se pudo guardar a tiempo. Abre http://bore.pub:7110/#administrador");
+          alert("No se pudo guardar a tiempo. Abre entrar.html y entra al administrador.");
         } catch (e) {}
       }, 50000);
 
@@ -1040,7 +1060,7 @@
         .then(function (apiUp) {
           if (!apiUp) {
             throw new Error(
-              "NO se puede guardar en GitHub Pages. Abre este link del servidor y guarda ahí:\nhttp://bore.pub:7110/#administrador"
+              "NO se puede guardar en GitHub Pages. Abre entrar.html y guarda en el servidor activo."
             );
           }
 
@@ -1254,6 +1274,86 @@
     if ($("btnExport")) {
       $("btnExport").addEventListener("click", function () {
         if (catalog) C.exportCatalog(catalog);
+      });
+    }
+
+    if ($("btnBackup")) {
+      $("btnBackup").addEventListener("click", function () {
+        C.pingApi().then(function (up) {
+          if (!up) {
+            alert("El respaldo ZIP solo funciona en el servidor activo. Abre entrar.html primero.");
+            return;
+          }
+          window.location.href = (CFG.root || "") + "api/backup";
+        });
+      });
+    }
+
+    if ($("importJson")) {
+      $("importJson").addEventListener("change", function (ev) {
+        var file = ev.target.files && ev.target.files[0];
+        ev.target.value = "";
+        if (!file) return;
+        if (
+          !confirm(
+            "¿Reemplazar el catálogo local con este JSON? (no borra archivos del servidor)"
+          )
+        ) {
+          return;
+        }
+        var reader = new FileReader();
+        reader.onload = function () {
+          try {
+            var parsed = JSON.parse(String(reader.result || ""));
+            if (!parsed || !parsed.categories) throw new Error("JSON sin categories");
+            catalog = parsed;
+            C.saveCatalog(catalog).then(function () {
+              renderTree();
+              alert(
+                "Catálogo importado en este teléfono. Para publicarlo, edita y pulsa Guardar en cada ayuda."
+              );
+            });
+          } catch (err) {
+            alert("No se pudo importar: " + ((err && err.message) || err));
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    if ($("btnBackup")) {
+      $("btnBackup").addEventListener("click", function () {
+        C.pingApi().then(function (up) {
+          if (!up) {
+            alert("Respaldo ZIP solo en el servidor activo. Abre entrar.html primero.");
+            return;
+          }
+          location.href = (CFG.root || "") + "api/backup";
+        });
+      });
+    }
+
+    if ($("importJson")) {
+      $("importJson").addEventListener("change", function (ev) {
+        var file = ev.target.files && ev.target.files[0];
+        ev.target.value = "";
+        if (!file) return;
+        if (!confirm("¿Reemplazar el catálogo local con este JSON? (no borra archivos del servidor)")) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+          try {
+            var parsed = JSON.parse(String(reader.result || ""));
+            if (!parsed || !parsed.categories) throw new Error("JSON sin categories");
+            catalog = parsed;
+            C.saveCatalog(catalog).then(function () {
+              renderTree();
+              alert("Catálogo importado en este teléfono. Para publicarlo, edita y Guardar cada ayuda en el servidor.");
+            });
+          } catch (err) {
+            alert("No se pudo importar: " + ((err && err.message) || err));
+          }
+        };
+        reader.readAsText(file);
       });
     }
 
