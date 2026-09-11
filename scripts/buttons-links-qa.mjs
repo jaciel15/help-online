@@ -1,13 +1,15 @@
 /**
  * Smoke-test every primary button/link on hub + admin + client help.
  * Run: node scripts/buttons-links-qa.mjs
+ * Pages: BASE_URL=https://jaciel15.github.io/help-online node scripts/buttons-links-qa.mjs
  */
 import { chromium } from "playwright";
 import fs from "fs";
 
-const BASE = process.env.BASE_URL || "http://127.0.0.1:8765";
+const BASE = (process.env.BASE_URL || "http://127.0.0.1:8765").replace(/\/$/, "");
 const PASS = "adminupa2026";
-const OUT = "/tmp/buttons-links-qa.json";
+const OUT = process.env.QA_OUT || "/tmp/buttons-links-qa.json";
+const IS_PAGES = /github\.io/i.test(BASE);
 const results = [];
 
 function ok(name, detail) {
@@ -22,7 +24,12 @@ function fail(name, detail) {
 async function main() {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
-  page.setDefaultTimeout(20000);
+  page.setDefaultTimeout(25000);
+  page.on("dialog", async (dialog) => {
+    try {
+      await dialog.accept();
+    } catch (e) {}
+  });
 
   // --- Home hub links ---
   await page.goto(BASE + "/", { waitUntil: "networkidle" });
@@ -33,11 +40,22 @@ async function main() {
   for (const sel of ['a.btn-admin-jump[href="#administrador"]', 'a.btn-primary[href="#administrador"]']) {
     if ((await page.locator(sel).count()) < 1) throw new Error("missing " + sel);
   }
-  ok("hub admin CTAs");
+  ok("hub admin CTAs → #administrador");
 
   const exampleHref = await page.locator('a[href*="ayuda/?c=motos"]').first().getAttribute("href");
   if (!exampleHref || !/c=motos/.test(exampleHref)) throw new Error("bad example href");
   ok("hub example client link", exampleHref);
+
+  if (IS_PAGES) {
+    if ((await page.locator("#staticHostBanner").count()) < 1) {
+      throw new Error("staticHostBanner missing on Pages");
+    }
+    ok("Pages static banner present");
+    if ((await page.locator("#loginGhToken").count()) < 1) {
+      throw new Error("GitHub token field missing on Pages login");
+    }
+    ok("Pages login has Token GitHub field");
+  }
 
   await page.locator('[data-theme-set="warm"]').first().click();
   if ((await page.evaluate(() => document.documentElement.getAttribute("data-theme"))) !== "warm") {
@@ -46,7 +64,9 @@ async function main() {
   await page.locator('[data-theme-set="dark"]').first().click();
   await page.locator('[data-lang-set="en"]').first().click();
   const leadEn = await page.locator("[data-i18n='hub.lead']").textContent();
-  if (!/client link appears/i.test(leadEn || "")) throw new Error("EN lead not updated: " + leadEn);
+  if (!/GitHub Pages|client link|permanent/i.test(leadEn || "")) {
+    throw new Error("EN lead not updated: " + leadEn);
+  }
   await page.locator('[data-lang-set="es"]').first().click();
   ok("theme + lang buttons update copy");
 
@@ -55,8 +75,18 @@ async function main() {
   if (!page.url().includes("#administrador")) throw new Error("admin redirect failed: " + page.url());
   ok("admin/ → #administrador");
 
+  // --- entrar.html → admin ---
+  await page.goto(BASE + "/entrar.html", { waitUntil: "networkidle" });
+  await page.waitForTimeout(800);
+  if (!page.url().includes("#administrador")) {
+    throw new Error("entrar.html did not land on #administrador: " + page.url());
+  }
+  ok("entrar.html → #administrador");
+
   // --- Login + inventory actions ---
   await page.goto(BASE + "/#administrador", { waitUntil: "networkidle" });
+  if ((await page.locator("#loginGhToken").count()) < 1) throw new Error("loginGhToken missing");
+  ok("login shows GitHub token field");
   await page.fill("#loginPass", PASS);
   await page.click('#loginForm button[type="submit"]');
   await page.waitForSelector("#adminApp:not([hidden])");
@@ -96,9 +126,12 @@ async function main() {
     await page.waitForSelector("#linkSharePanel:not([hidden])");
     const shareVal = await page.inputValue("#linkShareInput");
     if (!shareVal.includes("ayuda/")) throw new Error("share panel empty");
+    if (!/jaciel15\.github\.io\/help-online\/ayuda\//.test(shareVal)) {
+      throw new Error("client copy link is not permanent Pages URL: " + shareVal);
+    }
     const openHref = await page.locator("#linkShareOpen").getAttribute("href");
     if (!openHref || openHref === "#") throw new Error("Abrir ayuda href missing");
-    ok("Copiar link → panel + Abrir ayuda", openHref);
+    ok("Copiar link → Pages permanente + Abrir ayuda", openHref);
 
     await page.click("#linkShareClose");
     if (!(await page.locator("#linkSharePanel").isHidden())) throw new Error("close share failed");
@@ -129,19 +162,24 @@ async function main() {
   }
   ok("Galería/Cámara labels → file inputs");
 
-  // Clear + export + logout wired
   await page.click("#btnClear");
   ok("Limpiar");
   if ((await page.locator("#btnExport").count()) < 1) throw new Error("export missing");
   ok("Exportar JSON present");
 
-  // Password form
   if ((await page.locator("#passForm button[type='submit']").count()) < 1) throw new Error("pass update missing");
   ok("Actualizar clave present");
 
+  if ((await page.locator("#btnLogout").count()) < 1) throw new Error("logout missing");
+  ok("Salir present");
+
   // --- Client help controls ---
   await page.goto(BASE + "/ayuda/?c=motos&b=yamaha&m=mt09&v=base", { waitUntil: "networkidle" });
-  await page.waitForSelector("#fichaRoot h1");
+  await page.waitForSelector("#fichaRoot");
+  const bodyHelp = await page.locator("#fichaRoot").textContent();
+  if (!/MT-09/i.test(bodyHelp || "")) throw new Error("MT-09 help did not load: " + (bodyHelp || "").slice(0, 120));
+  ok("ayuda MT-09 carga", page.url());
+
   await page.click(".slider-arrow.next");
   await page.waitForTimeout(700);
   await page.click(".slider-arrow.prev");
@@ -182,6 +220,19 @@ async function main() {
   if ((await escape.count()) < 1) throw new Error("admin escape link missing from DOM");
   ok("ayuda admin escape link exists");
 
+  for (const path of [
+    "/ayuda/?c=autos&b=ford&m=focus&v=base",
+    "/ayuda/?c=autos&b=nissan&m=altima&v=base",
+  ]) {
+    await page.goto(BASE + path, { waitUntil: "networkidle" });
+    await page.waitForSelector("#fichaRoot");
+    const txt = await page.locator("#fichaRoot").textContent();
+    if (/no encontrada|not found|incompleto/i.test(txt || "")) {
+      throw new Error("help missing at " + path + ": " + (txt || "").slice(0, 100));
+    }
+    ok("ayuda published ok", path);
+  }
+
   // Legacy redirects
   await page.goto(BASE + "/motos/yamaha/mt09/", { waitUntil: "networkidle" });
   if (!page.url().includes("/ayuda/") || !page.url().includes("mt09")) {
@@ -192,6 +243,11 @@ async function main() {
   await page.goto(BASE + "/portal/?c=motos&b=yamaha&m=mt09&v=base", { waitUntil: "networkidle" });
   if (!page.url().includes("/ayuda/")) throw new Error("portal redirect failed: " + page.url());
   ok("portal/?… → ayuda");
+
+  await page.goto(BASE + "/ficha/?c=motos&b=yamaha&m=mt09&v=base", { waitUntil: "networkidle" });
+  await page.waitForTimeout(600);
+  if (!page.url().includes("/ayuda/")) throw new Error("ficha guest redirect failed: " + page.url());
+  ok("ficha/?… → ayuda");
 
   await browser.close();
 
