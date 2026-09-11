@@ -1,94 +1,38 @@
 {
-  "updatedAt": "2026-09-10T19:44:02.588569+00:00",
+  "updatedAt": "2026-09-11T01:08:42.367539+00:00",
+  "deleted": [],
   "categories": {
     "autos": {
       "label": "AUTOS",
-      "brands": {
-        "chevrolet": {
-          "name": "CHEVROLET",
-          "models": {}
-        },
-        "nissan": {
-          "name": "NISSAN",
-          "models": {
-            "altima": {
-              "name": "ALTIMA",
-              "versions": [
-                {
-                  "id": "base",
-                  "name": "Base",
-                  "eeprom": "93C56",
-                  "programmer": "UPA USB",
-                  "type": "SERIAL EEPROM",
-                  "notes": [
-                    "demo publica"
-                  ],
-                  "photos": {
-                    "main": "data/help/autos/nissan/altima/main.gif",
-                    "dashboard": "data/help/autos/nissan/altima/dashboard.gif",
-                    "connection": "data/help/autos/nissan/altima/connection.gif",
-                    "ignition": "data/help/autos/nissan/altima/ignition.gif"
-                  }
-                }
-              ]
-            }
-          }
-        },
-        "ford": {
-          "name": "FORD",
-          "models": {
-            "focus": {
-              "name": "FOCUS",
-              "versions": [
-                {
-                  "id": "base",
-                  "name": "Base",
-                  "eeprom": "93C66",
-                  "programmer": "UPA USB",
-                  "type": "SERIAL EEPROM",
-                  "notes": [],
-                  "photos": {
-                    "main": "data/help/autos/ford/focus/main.jpg",
-                    "dashboard": "data/help/autos/ford/focus/dashboard.jpg",
-                    "connection": "data/help/autos/ford/focus/connection.jpg",
-                    "ignition": "data/help/autos/ford/focus/ignition.jpg"
-                  }
-                }
-              ]
-            }
-          }
-        },
-        "toyota": {
-          "name": "TOYOTA",
-          "models": {
-            "hiace-vieja": {
-              "name": "HIACE VIEJA",
-              "versions": [
-                {
-                  "id": "version-1",
-                  "name": "Version 1",
-                  "eeprom": "93C56",
-                  "programmer": "UPA USB",
-                  "type": "SERIAL EEPROM",
-                  "notes": [
-                    "Recuperado tras fallo de disco. Vuelve a Editar, sube las 4 fotos reales y Guarda otra vez."
-                  ],
-                  "photos": {
-                    "main": "data/help/autos/toyota/hiace-vieja/version-1-main.gif",
-                    "dashboard": "data/help/autos/toyota/hiace-vieja/version-1-dashboard.gif",
-                    "connection": "data/help/autos/toyota/hiace-vieja/version-1-connection.gif",
-                    "ignition": "data/help/autos/toyota/hiace-vieja/version-1-ignition.gif"
-                  }
-                }
-              ]
-            }
-          }
-        }
-      }
+      "brands": {}
     },
     "motos": {
       "label": "MOTOS",
       "brands": {
+        "vespa": {
+          "name": "VESPA",
+          "models": {
+            "zardt": {
+              "name": "ZARDT",
+              "versions": [
+                {
+                  "id": "v1",
+                  "name": "V1",
+                  "eeprom": "",
+                  "programmer": "UPA USB",
+                  "type": "SERIAL EEPROM",
+                  "notes": [],
+                  "photos": {
+                    "main": "data/help/motos/vespa/zardt/v1-main.jpg",
+                    "dashboard": "",
+                    "connection": "",
+                    "ignition": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
         "yamaha": {
           "name": "YAMAHA",
           "models": {
@@ -112,27 +56,6 @@
                     "dashboard": "motos/yamaha/mt09/dashboard.png",
                     "connection": "motos/yamaha/mt09/conexion.png",
                     "ignition": "motos/yamaha/mt09/eeprom.jpg"
-                  }
-                }
-              ]
-            }
-          }
-        },
-        "vespa": {
-          "name": "VESPA",
-          "models": {
-            "zardt": {
-              "name": "ZARDT",
-              "versions": [
-                {
-                  "id": "v1",
-                  "name": "V1",
-                  "eeprom": "",
-                  "programmer": "UPA USB",
-                  "type": "SERIAL EEPROM",
-                  "notes": [],
-                  "photos": {
-                    "main": "data/help/motos/vespa/zardt/v1-main.jpg"
                   }
                 }
               ]

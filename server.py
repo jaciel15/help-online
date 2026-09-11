@@ -3,17 +3,22 @@
 from __future__ import annotations
 
 import base64
+import io
 import json
 import os
 import re
 import shutil
 import tempfile
+import zipfile
+from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parent
 os.chdir(ROOT)
+# Disco persistente en Render/Fly (volumen montado). Por defecto: ./data
+DATA_DIR = Path(os.environ.get("DATA_DIR", str(ROOT / "data"))).resolve()
 
 SAFE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 PHOTO_KEYS = ("main", "dashboard", "connection", "ignition")
@@ -22,14 +27,45 @@ MIN_FREE_BYTES = 150 * 1024 * 1024  # 150 MB libres mínimos para publicar
 
 
 def disk_status() -> dict:
-    usage = shutil.disk_usage(str(ROOT))
+    target = DATA_DIR if DATA_DIR.exists() else ROOT
+    usage = shutil.disk_usage(str(target))
     return {
         "total": usage.total,
         "used": usage.used,
         "free": usage.free,
         "freeMb": round(usage.free / (1024 * 1024)),
         "ok": usage.free >= MIN_FREE_BYTES,
+        "dataDir": str(DATA_DIR),
     }
+
+
+def data_path(*parts: str) -> Path:
+    """Rutas bajo el disco persistente (o data/ local)."""
+    return DATA_DIR.joinpath(*parts)
+
+
+def build_backup_zip() -> bytes:
+    """ZIP de data/ (catálogo + fichas + fotos) para respaldo."""
+    buf = io.BytesIO()
+    root = DATA_DIR if DATA_DIR.exists() else (ROOT / "data")
+    with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        if root.exists():
+            for path in sorted(root.rglob("*")):
+                if path.is_file():
+                    zf.write(path, arcname=str(path.relative_to(root)))
+        zf.writestr(
+            "backup-meta.json",
+            json.dumps(
+                {
+                    "createdAt": datetime.now(timezone.utc).isoformat(),
+                    "service": "help-online",
+                    "dataDir": str(root),
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+        )
+    return buf.getvalue()
 
 
 def slug_ok(value: str) -> bool:
@@ -67,7 +103,7 @@ def atomic_write_bytes(path: Path, data: bytes) -> None:
 
 
 def load_catalog() -> dict:
-    path = ROOT / "data" / "catalog.json"
+    path = data_path("catalog.json")
     if path.exists():
         return json.loads(path.read_text(encoding="utf-8"))
     return {
@@ -83,7 +119,7 @@ def save_catalog(catalog: dict) -> None:
     from datetime import datetime, timezone
 
     catalog["updatedAt"] = datetime.now(timezone.utc).isoformat()
-    atomic_write(ROOT / "data" / "catalog.json", json.dumps(catalog, ensure_ascii=False, indent=2))
+    atomic_write(data_path("catalog.json"), json.dumps(catalog, ensure_ascii=False, indent=2))
 
 
 def photo_filename(version_id: str, key: str, ext: str) -> str:
@@ -116,7 +152,7 @@ def extract_photos(unit: dict) -> tuple[dict, list[str]]:
     vid = version.get("id") or unit.get("v") or "base"
     version["id"] = vid
     photos_in = dict(version.get("photos") or {})
-    out_dir = ROOT / "data" / "help" / c / b / m
+    out_dir = data_path("help", c, b, m)
     out_dir.mkdir(parents=True, exist_ok=True)
     photos_out: dict[str, str] = {}
     errors: list[str] = []
@@ -212,6 +248,10 @@ def upsert_unit(catalog: dict, unit: dict) -> None:
     vid = version.get("id") or unit.get("v") or "base"
     version["id"] = vid
     version["photos"] = catalog_photos(version.get("photos"))
+    key = f"{c}/{b}/{m}/{vid}"
+    deleted = catalog.setdefault("deleted", [])
+    if key in deleted:
+        catalog["deleted"] = [k for k in deleted if k != key]
     cats = catalog.setdefault("categories", {})
     cat = cats.setdefault(c, {"label": c.upper(), "brands": {}})
     brands = cat.setdefault("brands", {})
@@ -232,6 +272,10 @@ def upsert_unit(catalog: dict, unit: dict) -> None:
 
 
 def delete_unit(catalog: dict, c: str, b: str, m: str, v: str) -> None:
+    key = f"{c}/{b}/{m}/{v}"
+    deleted = catalog.setdefault("deleted", [])
+    if key not in deleted:
+        deleted.append(key)
     try:
         brand = catalog["categories"][c]["brands"][b]
         model = brand["models"][m]
@@ -245,7 +289,7 @@ def delete_unit(catalog: dict, c: str, b: str, m: str, v: str) -> None:
 
 
 def delete_photo_files(c: str, b: str, m: str, v: str) -> None:
-    out_dir = ROOT / "data" / "help" / c / b / m
+    out_dir = data_path("help", c, b, m)
     if not out_dir.exists():
         return
     for key in PHOTO_KEYS:
@@ -295,6 +339,19 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json(200, {"ok": True, "service": "help-online", "disk": disk_status()})
         if path == "/api/storage":
             return self._json(200, {"ok": True, "disk": disk_status()})
+        if path == "/api/backup":
+            raw = build_backup_zip()
+            stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/zip")
+            self.send_header(
+                "Content-Disposition",
+                f'attachment; filename="help-online-backup-{stamp}.zip"',
+            )
+            self.send_header("Content-Length", str(len(raw)))
+            self.end_headers()
+            self.wfile.write(raw)
+            return
         return super().do_GET()
 
     def do_OPTIONS(self):
@@ -371,7 +428,7 @@ class Handler(SimpleHTTPRequestHandler):
                     )
 
                 v = unit["version"]["id"]
-                help_path = ROOT / "data" / "help" / c / b / m / f"{v}.json"
+                help_path = data_path("help", c, b, m) / f"{v}.json"
                 atomic_write(help_path, json.dumps(unit, ensure_ascii=False, indent=2))
 
                 catalog = load_catalog()
@@ -396,7 +453,7 @@ class Handler(SimpleHTTPRequestHandler):
                 c, b, m, v = body.get("c"), body.get("b"), body.get("m"), body.get("v") or "base"
                 if not all(slug_ok(x) for x in (c, b, m, v)):
                     return self._json(400, {"ok": False, "error": "ids inválidos"})
-                help_path = ROOT / "data" / "help" / c / b / m / f"{v}.json"
+                help_path = data_path("help", c, b, m) / f"{v}.json"
                 if help_path.exists():
                     help_path.unlink()
                 delete_photo_files(c, b, m, v)
@@ -423,9 +480,10 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 def main():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
     port = int(os.environ.get("PORT", "8765"))
     server = ThreadingHTTPServer(("0.0.0.0", port), Handler)
-    print(f"HELP ONLINE server on http://0.0.0.0:{port}", flush=True)
+    print(f"HELP ONLINE server on http://0.0.0.0:{port} data={DATA_DIR}", flush=True)
     server.serve_forever()
 
 

@@ -51,12 +51,18 @@
     return;
   }
 
+  function showMissing() {
+    if (!status) return;
+    status.removeAttribute("data-i18n");
+    status.innerHTML =
+      tt("ayuda.missing", "Ayuda no encontrada para este enlace.") +
+      "<br><small>Pide a soporte que vuelva a <strong>Guardar en catálogo</strong> y te reenvíe el link.</small>";
+  }
+
   C.loadHelpUnit(p.c, p.b, p.m, p.v)
     .then(function (unit) {
     if (!unit || !unit.version) {
-      status.innerHTML =
-        tt("ayuda.missing", "Ayuda no encontrada para este enlace.") +
-        "<br><small>Pide a soporte que vuelva a <strong>Guardar en catálogo</strong> y te reenvíe el link.</small>";
+      showMissing();
       return;
     }
 
@@ -203,11 +209,6 @@
     }
   })
   .catch(function () {
-    var statusEl = document.getElementById("fichaStatus") || root;
-    if (statusEl) {
-      statusEl.innerHTML =
-        tt("ayuda.missing", "Ayuda no encontrada para este enlace.") +
-        "<br><small>Pide a soporte que vuelva a <strong>Guardar en catálogo</strong> y te reenvíe el link.</small>";
-    }
+    showMissing();
   });
 })();

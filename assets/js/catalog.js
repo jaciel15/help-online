@@ -409,18 +409,25 @@
             return pingApi().then(function (apiUp) {
               var result;
               if (apiUp && fileCat) {
-                // Servidor = verdad. Conserva tombstones locales vacíos al sincronizar.
+                // Servidor = única verdad. NO mezclar borrados viejos del teléfono.
                 result = JSON.parse(JSON.stringify(fileCat));
                 ensureDeletedList(result);
-                // Enrich placeholders from IDB only for versions that still exist on server
-                if (idbCat) {
-                  result = mergePhotosOnly(result, idbCat);
-                }
+                pruneEmptyBrands(result);
               } else if (idbCat) {
-                result = mergeCatalogNoResurrect(fileCat, idbCat);
+                // Sin API (GitHub Pages): el teléfono manda. El JSON estático
+                // NO puede revivir ayudas que ya borraste.
+                result = JSON.parse(JSON.stringify(idbCat));
+                ensureDeletedList(result);
+                if (fileCat) {
+                  result = mergePhotosOnly(result, fileCat);
+                }
+                // Quitar del árbol local cualquier clave en deleted[]
+                applyTombstones(result);
+                pruneEmptyBrands(result);
               } else {
                 result = fileCat || emptyCatalog();
                 ensureDeletedList(result);
+                pruneEmptyBrands(result);
               }
               return idbSet(IDB_CATALOG, stripHeavyPhotos(result))
                 .catch(function () {})
@@ -437,27 +444,28 @@
       });
   }
 
-  /** Copy real photo paths from idb into file-based catalog for matching versions only. */
-  function mergePhotosOnly(filePrimary, idbCat) {
-    var out = filePrimary;
+  /** Enrich photos in `primary` from `source` only for versions that already exist in primary. */
+  function mergePhotosOnly(primary, source) {
+    var out = primary;
+    if (!source) return out;
     ["autos", "motos"].forEach(function (cat) {
       var brands = (((out.categories || {})[cat] || {}).brands) || {};
-      var idbBrands = (((idbCat.categories || {})[cat] || {}).brands) || {};
+      var srcBrands = (((source.categories || {})[cat] || {}).brands) || {};
       Object.keys(brands).forEach(function (bid) {
         var models = brands[bid].models || {};
-        var idbModels = (idbBrands[bid] && idbBrands[bid].models) || {};
+        var srcModels = (srcBrands[bid] && srcBrands[bid].models) || {};
         Object.keys(models).forEach(function (mid) {
           (models[mid].versions || []).forEach(function (fv) {
-            var idbModel = idbModels[mid];
-            if (!idbModel) return;
-            var iv = null;
-            (idbModel.versions || []).forEach(function (v) {
-              if (v.id === fv.id) iv = v;
+            var srcModel = srcModels[mid];
+            if (!srcModel) return;
+            var sv = null;
+            (srcModel.versions || []).forEach(function (v) {
+              if (v.id === fv.id) sv = v;
             });
-            if (!iv || !iv.photos) return;
+            if (!sv || !sv.photos) return;
             var op = fv.photos || (fv.photos = {});
-            Object.keys(iv.photos).forEach(function (pk) {
-              var val = iv.photos[pk];
+            Object.keys(sv.photos).forEach(function (pk) {
+              var val = sv.photos[pk];
               if (val && !isPhotoPlaceholder(val) && (!op[pk] || isPhotoPlaceholder(op[pk]))) {
                 op[pk] = val;
               }
@@ -467,6 +475,41 @@
       });
     });
     return out;
+  }
+
+  function applyTombstones(catalog) {
+    var list = ensureDeletedList(catalog);
+    if (!list.length) return catalog;
+    list.forEach(function (key) {
+      var parts = String(key).split("/");
+      if (parts.length < 4) return;
+      try {
+        var brand = catalog.categories[parts[0]].brands[parts[1]];
+        if (!brand) return;
+        var model = brand.models[parts[2]];
+        if (!model) return;
+        model.versions = (model.versions || []).filter(function (v) {
+          return v.id !== parts[3];
+        });
+        if (!model.versions.length) delete brand.models[parts[2]];
+        if (!Object.keys(brand.models || {}).length) delete catalog.categories[parts[0]].brands[parts[1]];
+      } catch (e) {}
+    });
+    return catalog;
+  }
+
+  function pruneEmptyBrands(catalog) {
+    ["autos", "motos"].forEach(function (cat) {
+      var brands = (((catalog.categories || {})[cat] || {}).brands) || {};
+      Object.keys(brands).forEach(function (bid) {
+        var models = brands[bid].models || {};
+        Object.keys(models).forEach(function (mid) {
+          if (!(models[mid].versions || []).length) delete models[mid];
+        });
+        if (!Object.keys(models).length) delete brands[bid];
+      });
+    });
+    return catalog;
   }
 
   function saveCatalog(catalog) {
@@ -579,7 +622,7 @@
     );
   }
 
-  /** Solo una ficha: prioriza archivo público data/help; IndexedDB como respaldo (creador). */
+  /** Solo una ficha pública desde data/help. IndexedDB no revive borrados para clientes. */
   function loadHelpUnit(c, b, m, v) {
     var versionId = v || "base";
     var key = IDB_HELP_PREFIX + [c, b, m, versionId].join(":");
@@ -654,13 +697,39 @@
       return out;
     }
 
-    return Promise.all([fromServer(), fromIdbOrLegacy()]).then(function (pair) {
+    function isTombstoned(catalog) {
+      return !!(catalog && isMarkedDeleted(catalog, c, b, m, versionId));
+    }
+
+    // Cliente (sin sesión admin): SOLO archivo del servidor.
+    // Si ya se borró, el JSON no existe → "no encontrada". Nunca usar caché del teléfono.
+    if (!isAdminSession()) {
+      return fromServer().then(function (server) {
+        if (!server) return null;
+        return idbGet(IDB_CATALOG)
+          .catch(function () {
+            return null;
+          })
+          .then(function (cat) {
+            if (isTombstoned(cat)) return null;
+            return server;
+          });
+      });
+    }
+
+    return Promise.all([fromServer(), fromIdbOrLegacy(), idbGet(IDB_CATALOG).catch(function () {
+      return null;
+    })]).then(function (pair) {
       var server = pair[0];
       var local = pair[1];
+      var cat = pair[2];
+      if (isTombstoned(cat)) return null;
+      // Si el servidor ya no tiene la ficha, no revivirla desde IndexedDB
+      if (!server) return null;
       var unit = mergeUnits(server, local);
       if (unit) return unit;
-      if (!isAdminSession()) return null;
       return loadCatalog().then(function (catalog) {
+        if (isTombstoned(catalog)) return null;
         return buildHelpUnit(catalog, c, b, m, versionId);
       });
     });
@@ -770,7 +839,7 @@
           throw new Error(
             (body && body.error) ||
               (r.status === 404
-                ? "API no disponible. Abre http://bore.pub:7110/ (servidor), no GitHub Pages."
+                ? "API no disponible. Abre entrar.html (servidor), no GitHub Pages."
                 : "No se pudo publicar en el servidor (" + r.status + ")")
           );
         }
